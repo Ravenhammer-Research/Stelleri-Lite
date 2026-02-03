@@ -9,36 +9,21 @@
 
 static std::string interfaceTypeToString(InterfaceType t) {
   switch (t) {
-  case InterfaceType::Unknown:
-    return "Unknown";
-  case InterfaceType::Loopback:
-    return "Loopback";
-  case InterfaceType::Ethernet:
-    return "Ethernet";
-  case InterfaceType::PointToPoint:
-    return "PointToPoint";
-  case InterfaceType::Wireless:
-    return "Wireless";
-  case InterfaceType::Bridge:
-    return "Bridge";
-  case InterfaceType::VLAN:
-    return "VLAN";
-  case InterfaceType::PPP:
-    return "PPP";
-  case InterfaceType::Tunnel:
-    return "Tunnel";
-  case InterfaceType::FDDI:
-    return "FDDI";
-  case InterfaceType::TokenRing:
-    return "TokenRing";
-  case InterfaceType::ATM:
-    return "ATM";
-  case InterfaceType::Virtual:
-    return "Virtual";
-  case InterfaceType::Other:
-    return "Other";
-  default:
-    return "Unknown";
+  case InterfaceType::Unknown: return "Unknown";
+  case InterfaceType::Loopback: return "Loopback";
+  case InterfaceType::Ethernet: return "Ethernet";
+  case InterfaceType::PointToPoint: return "PointToPoint";
+  case InterfaceType::Wireless: return "Wireless";
+  case InterfaceType::Bridge: return "Bridge";
+  case InterfaceType::VLAN: return "VLAN";
+  case InterfaceType::PPP: return "PPP";
+  case InterfaceType::Tunnel: return "Tunnel";
+  case InterfaceType::FDDI: return "FDDI";
+  case InterfaceType::TokenRing: return "TokenRing";
+  case InterfaceType::ATM: return "ATM";
+  case InterfaceType::Virtual: return "Virtual";
+  case InterfaceType::Other: return "Other";
+  default: return "Unknown";
   }
 }
 
@@ -64,7 +49,10 @@ std::string InterfaceTableFormatter::format(
       continue;
     const auto &ic = *cd.iface;
     nameWidth = std::max(nameWidth, ic.name.length());
-    typeWidth = std::max(typeWidth, interfaceTypeToString(ic.type).length());
+    // If the interface name indicates a LAGG, show as "Bond"
+    std::string effectiveType = ic.name.rfind("lagg", 0) == 0 ? std::string("Bond")
+                                                              : interfaceTypeToString(ic.type);
+    typeWidth = std::max(typeWidth, effectiveType.length());
     if (ic.address) {
       addrWidth = std::max(addrWidth, ic.address->toString().length());
     }
@@ -122,8 +110,10 @@ std::string InterfaceTableFormatter::format(
       }
     }
 
+    std::string effectiveType = ic.name.rfind("lagg", 0) == 0 ? std::string("Bond")
+                                  : interfaceTypeToString(ic.type);
     oss << std::left << std::setw(nameWidth) << ic.name << std::setw(typeWidth)
-        << interfaceTypeToString(ic.type);
+      << effectiveType;
 
     // If no primary address but has aliases, show first alias as primary
     if (!ic.address && !ic.aliases.empty()) {

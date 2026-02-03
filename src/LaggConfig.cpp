@@ -26,7 +26,7 @@
 
 LaggConfig::LaggConfig(const InterfaceConfig &base) {
   name = base.name;
-  type = base.type;
+  type = InterfaceType::Lagg;
   if (base.address)
     address = base.address->clone();
   aliases.clear();
@@ -48,7 +48,7 @@ LaggConfig::LaggConfig(const InterfaceConfig &base, LaggProtocol protocol_,
                        std::optional<int> lacp_rate_,
                        std::optional<int> min_links_) {
   name = base.name;
-  type = base.type;
+  type = InterfaceType::Lagg;
   if (base.address)
     address = base.address->clone();
   aliases.clear();

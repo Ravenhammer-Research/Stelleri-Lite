@@ -23,6 +23,7 @@ enum class InterfaceType {
   PointToPoint,
   Wireless,
   Bridge,
+  Lagg,
   VLAN,
   PPP,
   Tunnel,

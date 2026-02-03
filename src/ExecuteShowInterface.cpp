@@ -44,6 +44,13 @@ void netcli::Parser::executeShowInterface(const InterfaceToken &tok,
         cd.iface = std::make_shared<BridgeInterfaceConfig>(std::move(b));
         interfaces.push_back(std::move(cd));
       }
+    } else if (tok.type() == InterfaceType::Lagg) {
+      auto lgs = mgr->GetLaggInterfaces();
+      for (auto &l : lgs) {
+        ConfigData cd;
+        cd.iface = std::make_shared<LaggConfig>(std::move(l));
+        interfaces.push_back(std::move(cd));
+      }
     } else {
       auto allIfaces = mgr->getInterfaces();
       for (auto &iface : allIfaces) {
@@ -72,7 +79,7 @@ void netcli::Parser::executeShowInterface(const InterfaceToken &tok,
       continue;
     if (cd.iface->type != InterfaceType::Bridge)
       allBridge = false;
-    if (!cd.iface->lagg)
+    if (cd.iface->type != InterfaceType::Lagg)
       allLagg = false;
     if (cd.iface->type != InterfaceType::VLAN)
       allVlan = false;

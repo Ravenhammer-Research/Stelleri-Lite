@@ -50,7 +50,7 @@ InterfaceToken::parseFromTokens(const std::vector<std::string> &tokens,
       else if (type == "vlan")
         itype = InterfaceType::VLAN;
       else if (type == "lagg" || type == "lag")
-        itype = InterfaceType::Other;
+        itype = InterfaceType::Lagg;
       else if (type == "tunnel" || type == "gif")
         itype = InterfaceType::Tunnel;
       else if (type == "epair")
@@ -82,7 +82,7 @@ InterfaceToken::parseFromTokens(const std::vector<std::string> &tokens,
       else if (type == "vlan")
         itype = InterfaceType::VLAN;
       else if (type == "lagg")
-        itype = InterfaceType::Other; // LAGG doesn't have dedicated type
+        itype = InterfaceType::Lagg;
       else if (type == "tunnel" || type == "gif")
         itype = InterfaceType::Tunnel;
       else if (type == "epair")
