@@ -46,7 +46,7 @@ namespace netcli {
       return cmd;
 
     const std::string &target = tokens[idx];
-    if (target == "interfaces") {
+    if (target == "interfaces" || target == "interface") {
       size_t next = 0;
       auto itok = InterfaceToken::parseFromTokens(tokens, idx, next);
       if (itok)

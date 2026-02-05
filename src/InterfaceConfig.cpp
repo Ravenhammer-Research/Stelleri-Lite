@@ -28,12 +28,8 @@ InterfaceConfig::InterfaceConfig(const struct ifaddrs *ifa) {
   name = ifa->ifa_name;
   type = ifAddrToInterfaceType(ifa);
 
-  // Heuristic: some platforms may not report link-layer type for bridge
-  // interfaces via ifaddrs; treat names starting with "bridge" as Bridge
-  // to ensure filtering by type works (e.g., `show interfaces type bridge`).
-  if (name.rfind("bridge", 0) == 0) {
-    type = InterfaceType::Bridge;
-  }
+  // Prefer explicit kernel-provided link-layer type. Do not infer type
+  // from the interface name (avoid brittle name-prefix heuristics).
 
   // Store flags if present
   if (ifa->ifa_flags) {

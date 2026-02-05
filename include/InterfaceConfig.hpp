@@ -51,6 +51,8 @@ public:
   std::optional<int> tunnel_vrf;   ///< FIB ID for tunnel routing lookups
   std::vector<std::string> groups; ///< Interface groups
   std::optional<int> mtu;          ///< Maximum Transmission Unit
+  std::optional<int> metric;       ///< Interface metric (if available)
+  std::optional<std::string> nd6_options; ///< ND6 options string (if available)
   // Type-specific payloads (nullable)
   std::shared_ptr<BridgeInterfaceConfig> bridge;
   std::shared_ptr<LaggConfig> lagg;

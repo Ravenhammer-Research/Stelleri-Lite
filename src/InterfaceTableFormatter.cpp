@@ -49,9 +49,9 @@ std::string InterfaceTableFormatter::format(
       continue;
     const auto &ic = *cd.iface;
     nameWidth = std::max(nameWidth, ic.name.length());
-    // If the interface name indicates a LAGG, show as "Bond"
-    std::string effectiveType = ic.name.rfind("lagg", 0) == 0 ? std::string("Bond")
-                                                              : interfaceTypeToString(ic.type);
+    // If the interface type is LAGG, show as "Bond"
+    std::string effectiveType = (ic.type == InterfaceType::Lagg) ? std::string("Bond")
+                                  : interfaceTypeToString(ic.type);
     typeWidth = std::max(typeWidth, effectiveType.length());
     if (ic.address) {
       addrWidth = std::max(addrWidth, ic.address->toString().length());
@@ -110,8 +110,8 @@ std::string InterfaceTableFormatter::format(
       }
     }
 
-    std::string effectiveType = ic.name.rfind("lagg", 0) == 0 ? std::string("Bond")
-                                  : interfaceTypeToString(ic.type);
+    std::string effectiveType = (ic.type == InterfaceType::Lagg) ? std::string("Bond")
+                    : interfaceTypeToString(ic.type);
     oss << std::left << std::setw(nameWidth) << ic.name << std::setw(typeWidth)
       << effectiveType;
 

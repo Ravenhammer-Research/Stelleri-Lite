@@ -4,13 +4,7 @@
 #include <cstring>
 #include <iostream>
 #include <net/if.h>
-#if defined(__has_include)
-#if __has_include(<net/if_vlan.h>)
-#include <net/if_vlan.h>
-#elif __has_include(<net/if_vlan_var.h>)
 #include <net/if_vlan_var.h>
-#endif
-#endif
 #include <stdexcept>
 #include <string>
 #include <sys/ioctl.h>

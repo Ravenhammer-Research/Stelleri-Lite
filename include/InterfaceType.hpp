@@ -27,6 +27,8 @@ enum class InterfaceType {
   VLAN,
   PPP,
   Tunnel,
+  Gif,
+  Tun,
   FDDI,
   TokenRing,
   ATM,
@@ -42,12 +44,10 @@ inline InterfaceType ifAddrToInterfaceType(const struct ifaddrs *ifa) {
   if (!ifa)
     return InterfaceType::Unknown;
   unsigned int flags = ifa->ifa_flags;
-  if (flags & IFF_LOOPBACK)
-    return InterfaceType::Loopback;
-  if (flags & IFF_POINTOPOINT)
-    return InterfaceType::PointToPoint;
 
-  // Inspect link-layer sockaddr (AF_LINK / sockaddr_dl) on BSD-like systems.
+  // Inspect link-layer sockaddr (AF_LINK / sockaddr_dl) on BSD-like systems
+  // first so we can detect specific virtual link types (gif/tun/bridge)
+  // even when point-to-point or other flags are set.
   if (ifa->ifa_addr && ifa->ifa_addr->sa_family == AF_LINK) {
     struct sockaddr_dl *sdl =
         reinterpret_cast<struct sockaddr_dl *>(ifa->ifa_addr);
@@ -57,13 +57,17 @@ inline InterfaceType ifAddrToInterfaceType(const struct ifaddrs *ifa) {
     case IFT_GIGABITETHERNET:
     case IFT_FIBRECHANNEL:
     case IFT_AFLANE8023:
-      return InterfaceType::Ethernet;
+        return InterfaceType::Ethernet;
+      case IFT_IEEE8023ADLAG:
+        return InterfaceType::Lagg;
     case IFT_LOOP:
       return InterfaceType::Loopback;
     case IFT_PPP:
       return InterfaceType::PPP;
     case IFT_TUNNEL:
       return InterfaceType::Tunnel;
+    case IFT_GIF:
+      return InterfaceType::Gif;
     case IFT_FDDI:
       return InterfaceType::FDDI;
     case IFT_ISO88025: /* token ring / token bus family */
@@ -86,6 +90,12 @@ inline InterfaceType ifAddrToInterfaceType(const struct ifaddrs *ifa) {
       return InterfaceType::Other;
     }
   }
+  // Fall back to flag-based classification when link-layer type is not
+  // informative.
+  if (flags & IFF_LOOPBACK)
+    return InterfaceType::Loopback;
+  if (flags & IFF_POINTOPOINT)
+    return InterfaceType::PointToPoint;
 
   return InterfaceType::Unknown;
 }

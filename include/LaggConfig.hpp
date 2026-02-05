@@ -27,6 +27,7 @@ public:
       LaggProtocol::NONE;           ///< LAGG protocol (LACP, failover, etc.)
   std::vector<std::string> members; ///< Member port names
   std::vector<std::string> member_flags; ///< Per-member flag label (e.g., "MASTER")
+  std::vector<uint32_t> member_flag_bits; ///< Per-member raw flag bits from kernel
   std::optional<std::string>
       hash_policy;              ///< Hash policy (layer2, layer2+3, layer3+4)
   std::optional<int> lacp_rate; ///< LACP rate: 0=slow (30s), 1=fast (1s)

@@ -38,21 +38,11 @@ VLANTableFormatter::format(const std::vector<ConfigData> &interfaces) const {
       if (ic.vlan->pcp)
         pcp = static_cast<int>(*ic.vlan->pcp);
     } else {
-      // Attempt to parse forms like "re0.25" or "vlan25"/"vlan.25"
+      // Attempt to parse forms like "re0.25" (parent.name notation).
       auto pos = ic.name.find('.');
       if (pos != std::string::npos) {
         parent = ic.name.substr(0, pos);
         std::string rest = ic.name.substr(pos + 1);
-        try {
-          vid = std::stoi(rest);
-        } catch (...) {
-          vid = -1;
-        }
-      } else if (ic.name.rfind("vlan", 0) == 0) {
-        // name starts with 'vlan'
-        std::string rest = ic.name.substr(4);
-        if (!rest.empty() && rest[0] == '.')
-          rest = rest.substr(1);
         try {
           vid = std::stoi(rest);
         } catch (...) {

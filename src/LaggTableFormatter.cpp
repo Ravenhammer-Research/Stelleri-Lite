@@ -3,11 +3,39 @@
 #include "InterfaceType.hpp"
 #include "LaggConfig.hpp"
 #include "InterfaceFlags.hpp"
+#include <net/ethernet.h>
+#include <net/if_lagg.h>
 #include <net/if.h>
 #include <algorithm>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
+
+// Local helper to render member flag bits into a human-readable label.
+static std::string laggFlagsToLabel(uint32_t f) {
+  std::string s;
+  if (f & LAGG_PORT_MASTER) {
+    if (!s.empty()) s += ',';
+    s += "MASTER";
+  }
+  if (f & LAGG_PORT_STACK) {
+    if (!s.empty()) s += ',';
+    s += "STACK";
+  }
+  if (f & LAGG_PORT_ACTIVE) {
+    if (!s.empty()) s += ',';
+    s += "ACTIVE";
+  }
+  if (f & LAGG_PORT_COLLECTING) {
+    if (!s.empty()) s += ',';
+    s += "COLLECTING";
+  }
+  if (f & LAGG_PORT_DISTRIBUTING) {
+    if (!s.empty()) s += ',';
+    s += "DISTRIBUTING";
+  }
+  return s;
+}
 
 static std::string protocolToString(LaggProtocol proto) {
   switch (proto) {
@@ -40,7 +68,7 @@ LaggTableFormatter::format(const std::vector<ConfigData> &interfaces) const {
 
   struct Row { std::string name; std::string proto; std::optional<std::string> hash;
                std::vector<std::string> hash_items; std::vector<std::string> members;
-               std::vector<std::string> member_flags; std::optional<int> mtu;
+               std::vector<uint32_t> member_flag_bits; std::vector<std::string> member_flags; std::optional<int> mtu;
                std::optional<uint32_t> flags; std::string status; };
 
   std::vector<Row> rows;
@@ -75,6 +103,8 @@ LaggTableFormatter::format(const std::vector<ConfigData> &interfaces) const {
       }
     }
     r.members = laggPtr->members;
+    // Prefer numeric flag bits when available; keep string labels as fallback.
+    r.member_flag_bits = laggPtr->member_flag_bits;
     r.member_flags = laggPtr->member_flags;
     r.mtu = ic.mtu;
     r.flags = ic.flags;
@@ -95,6 +125,11 @@ LaggTableFormatter::format(const std::vector<ConfigData> &interfaces) const {
       hashWidth = std::max(hashWidth, r.hash->length());
     for (const auto &m : r.members)
       membersWidth = std::max(membersWidth, m.length());
+    // Compute max width for flags column from either bit labels or existing labels
+    for (const auto &mf_bits : r.member_flag_bits) {
+      std::string lbl = laggFlagsToLabel(mf_bits);
+      flagsWidth = std::max(flagsWidth, lbl.length());
+    }
     for (const auto &mf : r.member_flags)
       flagsWidth = std::max(flagsWidth, mf.length());
     for (const auto &hi : r.hash_items)
@@ -162,13 +197,18 @@ LaggTableFormatter::format(const std::vector<ConfigData> &interfaces) const {
           oss << std::setw(mtuWidth) << *r.mtu;
         else
           oss << std::setw(mtuWidth) << "-";
-        // Use first member's flag label if available, otherwise interface flags
-        if (!r.member_flags.empty() && r.member_flags[0] != "-")
+        // Use first member's flag bits (preferred) or label fallback, otherwise interface flags
+        if (!r.member_flag_bits.empty()) {
+          std::string lbl = laggFlagsToLabel(r.member_flag_bits[0]);
+          if (lbl.empty()) lbl = "-";
+          oss << std::setw(flagsWidth) << lbl;
+        } else if (!r.member_flags.empty() && r.member_flags[0] != "-") {
           oss << std::setw(flagsWidth) << r.member_flags[0];
-        else if (r.flags)
+        } else if (r.flags) {
           oss << std::setw(flagsWidth) << flagsToString(*r.flags);
-        else
+        } else {
           oss << std::setw(flagsWidth) << "-";
+        }
         oss << std::setw(statusWidth) << r.status;
       } else {
         oss << std::setw(mtuWidth) << "" << std::setw(flagsWidth) << "" << std::setw(statusWidth) << "";

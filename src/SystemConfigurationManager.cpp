@@ -2,10 +2,12 @@
 
 #include "SystemConfigurationManager.hpp"
 #include "InterfaceConfig.hpp"
+#include "LaggFlags.hpp"
 
 #include <ifaddrs.h>
 #include <net/route.h>
 #include <netinet/in.h>
+#include <net/if.h>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -14,15 +16,7 @@
 #include <unordered_set>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
-#if defined(__has_include)
-#if __has_include(<net/if_ether.h>)
-#include <net/if_ether.h>
-#elif __has_include(<net/ethernet.h>)
 #include <net/ethernet.h>
-#endif
-#else
-#include <net/if_ether.h>
-#endif
 #include <net/if_lagg.h>
 #include <sys/sockio.h>
 #include <net/if_vlan_var.h>
@@ -32,30 +26,7 @@
 #include <unistd.h>
 #include <iostream>
 
-static std::string laggPortFlagsLabel(uint32_t f) {
-  std::string s;
-  if (f & LAGG_PORT_MASTER) {
-    if (!s.empty()) s += ",";
-    s += "MASTER";
-  }
-  if (f & LAGG_PORT_STACK) {
-    if (!s.empty()) s += ",";
-    s += "STACK";
-  }
-  if (f & LAGG_PORT_ACTIVE) {
-    if (!s.empty()) s += ",";
-    s += "ACTIVE";
-  }
-  if (f & LAGG_PORT_COLLECTING) {
-    if (!s.empty()) s += ",";
-    s += "COLLECTING";
-  }
-  if (f & LAGG_PORT_DISTRIBUTING) {
-    if (!s.empty()) s += ",";
-    s += "DISTRIBUTING";
-  }
-  return s;
-}
+// LAGG port flag labeling moved to include/LaggFlags.hpp
 
 // Debug prints are always enabled (removed NETCLI_DEBUG env gating)
 
@@ -219,6 +190,137 @@ static bool matches_vrf(const InterfaceConfig &ic,
   return true;
 }
 
+// Populate additional metadata for an interface by querying the system.
+// Preferred implementation would use platform ioctls; fallback here uses
+// `ifconfig <iface>` parsing to extract metric, groups, fib, tunnelfib,
+// nd6 options, and for tunnels the endpoint addresses when available.
+static void populateInterfaceMetadata(InterfaceConfig &ic) {
+  // Use ioctls to retrieve metric, groups, fib, tunnelfib, nd6 options,
+  // and tunnel endpoints (gif). No popen/ifconfig parsing.
+
+  // Metric, fib, tunnelfib, and gif endpoints use an AF_INET socket.
+  int inet_sock = socket(AF_INET, SOCK_DGRAM, 0);
+  if (inet_sock >= 0) {
+    struct ifreq ifr;
+    std::memset(&ifr, 0, sizeof(ifr));
+    std::strncpy(ifr.ifr_name, ic.name.c_str(), IFNAMSIZ - 1);
+    if (ioctl(inet_sock, SIOCGIFMETRIC, &ifr) == 0) {
+      ic.metric = ifr.ifr_metric;
+    }
+
+    std::memset(&ifr, 0, sizeof(ifr));
+    std::strncpy(ifr.ifr_name, ic.name.c_str(), IFNAMSIZ - 1);
+    if (ioctl(inet_sock, SIOCGIFFIB, &ifr) == 0) {
+      try {
+        if (!ic.vrf)
+          ic.vrf = std::make_unique<VRFConfig>();
+        ic.vrf->table = ifr.ifr_fib;
+        ic.vrf->name = std::string("fib") + std::to_string(ifr.ifr_fib);
+      } catch (...) {}
+    }
+
+    std::memset(&ifr, 0, sizeof(ifr));
+    std::strncpy(ifr.ifr_name, ic.name.c_str(), IFNAMSIZ - 1);
+    if (ioctl(inet_sock, SIOCGTUNFIB, &ifr) == 0) {
+      ic.tunnel_vrf = ifr.ifr_fib;
+    }
+
+    std::memset(&ifr, 0, sizeof(ifr));
+    std::strncpy(ifr.ifr_name, ic.name.c_str(), IFNAMSIZ - 1);
+    if (ioctl(inet_sock, SIOCGIFPSRCADDR, &ifr) == 0) {
+      if (ifr.ifr_addr.sa_family == AF_INET) {
+        struct sockaddr_in *sin = reinterpret_cast<struct sockaddr_in *>(&ifr.ifr_addr);
+        char buf[INET_ADDRSTRLEN] = {0};
+        if (inet_ntop(AF_INET, &sin->sin_addr, buf, sizeof(buf))) {
+          try {
+            if (!ic.tunnel) ic.tunnel = std::make_shared<TunnelConfig>(ic);
+            ic.tunnel->source = std::make_unique<IPv4Address>(std::string(buf));
+          } catch (...) {}
+        }
+      } else if (ifr.ifr_addr.sa_family == AF_INET6) {
+        struct sockaddr_in6 *sin6 = reinterpret_cast<struct sockaddr_in6 *>(&ifr.ifr_addr);
+        char buf[INET6_ADDRSTRLEN] = {0};
+        if (inet_ntop(AF_INET6, &sin6->sin6_addr, buf, sizeof(buf))) {
+          try {
+            if (!ic.tunnel) ic.tunnel = std::make_shared<TunnelConfig>(ic);
+            ic.tunnel->source = std::make_unique<IPv6Address>(std::string(buf));
+          } catch (...) {}
+        }
+      }
+    }
+
+    std::memset(&ifr, 0, sizeof(ifr));
+    std::strncpy(ifr.ifr_name, ic.name.c_str(), IFNAMSIZ - 1);
+    if (ioctl(inet_sock, SIOCGIFPDSTADDR, &ifr) == 0) {
+      if (ifr.ifr_addr.sa_family == AF_INET) {
+        struct sockaddr_in *sin = reinterpret_cast<struct sockaddr_in *>(&ifr.ifr_addr);
+        char buf[INET_ADDRSTRLEN] = {0};
+        if (inet_ntop(AF_INET, &sin->sin_addr, buf, sizeof(buf))) {
+          try {
+            if (!ic.tunnel) ic.tunnel = std::make_shared<TunnelConfig>(ic);
+            ic.tunnel->destination = std::make_unique<IPv4Address>(std::string(buf));
+          } catch (...) {}
+        }
+      } else if (ifr.ifr_addr.sa_family == AF_INET6) {
+        struct sockaddr_in6 *sin6 = reinterpret_cast<struct sockaddr_in6 *>(&ifr.ifr_addr);
+        char buf[INET6_ADDRSTRLEN] = {0};
+        if (inet_ntop(AF_INET6, &sin6->sin6_addr, buf, sizeof(buf))) {
+          try {
+            if (!ic.tunnel) ic.tunnel = std::make_shared<TunnelConfig>(ic);
+            ic.tunnel->destination = std::make_unique<IPv6Address>(std::string(buf));
+          } catch (...) {}
+        }
+      }
+    }
+
+    close(inet_sock);
+  }
+
+  // Use AF_LOCAL socket for group and status ioctls
+  int local_sock = socket(AF_LOCAL, SOCK_DGRAM, 0);
+  if (local_sock >= 0) {
+    // Interface groups (SIOCGIFGROUP)
+    struct ifgroupreq ifgr;
+    std::memset(&ifgr, 0, sizeof(ifgr));
+    std::strncpy(ifgr.ifgr_name, ic.name.c_str(), IFNAMSIZ - 1);
+    if (ioctl(local_sock, SIOCGIFGROUP, &ifgr) == 0) {
+      size_t len = ifgr.ifgr_len;
+      if (len > 0) {
+        size_t count = len / sizeof(struct ifg_req);
+        struct ifg_req *groups = static_cast<struct ifg_req *>(std::calloc(count, sizeof(struct ifg_req)));
+        if (groups) {
+          ifgr.ifgr_groups = groups;
+          if (ioctl(local_sock, SIOCGIFGROUP, &ifgr) == 0) {
+            for (size_t i = 0; i < count; ++i) {
+              std::string gname(groups[i].ifgrq_group);
+              if (!gname.empty())
+                ic.groups.emplace_back(gname);
+            }
+          }
+          free(groups);
+        }
+      }
+    }
+
+    // Interface status (SIOCGIFSTATUS) to extract ND6 options and other text
+    struct ifstat ifsstat;
+    std::memset(&ifsstat, 0, sizeof(ifsstat));
+    std::strncpy(ifsstat.ifs_name, ic.name.c_str(), IFNAMSIZ - 1);
+    if (ioctl(local_sock, SIOCGIFSTATUS, &ifsstat) == 0) {
+      std::string ascii(ifsstat.ascii);
+      auto npos = ascii.find("nd6 options=");
+      if (npos != std::string::npos) {
+        auto lt = ascii.find('<', npos);
+        auto gt = ascii.find('>', npos);
+        if (lt != std::string::npos && gt != std::string::npos && gt > lt) {
+          ic.nd6_options = ascii.substr(lt + 1, gt - lt - 1);
+        }
+      }
+    }
+    close(local_sock);
+  }
+}
+
 std::vector<InterfaceConfig> SystemConfigurationManager::GetInterfaces(
     const std::optional<VRFConfig> &vrf) const {
   std::vector<InterfaceConfig> out;
@@ -259,7 +361,10 @@ std::vector<InterfaceConfig> SystemConfigurationManager::GetInterfaces(
   }
 
   // Move entries into output vector if they match VRF filter
+  // Populate additional per-interface metadata from system and move entries
   for (auto &kv : map) {
+    // Populate metric, nd6, tunnel endpoints, etc.
+    populateInterfaceMetadata(kv.second);
     if (matches_vrf(kv.second, vrf))
       out.emplace_back(std::move(kv.second));
   }
@@ -274,7 +379,7 @@ SystemConfigurationManager::GetBridgeInterfaces(
   auto bases = GetInterfaces(vrf);
   std::vector<BridgeInterfaceConfig> out;
   for (const auto &ic : bases) {
-    if (ic.type == InterfaceType::Bridge || ic.name.rfind("bridge", 0) == 0) {
+    if (ic.type == InterfaceType::Bridge) {
       BridgeInterfaceConfig bic(ic);
       bic.loadMembers();
       out.emplace_back(std::move(bic));
@@ -288,7 +393,7 @@ std::vector<LaggConfig> SystemConfigurationManager::GetLaggInterfaces(
   auto bases = GetInterfaces(vrf);
   std::vector<LaggConfig> out;
   for (const auto &ic : bases) {
-    if (ic.name.rfind("lagg", 0) == 0) {
+    if (ic.type == InterfaceType::Lagg) {
       LaggConfig lac(ic);
 
       // Attempt to query kernel for LAGG protocol, ports and hash policy
@@ -355,10 +460,9 @@ std::vector<LaggConfig> SystemConfigurationManager::GetLaggInterfaces(
               // std::cerr << "GetLaggInterfaces: lp port[" << i << "] name='" << pname << "' flags=" << ls->rpbuf[i].rp_flags << "\n";
                 if (!pname.empty()) {
                 uint32_t flags = ls->rpbuf[i].rp_flags;
-                std::string lbl = laggPortFlagsLabel(flags);
                 lac.members.emplace_back(pname);
-                lac.member_flags.emplace_back(lbl.empty() ? std::string("-") : lbl);
-                std::cerr << "GetLaggInterfaces: found member '" << pname << "' flags=" << flags << " label='" << lbl << "'\n";
+                lac.member_flag_bits.emplace_back(flags);
+                std::cerr << "GetLaggInterfaces: found member '" << pname << "' flags=" << flags << "\n";
               }
             }
           } else {
@@ -396,8 +500,7 @@ std::vector<LaggConfig> SystemConfigurationManager::GetLaggInterfaces(
               // std::cerr << "GetLaggInterfaces: SIOCGLAGGPORT found port '" << rp.rp_portname
               //           << "' flags=" << rp.rp_flags << " for lagg '" << ic.name << "'\n";
               lac.members.emplace_back(std::string(rp.rp_portname));
-              std::string lbl = laggPortFlagsLabel(rp.rp_flags);
-              lac.member_flags.emplace_back(lbl.empty() ? std::string("-") : lbl);
+              lac.member_flag_bits.emplace_back(rp.rp_flags);
             }
           }
         }
@@ -456,7 +559,7 @@ std::vector<VLANConfig> SystemConfigurationManager::GetVLANInterfaces(
   auto bases = GetInterfaces(vrf);
   std::vector<VLANConfig> out;
   for (const auto &ic : bases) {
-    if (ic.type == InterfaceType::VLAN || ic.name.rfind("vlan", 0) == 0) {
+    if (ic.type == InterfaceType::VLAN) {
       VLANConfig vconf(ic);
 
       // Query kernel for VLAN information using struct vlanreq via ioctl
@@ -556,7 +659,7 @@ std::vector<TunnelConfig> SystemConfigurationManager::GetTunnelInterfaces(
   auto bases = GetInterfaces(vrf);
   std::vector<TunnelConfig> out;
   for (const auto &ic : bases) {
-    if (ic.type == InterfaceType::Tunnel || ic.name.rfind("gif", 0) == 0) {
+    if (ic.type == InterfaceType::Tunnel || ic.type == InterfaceType::Gif || ic.type == InterfaceType::Tun) {
       out.emplace_back(ic);
     }
   }
@@ -569,8 +672,7 @@ SystemConfigurationManager::GetVirtualInterfaces(
   auto bases = GetInterfaces(vrf);
   std::vector<VirtualInterfaceConfig> out;
   for (const auto &ic : bases) {
-    if (ic.type == InterfaceType::Virtual || ic.name.rfind("epair", 0) == 0 ||
-        ic.name.rfind("tap", 0) == 0 || ic.name.rfind("tun", 0) == 0) {
+    if (ic.type == InterfaceType::Virtual || ic.type == InterfaceType::Tun) {
       out.emplace_back(ic);
     }
   }

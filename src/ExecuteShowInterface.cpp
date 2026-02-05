@@ -20,21 +20,23 @@ void netcli::Parser::executeShowInterface(const InterfaceToken &tok,
   }
   std::vector<ConfigData> interfaces;
   if (!tok.name().empty()) {
-    // If the requested name is a bridge, ask for bridge-specific data
-    if (tok.name().rfind("bridge", 0) == 0) {
-      auto brs = mgr->GetBridgeInterfaces();
-      for (auto &b : brs) {
-        if (b.name == tok.name()) {
-          ConfigData cd;
-          cd.iface = std::make_shared<BridgeInterfaceConfig>(std::move(b));
-          interfaces.push_back(std::move(cd));
-          break;
+    // Prefer to query the ConfigurationManager for the named interface
+    auto cdopt = mgr->getInterface(tok.name());
+    if (cdopt) {
+      if (cdopt->iface && cdopt->iface->type == InterfaceType::Bridge) {
+        // Retrieve bridge-specific representation (members, etc.)
+        auto brs = mgr->GetBridgeInterfaces();
+        for (auto &b : brs) {
+          if (b.name == tok.name()) {
+            ConfigData cd;
+            cd.iface = std::make_shared<BridgeInterfaceConfig>(std::move(b));
+            interfaces.push_back(std::move(cd));
+            break;
+          }
         }
-      }
-    } else {
-      auto cdopt = mgr->getInterface(tok.name());
-      if (cdopt)
+      } else {
         interfaces.push_back(std::move(*cdopt));
+      }
     }
   } else if (tok.type() != InterfaceType::Unknown) {
     if (tok.type() == InterfaceType::Bridge) {
@@ -54,7 +56,16 @@ void netcli::Parser::executeShowInterface(const InterfaceToken &tok,
     } else {
       auto allIfaces = mgr->getInterfaces();
       for (auto &iface : allIfaces) {
-        if (iface.iface && iface.iface->type == tok.type())
+        if (!iface.iface)
+          continue;
+        if (tok.type() == InterfaceType::Tunnel || tok.type() == InterfaceType::Gif || tok.type() == InterfaceType::Tun) {
+          if (iface.iface->type == InterfaceType::Tunnel || iface.iface->type == InterfaceType::Gif || iface.iface->type == InterfaceType::Tun) {
+            interfaces.push_back(std::move(iface));
+          }
+          continue;
+        }
+
+        if (iface.iface->type == tok.type())
           interfaces.push_back(std::move(iface));
       }
     }
@@ -83,7 +94,10 @@ void netcli::Parser::executeShowInterface(const InterfaceToken &tok,
       allLagg = false;
     if (cd.iface->type != InterfaceType::VLAN)
       allVlan = false;
-    if (cd.iface->type != InterfaceType::Tunnel)
+    // Treat explicit tunnel-ish interface types as tunnels for formatting
+    if (!(cd.iface->type == InterfaceType::Tunnel ||
+        cd.iface->type == InterfaceType::Gif ||
+        cd.iface->type == InterfaceType::Tun))
       allTunnel = false;
     if (cd.iface->type != InterfaceType::Virtual)
       allVirtual = false;
