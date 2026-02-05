@@ -21,15 +21,14 @@ public:
   LaggConfig(const InterfaceConfig &base);
   LaggConfig(const InterfaceConfig &base, LaggProtocol protocol,
              std::vector<std::string> members,
-             std::optional<std::string> hash_policy,
+             std::optional<uint32_t> hash_policy,
              std::optional<int> lacp_rate, std::optional<int> min_links);
   LaggProtocol protocol =
       LaggProtocol::NONE;           ///< LAGG protocol (LACP, failover, etc.)
   std::vector<std::string> members; ///< Member port names
   std::vector<std::string> member_flags; ///< Per-member flag label (e.g., "MASTER")
   std::vector<uint32_t> member_flag_bits; ///< Per-member raw flag bits from kernel
-  std::optional<std::string>
-      hash_policy;              ///< Hash policy (layer2, layer2+3, layer3+4)
+  std::optional<uint32_t> hash_policy; ///< Hash policy bitmask (L2/L3/L4)
   std::optional<int> lacp_rate; ///< LACP rate: 0=slow (30s), 1=fast (1s)
   std::optional<int> min_links; ///< Minimum number of active links
 

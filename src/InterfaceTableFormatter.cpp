@@ -15,9 +15,11 @@ static std::string interfaceTypeToString(InterfaceType t) {
   case InterfaceType::PointToPoint: return "PointToPoint";
   case InterfaceType::Wireless: return "Wireless";
   case InterfaceType::Bridge: return "Bridge";
+  case InterfaceType::Lagg: return "LinkAggregate";
   case InterfaceType::VLAN: return "VLAN";
   case InterfaceType::PPP: return "PPP";
   case InterfaceType::Tunnel: return "Tunnel";
+  case InterfaceType::Gif: return "GenericTunnel";
   case InterfaceType::FDDI: return "FDDI";
   case InterfaceType::TokenRing: return "TokenRing";
   case InterfaceType::ATM: return "ATM";
@@ -49,9 +51,7 @@ std::string InterfaceTableFormatter::format(
       continue;
     const auto &ic = *cd.iface;
     nameWidth = std::max(nameWidth, ic.name.length());
-    // If the interface type is LAGG, show as "Bond"
-    std::string effectiveType = (ic.type == InterfaceType::Lagg) ? std::string("Bond")
-                                  : interfaceTypeToString(ic.type);
+    std::string effectiveType = interfaceTypeToString(ic.type);
     typeWidth = std::max(typeWidth, effectiveType.length());
     if (ic.address) {
       addrWidth = std::max(addrWidth, ic.address->toString().length());
@@ -110,8 +110,7 @@ std::string InterfaceTableFormatter::format(
       }
     }
 
-    std::string effectiveType = (ic.type == InterfaceType::Lagg) ? std::string("Bond")
-                    : interfaceTypeToString(ic.type);
+    std::string effectiveType = interfaceTypeToString(ic.type);
     oss << std::left << std::setw(nameWidth) << ic.name << std::setw(typeWidth)
       << effectiveType;
 
@@ -133,7 +132,11 @@ std::string InterfaceTableFormatter::format(
     }
 
     if (ic.vrf) {
-      oss << std::setw(vrfWidth) << ic.vrf->name;
+      if (ic.vrf->table) {
+        oss << std::setw(vrfWidth) << *ic.vrf->table;
+      } else {
+        oss << std::setw(vrfWidth) << ic.vrf->name;
+      }
     } else {
       oss << std::setw(vrfWidth) << "-";
     }

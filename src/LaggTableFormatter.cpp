@@ -66,7 +66,7 @@ LaggTableFormatter::format(const std::vector<ConfigData> &interfaces) const {
   size_t flagsWidth = 5;
   size_t statusWidth = 6;
 
-  struct Row { std::string name; std::string proto; std::optional<std::string> hash;
+  struct Row { std::string name; std::string proto; std::optional<uint32_t> hash;
                std::vector<std::string> hash_items; std::vector<std::string> members;
                std::vector<uint32_t> member_flag_bits; std::vector<std::string> member_flags; std::optional<int> mtu;
                std::optional<uint32_t> flags; std::string status; };
@@ -91,16 +91,12 @@ LaggTableFormatter::format(const std::vector<ConfigData> &interfaces) const {
     r.name = ic.name;
     r.proto = protocolToString(laggPtr->protocol);
     r.hash = laggPtr->hash_policy;
-    // split hash policy into items for multiline display
-    if (r.hash && !r.hash->empty()) {
-      std::string tmp = *r.hash;
-      size_t start = 0;
-      while (start < tmp.size()) {
-        size_t pos = tmp.find(',', start);
-        if (pos == std::string::npos) pos = tmp.size();
-        r.hash_items.emplace_back(tmp.substr(start, pos - start));
-        start = pos + 1;
-      }
+    // split hash policy bits into items for multiline display (l2,l3,l4)
+    if (r.hash) {
+      uint32_t m = *r.hash;
+      if (m & LAGG_F_HASHL2) r.hash_items.emplace_back("l2");
+      if (m & LAGG_F_HASHL3) r.hash_items.emplace_back("l3");
+      if (m & LAGG_F_HASHL4) r.hash_items.emplace_back("l4");
     }
     r.members = laggPtr->members;
     // Prefer numeric flag bits when available; keep string labels as fallback.
@@ -121,8 +117,13 @@ LaggTableFormatter::format(const std::vector<ConfigData> &interfaces) const {
 
     nameWidth = std::max(nameWidth, r.name.length());
     protoWidth = std::max(protoWidth, r.proto.length());
-    if (r.hash && !r.hash->empty())
-      hashWidth = std::max(hashWidth, r.hash->length());
+    if (r.hash) {
+      if (!r.hash_items.empty()) {
+        for (const auto &hi : r.hash_items) hashWidth = std::max(hashWidth, hi.length());
+      } else {
+        hashWidth = std::max(hashWidth, size_t(3));
+      }
+    }
     for (const auto &m : r.members)
       membersWidth = std::max(membersWidth, m.length());
     // Compute max width for flags column from either bit labels or existing labels
@@ -178,9 +179,23 @@ LaggTableFormatter::format(const std::vector<ConfigData> &interfaces) const {
       // HashPolicy column: print the ith hash item if present
       if (i < r.hash_items.size())
         oss << std::setw(hashWidth) << r.hash_items[i];
-      else if (i == 0)
-        oss << std::setw(hashWidth) << (r.hash ? *r.hash : std::string("-"));
-      else
+      else if (i == 0) {
+        if (r.hash) {
+          if (!r.hash_items.empty())
+            oss << std::setw(hashWidth) << r.hash_items[0];
+          else {
+            uint32_t m = *r.hash;
+            std::string s;
+            if (m & LAGG_F_HASHL2) s += "l2";
+            if (m & LAGG_F_HASHL3) { if (!s.empty()) s += ","; s += "l3"; }
+            if (m & LAGG_F_HASHL4) { if (!s.empty()) s += ","; s += "l4"; }
+            if (s.empty()) s = "-";
+            oss << std::setw(hashWidth) << s;
+          }
+        } else {
+          oss << std::setw(hashWidth) << "-";
+        }
+      } else
         oss << std::setw(hashWidth) << "";
 
       // Members column

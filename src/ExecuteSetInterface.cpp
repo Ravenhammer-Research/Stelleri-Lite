@@ -3,6 +3,7 @@
 #include "InterfaceConfig.hpp"
 #include "InterfaceToken.hpp"
 #include "LaggConfig.hpp"
+#include "LoopBackConfig.hpp"
 #include "Parser.hpp"
 #include "TunnelConfig.hpp"
 #include "VLANConfig.hpp"
@@ -29,6 +30,18 @@ void netcli::Parser::executeSetInterface(const InterfaceToken &tok,
   try {
     InterfaceConfig base;
     base.name = name;
+
+    // If the token requested a specific VRF/FIB table, apply it to the base
+    if (tok.vrf) {
+      try {
+        int tbl = std::stoi(*tok.vrf);
+        if (!base.vrf) base.vrf = std::make_unique<VRFConfig>();
+        base.vrf->table = tbl;
+        base.vrf->name = std::string("fib") + std::to_string(tbl);
+      } catch (...) {
+        // ignore invalid fib value
+      }
+    }
 
     if (itype == InterfaceType::Bridge) {
       BridgeInterfaceConfig bic(base);
@@ -76,6 +89,24 @@ void netcli::Parser::executeSetInterface(const InterfaceToken &tok,
       tc.save();
       std::cout << "set interface: created tunnel '" << name << "'\n";
       return;
+    }
+
+    if (itype == InterfaceType::Loopback) {
+      // create a minimal loopback interface
+      LoopBackConfig lbc(base);
+      lbc.save();
+      std::cout << "set interface: created loopback '" << name << "'\n";
+      return;
+    }
+
+    // If no explicit type provided, infer from common name prefix (lo*)
+    if (itype == InterfaceType::Unknown) {
+      if (name.rfind("lo", 0) == 0) {
+        LoopBackConfig lbc(base);
+        lbc.save();
+        std::cout << "set interface: created loopback '" << name << "'\n";
+        return;
+      }
     }
 
     if (itype == InterfaceType::Virtual) {

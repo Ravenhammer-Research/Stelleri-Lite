@@ -48,6 +48,11 @@ InterfaceToken::parseFromTokens(const std::vector<std::string> &tokens,
       size_t cur = nnext;
       while (cur < tokens.size()) {
         const std::string &kw = tokens[cur];
+        if (kw == "fib" && cur + 1 < tokens.size()) {
+          tok->vrf = tokens[cur + 1];
+          cur += 2;
+          continue;
+        }
         if (kw == "vlan") {
           ++cur;
           std::optional<uint16_t> vid;
@@ -138,14 +143,18 @@ InterfaceToken::parseFromTokens(const std::vector<std::string> &tokens,
         itype = InterfaceType::Gif;
       else if (type == "tun")
         itype = InterfaceType::Tun;
-      else if (type == "epair")
+      else if (type == "epair" || type == "virtual")
         itype = InterfaceType::Virtual;
 
       if (itype != InterfaceType::Unknown) {
-        // optional name follows
-        if (start + 3 < tokens.size())
-          name = tokens[start + 3];
-        next = start + (name.empty() ? 3 : 4);
+        // optional name follows; allow `name <name>` form as well
+        if (start + 3 < tokens.size()) {
+          if (tokens[start + 3] == "name" && start + 4 < tokens.size())
+            name = tokens[start + 4];
+          else
+            name = tokens[start + 3];
+        }
+        next = start + (name.empty() ? 3 : (tokens[start + 3] == "name" ? 5 : 4));
         std::cerr << "[InterfaceToken] parseFromTokens: consumed 'type '" << b
                   << " starting at " << start
                   << " -> type=" << static_cast<int>(itype) << " name='" << name
@@ -155,6 +164,11 @@ InterfaceToken::parseFromTokens(const std::vector<std::string> &tokens,
         size_t cur = next;
         while (cur < tokens.size()) {
           const std::string &kw = tokens[cur];
+          if (kw == "fib" && cur + 1 < tokens.size()) {
+            tok->vrf = tokens[cur + 1];
+            cur += 2;
+            continue;
+          }
           if (kw == "vlan") {
             // expect: vlan id <num> parent <ifname>
             ++cur;

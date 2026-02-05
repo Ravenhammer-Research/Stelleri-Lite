@@ -7,15 +7,7 @@
 #include <cerrno>
 #include <cstring>
 #include <iostream>
-#if defined(__has_include)
-#if __has_include(<net/if_ether.h>)
-#include <net/if_ether.h>
-#elif __has_include(<net/ethernet.h>)
 #include <net/ethernet.h>
-#endif
-#else
-#include <net/if_ether.h>
-#endif
 #include <net/if.h>
 #include <net/if_lagg.h>
 #include <stdexcept>
@@ -44,7 +36,7 @@ LaggConfig::LaggConfig(const InterfaceConfig &base) {
 
 LaggConfig::LaggConfig(const InterfaceConfig &base, LaggProtocol protocol_,
                        std::vector<std::string> members_,
-                       std::optional<std::string> hash_policy_,
+                       std::optional<uint32_t> hash_policy_,
                        std::optional<int> lacp_rate_,
                        std::optional<int> min_links_) {
   name = base.name;

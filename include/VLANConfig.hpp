@@ -7,6 +7,7 @@
 
 #include "InterfaceConfig.hpp"
 #include "PriorityCodePoint.hpp"
+#include "VLANProto.hpp"
 #include <cstdint>
 #include <optional>
 #include <string>
@@ -29,8 +30,8 @@ public:
   std::optional<std::string>
       parent; ///< Parent interface (e.g., "em0" for em0.100)
   std::optional<PriorityCodePoint> pcp; ///< Priority Code Point (0-7)
-  std::optional<std::string> proto;   ///< VLAN protocol (e.g., "802.1q")
-  std::optional<std::string> options; ///< Interface capability options (comma sep)
+  std::optional<VLANProto> proto;   ///< VLAN protocol as enum
+  std::optional<uint32_t> options_bits; ///< Raw interface capability bits (IFCAP_*)
 
   void save() const override;
 
