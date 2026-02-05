@@ -1,10 +1,11 @@
-#include "AbstractTableFormatter.hpp"
 #include "TapTableFormatter.hpp"
+#include "AbstractTableFormatter.hpp"
 #include "ConfigData.hpp"
 #include "InterfaceConfig.hpp"
 #include <sstream>
 
-std::string TapTableFormatter::format(const std::vector<ConfigData> &items) const {
+std::string
+TapTableFormatter::format(const std::vector<ConfigData> &items) const {
   AbstractTableFormatter atf;
   atf.addColumn("Interface", "Interface", 10, 4, true);
   atf.addColumn("Address", "Address", 5, 7, true);
@@ -16,7 +17,8 @@ std::string TapTableFormatter::format(const std::vector<ConfigData> &items) cons
       continue;
     const auto &ic = *cd.iface;
 
-    // Heuristic: consider interfaces with names starting with "tap" or type Virtual
+    // Heuristic: consider interfaces with names starting with "tap" or type
+    // Virtual
     if (ic.type != InterfaceType::Virtual && ic.name.rfind("tap", 0) != 0)
       continue;
 

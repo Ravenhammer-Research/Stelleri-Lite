@@ -1,5 +1,5 @@
-#include "AbstractTableFormatter.hpp"
 #include "RouteTableFormatter.hpp"
+#include "AbstractTableFormatter.hpp"
 #include "RouteConfig.hpp"
 #include <iomanip>
 #include <sstream>

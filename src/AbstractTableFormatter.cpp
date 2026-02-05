@@ -1,14 +1,13 @@
 #include "AbstractTableFormatter.hpp"
 
 #include <algorithm>
+#include <cctype>
 #include <numeric>
 #include <sstream>
 #include <string>
 #include <vector>
-#include <cctype>
 
-static std::vector<std::string>
-splitLines(const std::string &s) {
+static std::vector<std::string> splitLines(const std::string &s) {
   std::vector<std::string> out;
   std::string line;
   std::istringstream iss(s);
@@ -181,43 +180,48 @@ std::string AbstractTableFormatter::format(int maxWidth) const {
                         columns_[sc].key == "Index");
 
   if (isIndexColumn) {
-    std::stable_sort(sorted_rows.begin(), sorted_rows.end(), [&](
-                         const std::vector<std::string> &a,
-                         const std::vector<std::string> &b) {
-      const std::string &sa = (sc < static_cast<int>(a.size())) ? a[sc]
-                                                                 : std::string();
-      const std::string &sb = (sc < static_cast<int>(b.size())) ? b[sc]
-                                                                 : std::string();
-      auto parseInt = [&](const std::string &s, long long &out) -> bool {
-        if (s.empty() || s == "-")
-          return false;
-        try {
-          size_t pos = 0;
-          out = std::stoll(s, &pos);
-          return pos == s.size();
-        } catch (...) {
-          return false;
-        }
-      };
-      long long ia = 0, ib = 0;
-      bool ha = parseInt(sa, ia);
-      bool hb = parseInt(sb, ib);
-      if (ha && hb)
-        return ia < ib;
-      if (ha && !hb)
-        return true; // numbers come before missing/non-numeric
-      if (!ha && hb)
-        return false;
-      return sa < sb;
-    });
+    std::stable_sort(
+        sorted_rows.begin(), sorted_rows.end(),
+        [&](const std::vector<std::string> &a,
+            const std::vector<std::string> &b) {
+          const std::string &sa =
+              (sc < static_cast<int>(a.size())) ? a[sc] : std::string();
+          const std::string &sb =
+              (sc < static_cast<int>(b.size())) ? b[sc] : std::string();
+          auto parseInt = [&](const std::string &s, long long &out) -> bool {
+            if (s.empty() || s == "-")
+              return false;
+            try {
+              size_t pos = 0;
+              out = std::stoll(s, &pos);
+              return pos == s.size();
+            } catch (...) {
+              return false;
+            }
+          };
+          long long ia = 0, ib = 0;
+          bool ha = parseInt(sa, ia);
+          bool hb = parseInt(sb, ib);
+          if (ha && hb)
+            return ia < ib;
+          if (ha && !hb)
+            return true; // numbers come before missing/non-numeric
+          if (!ha && hb)
+            return false;
+          return sa < sb;
+        });
   } else {
-    std::stable_sort(sorted_rows.begin(), sorted_rows.end(), [&](
-                         const std::vector<std::string> &a,
+    std::stable_sort(sorted_rows.begin(), sorted_rows.end(),
+                     [&](const std::vector<std::string> &a,
                          const std::vector<std::string> &b) {
-      const std::string &sa = (sc < static_cast<int>(a.size())) ? a[sc] : std::string();
-      const std::string &sb = (sc < static_cast<int>(b.size())) ? b[sc] : std::string();
-      return sa < sb;
-    });
+                       const std::string &sa = (sc < static_cast<int>(a.size()))
+                                                   ? a[sc]
+                                                   : std::string();
+                       const std::string &sb = (sc < static_cast<int>(b.size()))
+                                                   ? b[sc]
+                                                   : std::string();
+                       return sa < sb;
+                     });
   }
 
   for (const auto &r : sorted_rows) {

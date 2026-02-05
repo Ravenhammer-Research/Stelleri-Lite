@@ -4,7 +4,8 @@
 
 class SixToFourConfig : public InterfaceConfig {
 public:
-  explicit SixToFourConfig(const InterfaceConfig &base) : InterfaceConfig(base) {}
+  explicit SixToFourConfig(const InterfaceConfig &base)
+      : InterfaceConfig(base) {}
   void save() const override;
   void create() const;
 };

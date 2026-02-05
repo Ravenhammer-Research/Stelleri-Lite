@@ -9,8 +9,8 @@
 #include <netinet/in.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
-#include <unistd.h>
 #include <sys/sockio.h>
+#include <unistd.h>
 
 #include "IPAddress.hpp"
 #include "IPNetwork.hpp"

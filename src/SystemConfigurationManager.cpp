@@ -14,13 +14,13 @@
 #include <net/if_lagg.h>
 #include <net/if_vlan_var.h>
 #include <net/route.h>
+#include <net80211/ieee80211_ioctl.h>
 #include <netinet/in.h>
 #include <optional>
 #include <string>
 #include <string_view>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
-#include <net80211/ieee80211_ioctl.h>
 #include <sys/sockio.h>
 #include <sys/sysctl.h>
 #include <unistd.h>
@@ -515,7 +515,8 @@ static void populateInterfaceMetadata(InterfaceConfig &ic) {
         ic.status = std::string("down");
       }
       if (ic.channel) {
-        ic.media = std::string("IEEE 802.11 channel ") + std::to_string(*ic.channel);
+        ic.media =
+            std::string("IEEE 802.11 channel ") + std::to_string(*ic.channel);
       }
 
       close(s);

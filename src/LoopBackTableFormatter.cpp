@@ -1,5 +1,5 @@
-#include "AbstractTableFormatter.hpp"
 #include "LoopBackTableFormatter.hpp"
+#include "AbstractTableFormatter.hpp"
 #include "ConfigData.hpp"
 #include "InterfaceConfig.hpp"
 #include <iomanip>

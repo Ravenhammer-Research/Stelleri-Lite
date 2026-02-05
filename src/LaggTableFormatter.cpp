@@ -1,5 +1,5 @@
-#include "AbstractTableFormatter.hpp"
 #include "LaggTableFormatter.hpp"
+#include "AbstractTableFormatter.hpp"
 #include "InterfaceConfig.hpp"
 #include "InterfaceFlags.hpp"
 #include "InterfaceType.hpp"
@@ -238,7 +238,8 @@ LaggTableFormatter::format(const std::vector<ConfigData> &interfaces) const {
       flagsCell = flagsToString(*r.flags);
     }
 
-    atf.addRow({r.name, r.proto, hashCell, membersCell, mtuCell, flagsCell, r.status});
+    atf.addRow(
+        {r.name, r.proto, hashCell, membersCell, mtuCell, flagsCell, r.status});
   }
 
   return atf.format(80);

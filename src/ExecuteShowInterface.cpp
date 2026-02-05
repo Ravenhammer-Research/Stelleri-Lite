@@ -1,17 +1,17 @@
 #include "BridgeTableFormatter.hpp"
+#include "CarpTableFormatter.hpp"
 #include "ConfigurationManager.hpp"
 #include "InterfaceTableFormatter.hpp"
 #include "InterfaceToken.hpp"
 #include "LaggTableFormatter.hpp"
 #include "Parser.hpp"
 #include "SingleInterfaceSummaryFormatter.hpp"
+#include "SixToFourTableFormatter.hpp"
+#include "TapTableFormatter.hpp"
 #include "TunnelTableFormatter.hpp"
 #include "VLANTableFormatter.hpp"
 #include "VirtualTableFormatter.hpp"
 #include "WlanTableFormatter.hpp"
-#include "SixToFourTableFormatter.hpp"
-#include "TapTableFormatter.hpp"
-#include "CarpTableFormatter.hpp"
 #include <iomanip>
 #include <iostream>
 #include <sstream>
@@ -46,7 +46,8 @@ void netcli::Parser::executeShowInterface(const InterfaceToken &tok,
     if (tok.type() == InterfaceType::Bridge) {
       auto brs = mgr->GetBridgeInterfaces();
       for (auto &b : brs) {
-        if (tok.group && std::find(b.groups.begin(), b.groups.end(), *tok.group) == b.groups.end())
+        if (tok.group && std::find(b.groups.begin(), b.groups.end(),
+                                   *tok.group) == b.groups.end())
           continue;
         ConfigData cd;
         cd.iface = std::make_shared<BridgeInterfaceConfig>(std::move(b));
@@ -55,7 +56,8 @@ void netcli::Parser::executeShowInterface(const InterfaceToken &tok,
     } else if (tok.type() == InterfaceType::Lagg) {
       auto lgs = mgr->GetLaggInterfaces();
       for (auto &l : lgs) {
-        if (tok.group && std::find(l.groups.begin(), l.groups.end(), *tok.group) == l.groups.end())
+        if (tok.group && std::find(l.groups.begin(), l.groups.end(),
+                                   *tok.group) == l.groups.end())
           continue;
         ConfigData cd;
         cd.iface = std::make_shared<LaggConfig>(std::move(l));
@@ -64,16 +66,20 @@ void netcli::Parser::executeShowInterface(const InterfaceToken &tok,
     } else if (tok.type() == InterfaceType::VLAN) {
       auto vls = mgr->GetVLANInterfaces();
       for (auto &v : vls) {
-        if (tok.group && std::find(v.groups.begin(), v.groups.end(), *tok.group) == v.groups.end())
+        if (tok.group && std::find(v.groups.begin(), v.groups.end(),
+                                   *tok.group) == v.groups.end())
           continue;
         ConfigData cd;
         cd.iface = std::make_shared<VLANConfig>(std::move(v));
         interfaces.push_back(std::move(cd));
       }
-    } else if (tok.type() == InterfaceType::Tunnel || tok.type() == InterfaceType::Gif || tok.type() == InterfaceType::Tun) {
+    } else if (tok.type() == InterfaceType::Tunnel ||
+               tok.type() == InterfaceType::Gif ||
+               tok.type() == InterfaceType::Tun) {
       auto tfs = mgr->GetTunnelInterfaces();
       for (auto &t : tfs) {
-        if (tok.group && std::find(t.groups.begin(), t.groups.end(), *tok.group) == t.groups.end())
+        if (tok.group && std::find(t.groups.begin(), t.groups.end(),
+                                   *tok.group) == t.groups.end())
           continue;
         ConfigData cd;
         cd.iface = std::make_shared<TunnelConfig>(std::move(t));
@@ -82,14 +88,16 @@ void netcli::Parser::executeShowInterface(const InterfaceToken &tok,
     } else if (tok.type() == InterfaceType::Virtual) {
       auto vifs = mgr->GetVirtualInterfaces();
       for (auto &v : vifs) {
-        if (tok.group && std::find(v.groups.begin(), v.groups.end(), *tok.group) == v.groups.end())
+        if (tok.group && std::find(v.groups.begin(), v.groups.end(),
+                                   *tok.group) == v.groups.end())
           continue;
         ConfigData cd;
         cd.iface = std::make_shared<VirtualInterfaceConfig>(std::move(v));
         interfaces.push_back(std::move(cd));
       }
     } else {
-      // Fallback: inspect all interfaces and select those matching type and group
+      // Fallback: inspect all interfaces and select those matching type and
+      // group
       auto allIfaces = mgr->getInterfaces();
       for (auto &iface : allIfaces) {
         if (!iface.iface)
@@ -105,8 +113,12 @@ void netcli::Parser::executeShowInterface(const InterfaceToken &tok,
           if (!has)
             continue;
         }
-        if (tok.type() == InterfaceType::Tunnel || tok.type() == InterfaceType::Gif || tok.type() == InterfaceType::Tun) {
-          if (iface.iface->type == InterfaceType::Tunnel || iface.iface->type == InterfaceType::Gif || iface.iface->type == InterfaceType::Tun) {
+        if (tok.type() == InterfaceType::Tunnel ||
+            tok.type() == InterfaceType::Gif ||
+            tok.type() == InterfaceType::Tun) {
+          if (iface.iface->type == InterfaceType::Tunnel ||
+              iface.iface->type == InterfaceType::Gif ||
+              iface.iface->type == InterfaceType::Tun) {
             interfaces.push_back(std::move(iface));
           }
           continue;
@@ -175,15 +187,22 @@ void netcli::Parser::executeShowInterface(const InterfaceToken &tok,
       allWlan = false;
     // SixToFour heuristics: treat tunnel-like interfaces whose name begins with
     // gif/stf/sit as six-to-four style
-    if (!(cd.iface->type == InterfaceType::Tunnel || cd.iface->type == InterfaceType::Gif || cd.iface->type == InterfaceType::Tun))
+    if (!(cd.iface->type == InterfaceType::Tunnel ||
+          cd.iface->type == InterfaceType::Gif ||
+          cd.iface->type == InterfaceType::Tun))
       allSixToFour = false;
-    if (!(cd.iface->name.rfind("gif", 0) == 0 || cd.iface->name.rfind("stf", 0) == 0 || cd.iface->name.rfind("sit",0)==0))
+    if (!(cd.iface->name.rfind("gif", 0) == 0 ||
+          cd.iface->name.rfind("stf", 0) == 0 ||
+          cd.iface->name.rfind("sit", 0) == 0))
       allSixToFour = false;
     // Tap heuristics: name starts with "tap" or treated as virtual
-    if (cd.iface->type != InterfaceType::Virtual && cd.iface->name.rfind("tap", 0) != 0)
+    if (cd.iface->type != InterfaceType::Virtual &&
+        cd.iface->name.rfind("tap", 0) != 0)
       allTap = false;
     // CARP heuristics: name starts with carp/ vh or virtual
-    if (cd.iface->name.rfind("carp", 0) != 0 && cd.iface->name.rfind("vh", 0) != 0 && cd.iface->type != InterfaceType::Virtual)
+    if (cd.iface->name.rfind("carp", 0) != 0 &&
+        cd.iface->name.rfind("vh", 0) != 0 &&
+        cd.iface->type != InterfaceType::Virtual)
       allCarp = false;
   }
 

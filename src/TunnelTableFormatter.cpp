@@ -1,5 +1,5 @@
-#include "AbstractTableFormatter.hpp"
 #include "TunnelTableFormatter.hpp"
+#include "AbstractTableFormatter.hpp"
 #include "InterfaceConfig.hpp"
 #include "InterfaceFlags.hpp"
 #include "InterfaceType.hpp"
@@ -86,7 +86,8 @@ TunnelTableFormatter::format(const std::vector<ConfigData> &interfaces) const {
     if (ic.nd6_options)
       nd6Cell = *ic.nd6_options;
 
-    atf.addRow({ic.name, source, destination, flagsStr, metricStr, mtuStr, groupsCell, fibStr, tunnelFibStr, nd6Cell});
+    atf.addRow({ic.name, source, destination, flagsStr, metricStr, mtuStr,
+                groupsCell, fibStr, tunnelFibStr, nd6Cell});
   }
 
   auto out = atf.format(80);

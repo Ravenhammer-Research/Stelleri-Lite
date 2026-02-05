@@ -1,5 +1,5 @@
-#include "AbstractTableFormatter.hpp"
 #include "BridgeTableFormatter.hpp"
+#include "AbstractTableFormatter.hpp"
 #include "BridgeInterfaceConfig.hpp"
 #include "InterfaceConfig.hpp"
 #include "InterfaceFlags.hpp"
@@ -30,13 +30,16 @@ BridgeTableFormatter::format(const std::vector<ConfigData> &interfaces) const {
       continue;
 
     const auto &ic = *cd.iface;
-    const auto *br = dynamic_cast<const BridgeInterfaceConfig *>(cd.iface.get());
+    const auto *br =
+        dynamic_cast<const BridgeInterfaceConfig *>(cd.iface.get());
 
     std::string stp = (br && br->stp) ? "yes" : "no";
     std::string vlanf = (br && br->vlanFiltering) ? "yes" : "no";
-    std::string prio = (br && br->priority) ? std::to_string(*br->priority) : std::string("-");
+    std::string prio =
+        (br && br->priority) ? std::to_string(*br->priority) : std::string("-");
     std::string mtu = ic.mtu ? std::to_string(*ic.mtu) : std::string("-");
-    std::string flags = (ic.flags ? flagsToString(*ic.flags) : std::string("-"));
+    std::string flags =
+        (ic.flags ? flagsToString(*ic.flags) : std::string("-"));
 
     std::string membersCell = "-";
     if (br && !br->members.empty()) {

@@ -1,10 +1,11 @@
-#include "AbstractTableFormatter.hpp"
 #include "SixToFourTableFormatter.hpp"
+#include "AbstractTableFormatter.hpp"
 #include "ConfigData.hpp"
 #include "InterfaceConfig.hpp"
 #include <sstream>
 
-std::string SixToFourTableFormatter::format(const std::vector<ConfigData> &items) const {
+std::string
+SixToFourTableFormatter::format(const std::vector<ConfigData> &items) const {
   AbstractTableFormatter atf;
   atf.addColumn("Interface", "Interface", 10, 4, true);
   atf.addColumn("Address", "Address", 5, 7, true);
@@ -16,10 +17,12 @@ std::string SixToFourTableFormatter::format(const std::vector<ConfigData> &items
       continue;
     const auto &ic = *cd.iface;
 
-    // Heuristic: treat Tunnel-type interfaces whose name starts with "gif" or "stf" as 6to4/SIT-like
+    // Heuristic: treat Tunnel-type interfaces whose name starts with "gif" or
+    // "stf" as 6to4/SIT-like
     if (ic.type != InterfaceType::Tunnel && ic.type != InterfaceType::Gif)
       continue;
-    if (!(ic.name.rfind("gif", 0) == 0 || ic.name.rfind("stf", 0) == 0 || ic.name.rfind("sit",0)==0))
+    if (!(ic.name.rfind("gif", 0) == 0 || ic.name.rfind("stf", 0) == 0 ||
+          ic.name.rfind("sit", 0) == 0))
       continue;
 
     std::vector<std::string> addrs;

@@ -1,10 +1,11 @@
-#include "AbstractTableFormatter.hpp"
 #include "CarpTableFormatter.hpp"
+#include "AbstractTableFormatter.hpp"
 #include "ConfigData.hpp"
 #include "InterfaceConfig.hpp"
 #include <sstream>
 
-std::string CarpTableFormatter::format(const std::vector<ConfigData> &items) const {
+std::string
+CarpTableFormatter::format(const std::vector<ConfigData> &items) const {
   AbstractTableFormatter atf;
   atf.addColumn("Interface", "Interface", 10, 4, true);
   atf.addColumn("Address", "Address", 5, 7, true);
@@ -16,8 +17,10 @@ std::string CarpTableFormatter::format(const std::vector<ConfigData> &items) con
       continue;
     const auto &ic = *cd.iface;
 
-    // Heuristic: CARP interfaces often start with "carp" or "vh"; treat virtual types too
-    if (ic.name.rfind("carp", 0) != 0 && ic.name.rfind("vh", 0) != 0 && ic.type != InterfaceType::Virtual)
+    // Heuristic: CARP interfaces often start with "carp" or "vh"; treat virtual
+    // types too
+    if (ic.name.rfind("carp", 0) != 0 && ic.name.rfind("vh", 0) != 0 &&
+        ic.type != InterfaceType::Virtual)
       continue;
 
     std::vector<std::string> addrs;

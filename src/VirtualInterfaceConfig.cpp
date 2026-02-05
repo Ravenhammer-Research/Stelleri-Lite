@@ -5,10 +5,10 @@
 #include <iostream>
 #include <net/if.h>
 #include <net/if_clone.h>
-#include <sys/linker.h>
-#include <string>
 #include <stdexcept>
+#include <string>
 #include <sys/ioctl.h>
+#include <sys/linker.h>
 #include <sys/socket.h>
 #include <unistd.h>
 
@@ -93,8 +93,8 @@ void VirtualInterfaceConfig::create() const {
       std::strncpy(tmp_ifr.ifr_name, "epair", IFNAMSIZ - 1);
       if (ioctl(sock, SIOCIFCREATE2, &tmp_ifr) < 0) {
         int e = errno;
-        std::cerr << "debug: SIOCIFCREATE2('epair') failed: errno=" << e
-                  << " (" << strerror(e) << ")\n";
+        std::cerr << "debug: SIOCIFCREATE2('epair') failed: errno=" << e << " ("
+                  << strerror(e) << ")\n";
 
         // Try to load the if_epair kernel module and retry once.
         auto try_load_and_retry = [&]() -> bool {
@@ -102,7 +102,8 @@ void VirtualInterfaceConfig::create() const {
             return false; // already found but create failed
           int kid = kldload("if_epair.ko");
           if (kid == -1) {
-            std::cerr << "debug: kldload(if_epair.ko) failed: " << strerror(errno) << "\n";
+            std::cerr << "debug: kldload(if_epair.ko) failed: "
+                      << strerror(errno) << "\n";
             return false;
           }
           // retry create
@@ -110,7 +111,9 @@ void VirtualInterfaceConfig::create() const {
           std::strncpy(tmp_ifr.ifr_name, "epair", IFNAMSIZ - 1);
           if (ioctl(sock, SIOCIFCREATE2, &tmp_ifr) == 0)
             return true;
-          std::cerr << "debug: SIOCIFCREATE2('epair') retry after kldload failed: " << strerror(errno) << "\n";
+          std::cerr
+              << "debug: SIOCIFCREATE2('epair') retry after kldload failed: "
+              << strerror(errno) << "\n";
           return false;
         };
 
@@ -134,7 +137,8 @@ void VirtualInterfaceConfig::create() const {
       // use it as-is; otherwise append 'a'/'b'.
       std::string targetBase = nm;
       // If requested name ends with letter a/b, strip it (we'll append later)
-      if (!targetBase.empty() && (targetBase.back() == 'a' || targetBase.back() == 'b'))
+      if (!targetBase.empty() &&
+          (targetBase.back() == 'a' || targetBase.back() == 'b'))
         targetBase.pop_back();
 
       std::string srcPeerA = created;

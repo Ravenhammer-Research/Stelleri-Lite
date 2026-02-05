@@ -1,5 +1,5 @@
-#include "AbstractTableFormatter.hpp"
 #include "InterfaceTableFormatter.hpp"
+#include "AbstractTableFormatter.hpp"
 #include "InterfaceConfig.hpp"
 #include "InterfaceFlags.hpp"
 #include "InterfaceType.hpp"
@@ -108,7 +108,8 @@ std::string InterfaceTableFormatter::format(
         vrfCell = ic.vrf->name;
     }
 
-    std::string flagsCell = ic.flags ? flagsToString(*ic.flags) : std::string("-");
+    std::string flagsCell =
+        ic.flags ? flagsToString(*ic.flags) : std::string("-");
 
     std::string groupCell = "-";
     if (!ic.groups.empty()) {
@@ -135,8 +136,8 @@ std::string InterfaceTableFormatter::format(
     if (ic.index)
       indexCell = B + std::to_string(*ic.index) + R;
 
-    atf.addRow({indexCell, ic.name, groupCell, interfaceTypeToString(ic.type), addrCell, status,
-                mtuCell, vrfCell, flagsCell});
+    atf.addRow({indexCell, ic.name, groupCell, interfaceTypeToString(ic.type),
+                addrCell, status, mtuCell, vrfCell, flagsCell});
   }
 
   // Sort by index numeric ascending by default

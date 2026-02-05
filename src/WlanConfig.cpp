@@ -13,7 +13,8 @@ void WlanConfig::create() const {
 
   int sock = socket(AF_INET, SOCK_DGRAM, 0);
   if (sock < 0) {
-    throw std::runtime_error("Failed to create socket: " + std::string(strerror(errno)));
+    throw std::runtime_error("Failed to create socket: " +
+                             std::string(strerror(errno)));
   }
 
   struct ifreq ifr;
@@ -23,7 +24,8 @@ void WlanConfig::create() const {
   if (ioctl(sock, SIOCIFCREATE, &ifr) < 0) {
     int err = errno;
     close(sock);
-    throw std::runtime_error("Failed to create interface '" + name + "': " + std::string(strerror(err)));
+    throw std::runtime_error("Failed to create interface '" + name +
+                             "': " + std::string(strerror(err)));
   }
 
   close(sock);

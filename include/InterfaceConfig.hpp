@@ -52,16 +52,16 @@ public:
   std::vector<std::string> groups; ///< Interface groups
   std::optional<int> mtu;          ///< Maximum Transmission Unit
   std::optional<int> metric;       ///< Interface metric (if available)
-   std::optional<int> index;        ///< Interface numeric index (if available)
+  std::optional<int> index;        ///< Interface numeric index (if available)
   std::optional<std::string> nd6_options; ///< ND6 options string (if available)
   // Wireless-specific attributes (populated for IEEE80211/WLAN interfaces)
-  std::optional<std::string> ssid;   ///< Connected SSID (if any)
-  std::optional<int> channel;        ///< Channel number (if known)
-  std::optional<std::string> bssid;  ///< BSSID (MAC) of associated AP
-  std::optional<std::string> parent; ///< Parent device (e.g., rtwn0)
+  std::optional<std::string> ssid;     ///< Connected SSID (if any)
+  std::optional<int> channel;          ///< Channel number (if known)
+  std::optional<std::string> bssid;    ///< BSSID (MAC) of associated AP
+  std::optional<std::string> parent;   ///< Parent device (e.g., rtwn0)
   std::optional<std::string> authmode; ///< Auth mode string (WPA2, etc.)
   std::optional<std::string> media;    ///< Media description (IEEE 802.11 ...)
-  std::optional<std::string> status;   ///< User-visible status (associated/down)
+  std::optional<std::string> status; ///< User-visible status (associated/down)
   // Type-specific payloads (nullable)
   std::shared_ptr<BridgeInterfaceConfig> bridge;
   std::shared_ptr<LaggConfig> lagg;

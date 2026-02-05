@@ -40,7 +40,8 @@ InterfaceToken::parseFromTokens(const std::vector<std::string> &tokens,
     if (a == "group") {
       std::string grp = b;
       size_t nnext = start + 3;
-      auto tok = std::make_shared<InterfaceToken>(InterfaceType::Unknown, std::string());
+      auto tok = std::make_shared<InterfaceToken>(InterfaceType::Unknown,
+                                                  std::string());
       tok->group = grp;
       next = nnext;
       return tok;
