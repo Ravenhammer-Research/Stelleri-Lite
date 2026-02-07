@@ -5,6 +5,7 @@
 #include <iomanip>
 #include <iostream>
 #include <sstream>
+#include <algorithm>
 
 void netcli::Parser::executeShowRoute(const RouteToken &tok,
                                       ConfigurationManager *mgr) const {
@@ -12,14 +13,44 @@ void netcli::Parser::executeShowRoute(const RouteToken &tok,
     std::cout << "No ConfigurationManager provided\n";
     return;
   }
+  // If a VRF token was provided, build a VRFConfig to request routes from
+  // that routing table. Otherwise request global routes.
+  std::optional<VRFConfig> vrfOpt = std::nullopt;
+  if (tok.vrf) {
+    VRFConfig v;
+    std::string nm = tok.vrf->name();
+    // If the VRF token is numeric, treat it as a FIB/table id.
+    bool isnumeric = !nm.empty() &&
+                     std::all_of(nm.begin(), nm.end(), [](char c) {
+                       return c >= '0' && c <= '9';
+                     });
+    if (isnumeric) {
+      int t = std::stoi(nm);
+      v.table = t;
+      v.name = std::string("fib") + std::to_string(t);
+    } else {
+      v.name = nm;
+    }
+    vrfOpt = std::move(v);
+  }
+
   std::vector<ConfigData> routes;
+  // Retrieve RouteConfig entries for the requested VRF (or global) and
+  // convert them into ConfigData for the formatter.
+  auto routeConfs = mgr->GetRoutes(vrfOpt);
   if (tok.prefix().empty()) {
-    routes = mgr->getRoutes();
+    routes.reserve(routeConfs.size());
+    for (auto &rc : routeConfs) {
+      ConfigData cd;
+      cd.route = std::make_shared<RouteConfig>(std::move(rc));
+      routes.push_back(std::move(cd));
+    }
   } else {
-    auto allRoutes = mgr->getRoutes();
-    for (auto &r : allRoutes) {
-      if (r.route && r.route->prefix == tok.prefix()) {
-        routes.push_back(std::move(r));
+    for (auto &rc : routeConfs) {
+      if (rc.prefix == tok.prefix()) {
+        ConfigData cd;
+        cd.route = std::make_shared<RouteConfig>(std::move(rc));
+        routes.push_back(std::move(cd));
         break;
       }
     }

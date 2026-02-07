@@ -1,11 +1,10 @@
 #pragma once
 
-#include "BlackholeToken.hpp"
+#include "ConfigurationManager.hpp"
 #include "ConfigurationManager.hpp"
 #include "IPAddress.hpp"
 #include "IPNetwork.hpp"
 #include "InterfaceToken.hpp"
-#include "RejectToken.hpp"
 #include "Token.hpp"
 #include "VRFToken.hpp"
 #include <iomanip>
@@ -26,8 +25,6 @@ public:
   std::unique_ptr<InterfaceToken> interface;
   std::unique_ptr<VRFToken>
       vrf; // only the id/name is completable in this context
-  std::unique_ptr<BlackholeToken> blackhole_token;
-  std::unique_ptr<RejectToken> reject_token;
   bool blackhole = false; // Kept for backward compatibility
   bool reject = false;    // Kept for backward compatibility
 

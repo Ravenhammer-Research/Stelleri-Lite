@@ -10,7 +10,6 @@
 #include <sstream>
 
 namespace netcli {
-
   std::vector<std::string> Parser::tokenize(const std::string &line) const {
     std::vector<std::string> out;
     std::istringstream iss(line);
@@ -51,18 +50,12 @@ namespace netcli {
       auto itok = InterfaceToken::parseFromTokens(tokens, idx, next);
       if (itok)
         cmd->addToken(itok);
-    } else if (target == "route") {
-      if (idx + 1 < tokens.size()) {
-        auto rt = std::make_shared<RouteToken>(tokens[idx + 1]);
-        // parse options starting after prefix
-        rt->parseOptions(tokens, idx + 2);
-        cmd->addToken(rt);
-      }
     } else if (target == "route" || target == "routes") {
       if (idx + 1 < tokens.size()) {
+        // Pass the next token as the potential prefix to the RouteToken and
+        // let the token decide whether it's an actual prefix or an option.
         auto rt = std::make_shared<RouteToken>(tokens[idx + 1]);
-        // parse options starting after prefix
-        rt->parseOptions(tokens, idx + 2);
+        rt->parseOptions(tokens, idx + 1);
         cmd->addToken(rt);
       } else {
         // support `show routes` with no prefix

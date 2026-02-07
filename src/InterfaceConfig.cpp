@@ -167,43 +167,7 @@ void InterfaceConfig::configureAddresses(int sock, struct ifreq &ifr) const {
                     << strerror(errno) << "\n";
         }
 
-        // set netmask if provided
-        if (v4->mask() < 32) {
-          uint32_t maskval =
-              (v4->mask() == 0) ? 0u : (~0u << (32 - v4->mask()));
-          struct sockaddr_in mask;
-          std::memset(&mask, 0, sizeof(mask));
-          mask.sin_len = sizeof(mask);
-          mask.sin_family = AF_INET;
-          mask.sin_addr.s_addr = htonl(maskval);
-          struct ifreq mifr;
-          std::memset(&mifr, 0, sizeof(mifr));
-          std::strncpy(mifr.ifr_name, name.c_str(), IFNAMSIZ - 1);
-          std::memcpy(&mifr.ifr_addr, &mask, sizeof(mask));
-          if (ioctl(sock, SIOCSIFNETMASK, &mifr) < 0) {
-            std::cerr << "Warning: SIOCSIFNETMASK failed for " << name << ": "
-                      << strerror(errno) << "\n";
-          }
-        }
-
-        // /31 peer -> set dstaddr
-        if (v4->mask() == 31) {
-          uint32_t host = v4addr->value();
-          uint32_t peer = host ^ 1u;
-          struct ifreq pfr;
-          std::memset(&pfr, 0, sizeof(pfr));
-          std::strncpy(pfr.ifr_name, name.c_str(), IFNAMSIZ - 1);
-          struct sockaddr_in dst;
-          std::memset(&dst, 0, sizeof(dst));
-          dst.sin_len = sizeof(dst);
-          dst.sin_family = AF_INET;
-          dst.sin_addr.s_addr = htonl(peer);
-          std::memcpy(&pfr.ifr_dstaddr, &dst, sizeof(dst));
-          if (ioctl(sock, SIOCSIFDSTADDR, &pfr) < 0) {
-            std::cerr << "Warning: SIOCSIFDSTADDR failed for " << name << ": "
-                      << strerror(errno) << "\n";
-          }
-        }
+        // (netmask and /31 destination handling intentionally omitted)
       }
     }
   }
@@ -252,8 +216,8 @@ void InterfaceConfig::configureAddresses(int sock, struct ifreq &ifr) const {
     broad.sin_addr.s_addr = htonl(bcast);
     std::memcpy(&iar.ifra_broadaddr, &broad, sizeof(broad));
 
-    if (ioctl(sock, SIOCAIFADDR, &iar) < 0) {
-      // fallback to set addr/netmask (and dst for /31)
+      if (ioctl(sock, SIOCAIFADDR, &iar) < 0) {
+      // fallback to set addr only; netmask and /31 dst handling intentionally omitted
       struct ifreq rifr;
       std::memset(&rifr, 0, sizeof(rifr));
       std::strncpy(rifr.ifr_name, name.c_str(), IFNAMSIZ - 1);
@@ -262,30 +226,6 @@ void InterfaceConfig::configureAddresses(int sock, struct ifreq &ifr) const {
         std::cerr << "Warning: SIOCSIFADDR failed when adding alias to " << name
                   << ": " << strerror(errno) << "\n";
         continue;
-      }
-      if (a4net->mask() < 32) {
-        struct ifreq mifr;
-        std::memset(&mifr, 0, sizeof(mifr));
-        std::strncpy(mifr.ifr_name, name.c_str(), IFNAMSIZ - 1);
-        std::memcpy(&mifr.ifr_addr, &mask, sizeof(mask));
-        if (ioctl(sock, SIOCSIFNETMASK, &mifr) < 0) {
-          std::cerr << "Warning: SIOCSIFNETMASK failed when adding alias to "
-                    << name << ": " << strerror(errno) << "\n";
-          continue;
-        }
-      }
-      if (a4net->mask() == 31) {
-        uint32_t peer = host ^ 1u;
-        struct ifreq pfr;
-        std::memset(&pfr, 0, sizeof(pfr));
-        std::strncpy(pfr.ifr_name, name.c_str(), IFNAMSIZ - 1);
-        struct sockaddr_in dst;
-        std::memset(&dst, 0, sizeof(dst));
-        dst.sin_len = sizeof(dst);
-        dst.sin_family = AF_INET;
-        dst.sin_addr.s_addr = htonl(peer);
-        std::memcpy(&pfr.ifr_dstaddr, &dst, sizeof(dst));
-        ioctl(sock, SIOCSIFDSTADDR, &pfr);
       }
     }
   }

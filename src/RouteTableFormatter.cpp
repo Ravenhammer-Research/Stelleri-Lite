@@ -3,6 +3,8 @@
 #include "RouteConfig.hpp"
 #include <iomanip>
 #include <sstream>
+#include <sys/socket.h>
+#include <net/route.h>
 
 std::string
 RouteTableFormatter::format(const std::vector<ConfigData> &routes) const {
@@ -19,6 +21,8 @@ RouteTableFormatter::format(const std::vector<ConfigData> &routes) const {
   atf.addColumn("Gateway", "Gateway", 6, 7, true);
   atf.addColumn("Interface", "Interface", 6, 4, true);
   atf.addColumn("Flags", "Flags", 3, 2, true);
+  atf.addColumn("Scope", "Scope", 5, 6, true);
+  atf.addColumn("Expire", "Expire", 6, 8, true);
 
   for (const auto &cd : routes) {
     if (!cd.route)
@@ -28,20 +32,48 @@ RouteTableFormatter::format(const std::vector<ConfigData> &routes) const {
     std::string dest = route.prefix.empty() ? "-" : route.prefix;
     std::string gateway = route.nexthop.value_or("-");
     std::string iface = route.iface.value_or("-");
+    std::string scope = route.scope.value_or("-");
+    std::string expire = "-";
+    if (route.expire)
+      expire = std::to_string(*route.expire);
+
+    // Build flags in netstat order: U G H S B R (plain letters — legend is bold)
     std::string flags;
+    if (route.flags & RTF_UP)
+      flags += "U";
+    if (route.flags & RTF_GATEWAY)
+      flags += "G";
+    if (route.flags & RTF_HOST)
+      flags += "H";
+    if (route.flags & RTF_STATIC)
+      flags += "S";
     if (route.blackhole)
       flags += "B";
     if (route.reject)
       flags += "R";
-    if (!route.nexthop)
-      flags += "C"; // Connected
-    else if (!route.blackhole && !route.reject)
-      flags += "UG"; // Up, Gateway
 
-    atf.addRow({dest, gateway, iface, flags});
+    atf.addRow({dest, gateway, iface, flags, scope, expire});
   }
 
-  auto out = std::string("Routes (FIB: ") + vrfContext + ")\n\n";
+  // Display VRF header: if kernel reported a fib name like "fibN", show
+  // numeric VRF id. Treat global as VRF 0.
+  std::string vrfLabel;
+  if (vrfContext.rfind("fib", 0) == 0) {
+    std::string num = vrfContext.substr(3);
+    vrfLabel = std::string("VRF: ") + num;
+  } else if (vrfContext == "Global") {
+    vrfLabel = std::string("VRF: 0");
+  } else {
+    vrfLabel = std::string("VRF: ") + vrfContext;
+  }
+  auto out = std::string("Routes (") + vrfLabel + ")\n\n";
+  // Legend for route flags (abbrev letters are bold)
+  out += std::string("Flags: ") + "\x1b[1mU\x1b[0m=up, " +
+         "\x1b[1mG\x1b[0m=gateway, " +
+         "\x1b[1mH\x1b[0m=host, " +
+         "\x1b[1mS\x1b[0m=static, " +
+         "\x1b[1mB\x1b[0m=blackhole, " +
+         "\x1b[1mR\x1b[0m=reject\n\n";
   out += atf.format(80);
   return out;
 }

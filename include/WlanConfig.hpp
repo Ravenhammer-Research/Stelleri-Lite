@@ -1,6 +1,7 @@
 #pragma once
 
 #include "InterfaceConfig.hpp"
+#include "WlanAuthMode.hpp"
 
 class WlanConfig : public InterfaceConfig {
 public:
@@ -12,7 +13,7 @@ public:
   std::optional<int> channel;
   std::optional<std::string> bssid;
   std::optional<std::string> parent;
-  std::optional<std::string> authmode;
+  std::optional<WlanAuthMode> authmode;
   std::optional<std::string> media;
   std::optional<std::string> status;
   // Copy constructor from another WlanConfig

@@ -3,6 +3,7 @@
 #include "ConfigData.hpp"
 #include "InterfaceConfig.hpp"
 #include "WlanConfig.hpp"
+#include "WlanAuthMode.hpp"
 #include <sstream>
 
 std::string
@@ -13,6 +14,7 @@ WlanTableFormatter::format(const std::vector<ConfigData> &items) const {
   atf.addColumn("Channel", "Chan", 6, 3, true);
   atf.addColumn("Parent", "Parent", 10, 6, true);
   atf.addColumn("Status", "Status", 10, 6, true);
+  atf.addColumn("Auth", "Auth", 6, 4, true);
   atf.addColumn("Address", "Address", 5, 7, true);
   atf.addColumn("MTU", "MTU", 6, 6, true);
 
@@ -44,6 +46,7 @@ WlanTableFormatter::format(const std::vector<ConfigData> &items) const {
     std::string ssid = "-";
     std::string channel = "-";
     std::string parent = "-";
+    std::string auth = "-";
     // If this InterfaceConfig is actually a WlanConfig, read wireless fields
     if (auto w = dynamic_cast<const WlanConfig *>(&ic)) {
       if (w->status)
@@ -59,6 +62,8 @@ WlanTableFormatter::format(const std::vector<ConfigData> &items) const {
       ssid = w->ssid ? *w->ssid : std::string("-");
       channel = w->channel ? std::to_string(*w->channel) : std::string("-");
       parent = w->parent ? *w->parent : std::string("-");
+      if (w->authmode)
+        auth = WlanAuthModeToString(*w->authmode);
     } else {
       if (ic.flags) {
         if (*ic.flags & IFF_RUNNING)
@@ -70,7 +75,7 @@ WlanTableFormatter::format(const std::vector<ConfigData> &items) const {
       }
     }
 
-    atf.addRow({ssid, channel, parent, status, ic.name, addrCell, mtu});
+    atf.addRow({ssid, channel, parent, status, auth, ic.name, addrCell, mtu});
   }
 
   return atf.format(80);

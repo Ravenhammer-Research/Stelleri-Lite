@@ -16,10 +16,6 @@ std::unique_ptr<Token> RouteToken::clone() const {
     r->interface = std::make_unique<InterfaceToken>(*interface);
   if (vrf)
     r->vrf = std::make_unique<VRFToken>(*vrf);
-  if (blackhole_token)
-    r->blackhole_token = std::make_unique<BlackholeToken>(*blackhole_token);
-  if (reject_token)
-    r->reject_token = std::make_unique<RejectToken>(*reject_token);
   r->blackhole = blackhole;
   r->reject = reject;
   return r;
@@ -43,6 +39,27 @@ void RouteToken::debugOutput(std::ostream &os) const {
 size_t RouteToken::parseOptions(const std::vector<std::string> &tokens,
                                 size_t start) {
   size_t j = start;
+
+  // Determine whether the provided `prefix_` is actually a network prefix or
+  // whether the next token(s) are option keywords. If `prefix_` parses as a
+  // network, treat it as the prefix and begin option parsing after it. If
+  // `prefix_` does not parse as a network (for example it equals "vrf"),
+  // clear it and treat the next tokens as options.
+  if (!prefix_.empty()) {
+    if (IPNetwork::fromString(prefix_)) {
+      // prefix_ looks like a network; skip the token at `start` (caller
+      // passed the prefix as tokens[start]).
+      if (start < tokens.size() && tokens[start] == prefix_)
+        j = start + 1;
+      else
+        j = start + 1; // still advance past the presumed prefix
+    } else {
+      // prefix_ is not a network (likely an option keyword); clear it and
+      // start parsing options from `start`.
+      prefix_.clear();
+      j = start;
+    }
+  }
   while (j < tokens.size()) {
     const auto &opt = tokens[j];
     if (opt == "next-hop" && j + 1 < tokens.size()) {
@@ -70,13 +87,13 @@ size_t RouteToken::parseOptions(const std::vector<std::string> &tokens,
     }
     if (opt == "blackhole") {
       blackhole = true;
-      blackhole_token = std::make_unique<BlackholeToken>();
+      // blackhole represented by boolean only
       ++j;
       continue;
     }
     if (opt == "reject") {
       reject = true;
-      reject_token = std::make_unique<RejectToken>();
+      // reject represented by boolean only
       ++j;
       continue;
     }

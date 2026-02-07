@@ -6,6 +6,7 @@
 #include "InterfaceConfig.hpp"
 #include "LaggFlags.hpp"
 #include "WlanConfig.hpp"
+#include "WlanAuthMode.hpp"
 
 #include <cstring>
 #include <ifaddrs.h>
@@ -200,14 +201,19 @@ query_ifstatus_nd6(const std::string &ifname) {
 std::vector<RouteConfig> SystemConfigurationManager::GetStaticRoutes(
     const std::optional<VRFConfig> &vrf) const {
   std::vector<RouteConfig> routes;
-
-  int mib[6] = {CTL_NET, PF_ROUTE, 0, AF_UNSPEC, NET_RT_DUMP, 0};
+  // Use a 7-element MIB where the final element is the FIB (routing table)
+  // number. This mirrors the approach used by the system `netstat` tool and
+  // lets the kernel return routes for the requested FIB directly.
+  int fibnum = 0;
+  if (vrf && vrf->table)
+    fibnum = *vrf->table;
+  int mib[7] = {CTL_NET, PF_ROUTE, 0, AF_UNSPEC, NET_RT_DUMP, 0, fibnum};
   size_t needed = 0;
-  if (sysctl(mib, 6, nullptr, &needed, nullptr, 0) < 0 || needed == 0)
+  if (sysctl(mib, 7, nullptr, &needed, nullptr, 0) < 0 || needed == 0)
     return routes;
 
   std::vector<char> buf(needed);
-  if (sysctl(mib, 6, buf.data(), &needed, nullptr, 0) < 0)
+  if (sysctl(mib, 7, buf.data(), &needed, nullptr, 0) < 0)
     return routes;
 
   char *lim = buf.data() + needed;
@@ -239,6 +245,12 @@ std::vector<RouteConfig> SystemConfigurationManager::GetStaticRoutes(
 
     RouteConfig rc;
 
+    // If caller requested a VRF and we switched FIB above, mark the route
+    // as belonging to that VRF name so higher-level filtering/formatting
+    // can make use of the information.
+    if (vrf && vrf->name.size())
+      rc.vrf = vrf->name;
+
     if (rti_info[RTAX_DST]) {
       char buf_dst[INET6_ADDRSTRLEN] = {0};
       int prefixlen = 0;
@@ -264,6 +276,14 @@ std::vector<RouteConfig> SystemConfigurationManager::GetStaticRoutes(
             prefixlen += __builtin_popcount(mask6->sin6_addr.s6_addr[j]);
         } else
           prefixlen = 128;
+        // extract scope id (if present) into separate field
+        if (sin6->sin6_scope_id != 0) {
+          char ifn[IF_NAMESIZE] = {0};
+          if (if_indextoname(static_cast<unsigned int>(sin6->sin6_scope_id),
+                             ifn)) {
+            rc.scope = std::string(ifn);
+          }
+        }
         rc.prefix = std::string(buf_dst) + "/" + std::to_string(prefixlen);
       }
     }
@@ -283,6 +303,9 @@ std::vector<RouteConfig> SystemConfigurationManager::GetStaticRoutes(
       } else if (rti_info[RTAX_GATEWAY]->sa_family == AF_LINK) {
         auto sdl =
             reinterpret_cast<struct sockaddr_dl *>(rti_info[RTAX_GATEWAY]);
+        if (sdl->sdl_index > 0) {
+          rc.nexthop = std::string("link#") + std::to_string(sdl->sdl_index);
+        }
         if (sdl->sdl_nlen > 0)
           rc.iface = std::string(sdl->sdl_data, sdl->sdl_nlen);
       }
@@ -300,6 +323,11 @@ std::vector<RouteConfig> SystemConfigurationManager::GetStaticRoutes(
       rc.blackhole = true;
     if (rtm->rtm_flags & RTF_REJECT)
       rc.reject = true;
+
+    // record raw flags and optional expire
+    rc.flags = static_cast<unsigned int>(rtm->rtm_flags);
+    if (rtm->rtm_rmx.rmx_expire != 0)
+      rc.expire = static_cast<int>(rtm->rtm_rmx.rmx_expire);
 
     if (!rc.prefix.empty()) {
       // VRF filtering: kernel route records may not include VRF names.
@@ -324,25 +352,42 @@ std::vector<RouteConfig> SystemConfigurationManager::GetStaticRoutes(
 std::vector<VRFConfig> SystemConfigurationManager::GetNetworkInstances(
     const std::optional<int> &table) const {
   std::vector<VRFConfig> out;
-  // FreeBSD VRF/FIB enumeration is platform-specific and not exposed via a
-  // simple sysctl on all systems. Provide a minimal implementation:
-  // - if a specific table id is requested, return a VRFConfig with that table
-  // - otherwise return empty (no enumeration implemented)
-  if (table) {
+  // VRF/FIB enumeration: collect unique VRF entries reported on
+  // interfaces. This is a conservative, portable approach that does
+  // not rely on platform-specific sysctls for VRF lists.
+  std::unordered_map<std::string, VRFConfig> seen;
+  auto ifs = GetInterfaces(std::nullopt);
+  for (const auto &ic : ifs) {
+    if (!ic.vrf)
+      continue;
+    // If caller requested a specific table, filter by it.
+    if (table && ic.vrf->table) {
+      if (*table != *ic.vrf->table)
+        continue;
+    } else if (table && !ic.vrf->table) {
+      continue;
+    }
     VRFConfig v;
-    v.table = *table;
-    // Name for the FIB is not universally defined; provide a helper name.
-    v.name = std::string("fib") + std::to_string(*table);
-    out.push_back(std::move(v));
+    v.name = ic.vrf->name;
+    v.table = ic.vrf->table;
+    if (v.name.empty() && v.table)
+      v.name = std::string("fib") + std::to_string(*v.table);
+    seen[v.name] = v;
   }
+  for (const auto &kv : seen)
+    out.emplace_back(kv.second);
   return out;
 }
 
+// Return true if interface `ic` belongs to the optional `vrf` filter.
+
 std::vector<RouteConfig> SystemConfigurationManager::GetRoutes(
     const std::optional<VRFConfig> &vrf) const {
-  // For now, alias to GetStaticRoutes
+  // For now, surface static routes only. Dynamic/RTM listeners can be
+  // added later if needed.
   return GetStaticRoutes(vrf);
 }
+
 
 // Return true if interface `ic` belongs to the optional `vrf` filter.
 static bool matches_vrf(const InterfaceConfig &ic,
@@ -467,23 +512,25 @@ static void populateInterfaceMetadata(InterfaceConfig &ic) {
           req.i_data = &am;
           req.i_len = sizeof(am);
           if (ioctl(s, SIOCG80211, &req) == 0) {
+            WlanAuthMode m = WlanAuthMode::UNKNOWN;
             switch (am) {
             case 0:
-              w->authmode = std::string("OPEN");
+              m = WlanAuthMode::OPEN;
               break;
             case 1:
-              w->authmode = std::string("SHARED");
+              m = WlanAuthMode::SHARED;
               break;
             case 2:
-              w->authmode = std::string("WPA");
+              m = WlanAuthMode::WPA;
               break;
             case 3:
-              w->authmode = std::string("WPA2");
+              m = WlanAuthMode::WPA2;
               break;
             default:
-              w->authmode = std::string("unknown");
+              m = WlanAuthMode::UNKNOWN;
               break;
             }
+            w->authmode = m;
           }
         }
 
