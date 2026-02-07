@@ -27,9 +27,11 @@
 
 #pragma once
 
+#include "ArpToken.hpp"
 #include "Command.hpp"
 #include "ConfigurationManager.hpp"
 #include "InterfaceToken.hpp"
+#include "NdpToken.hpp"
 #include "RouteToken.hpp"
 #include "Token.hpp"
 #include "VRFToken.hpp"
@@ -73,6 +75,14 @@ namespace netcli {
     void executeShowVRF(const VRFToken &tok, ConfigurationManager *mgr) const;
     void executeSetVRF(const VRFToken &tok, ConfigurationManager *mgr) const;
     void executeDeleteVRF(const VRFToken &tok, ConfigurationManager *mgr) const;
+
+    void executeShowArp(const ArpToken &tok, ConfigurationManager *mgr) const;
+    void executeSetArp(const ArpToken &tok, ConfigurationManager *mgr) const;
+    void executeDeleteArp(const ArpToken &tok, ConfigurationManager *mgr) const;
+
+    void executeShowNdp(const NdpToken &tok, ConfigurationManager *mgr) const;
+    void executeSetNdp(const NdpToken &tok, ConfigurationManager *mgr) const;
+    void executeDeleteNdp(const NdpToken &tok, ConfigurationManager *mgr) const;
   };
 
 } // namespace netcli

@@ -35,8 +35,7 @@
 #include <string>
 #include <vector>
 
-template <typename T>
-class TableFormatter {
+template <typename T> class TableFormatter {
 public:
   struct Column {
     std::string key;   // logical key
@@ -55,7 +54,8 @@ public:
 protected:
   // Table building methods for use by derived classes
   void addColumn(const std::string &key, const std::string &title,
-                 int priority = 1, int minWidth = 3, bool leftAlign = true) const;
+                 int priority = 1, int minWidth = 3,
+                 bool leftAlign = true) const;
 
   void addRow(const std::vector<std::string> &cells) const;
 
@@ -80,54 +80,54 @@ private:
 #include <sstream>
 
 namespace {
-static inline std::vector<std::string> splitLines(const std::string &s) {
-  std::vector<std::string> out;
-  std::string line;
-  std::istringstream iss(s);
-  while (std::getline(iss, line))
-    out.push_back(line);
-  if (out.empty())
-    out.push_back("");
-  return out;
-}
-
-static inline int visibleLength(const std::string &s) {
-  int len = 0;
-  for (size_t i = 0; i < s.size();) {
-    if (s[i] == '\x1b' && i + 1 < s.size() && s[i + 1] == '[') {
-      i += 2;
-      while (i < s.size() && s[i] != 'm')
-        ++i;
-      if (i < s.size() && s[i] == 'm')
-        ++i;
-    } else {
-      ++len;
-      ++i;
-    }
+  static inline std::vector<std::string> splitLines(const std::string &s) {
+    std::vector<std::string> out;
+    std::string line;
+    std::istringstream iss(s);
+    while (std::getline(iss, line))
+      out.push_back(line);
+    if (out.empty())
+      out.push_back("");
+    return out;
   }
-  return len;
-}
 
-static inline std::string truncateVisible(const std::string &s, int w) {
-  std::string out;
-  int vis = 0;
-  for (size_t i = 0; i < s.size() && vis < w;) {
-    if (s[i] == '\x1b' && i + 1 < s.size() && s[i + 1] == '[') {
-      size_t start = i;
-      i += 2;
-      while (i < s.size() && s[i] != 'm')
+  static inline int visibleLength(const std::string &s) {
+    int len = 0;
+    for (size_t i = 0; i < s.size();) {
+      if (s[i] == '\x1b' && i + 1 < s.size() && s[i + 1] == '[') {
+        i += 2;
+        while (i < s.size() && s[i] != 'm')
+          ++i;
+        if (i < s.size() && s[i] == 'm')
+          ++i;
+      } else {
+        ++len;
         ++i;
-      if (i < s.size() && s[i] == 'm')
-        ++i;
-      out.append(s.data() + start, i - start);
-    } else {
-      out.push_back(s[i]);
-      ++vis;
-      ++i;
+      }
     }
+    return len;
   }
-  return out;
-}
+
+  static inline std::string truncateVisible(const std::string &s, int w) {
+    std::string out;
+    int vis = 0;
+    for (size_t i = 0; i < s.size() && vis < w;) {
+      if (s[i] == '\x1b' && i + 1 < s.size() && s[i + 1] == '[') {
+        size_t start = i;
+        i += 2;
+        while (i < s.size() && s[i] != 'm')
+          ++i;
+        if (i < s.size() && s[i] == 'm')
+          ++i;
+        out.append(s.data() + start, i - start);
+      } else {
+        out.push_back(s[i]);
+        ++vis;
+        ++i;
+      }
+    }
+    return out;
+  }
 } // namespace
 
 template <typename T>
@@ -150,13 +150,11 @@ void TableFormatter<T>::addRow(const std::vector<std::string> &cells) const {
   rows_.push_back(cells);
 }
 
-template <typename T>
-void TableFormatter<T>::setSortColumn(int index) const {
+template <typename T> void TableFormatter<T>::setSortColumn(int index) const {
   sortColumn_ = index;
 }
 
-template <typename T>
-void TableFormatter<T>::clearTable() const {
+template <typename T> void TableFormatter<T>::clearTable() const {
   columns_.clear();
   rows_.clear();
   sortColumn_ = 0;

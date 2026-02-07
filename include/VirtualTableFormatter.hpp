@@ -49,8 +49,10 @@ public:
 
   /**
    * @brief Format virtual interfaces into a detailed table
-   * @param interfaces List of InterfaceConfig with virtual interface configurations
+   * @param interfaces List of InterfaceConfig with virtual interface
+   * configurations
    * @return Formatted ASCII table string
    */
-  std::string format(const std::vector<InterfaceConfig> &interfaces) const override;
+  std::string
+  format(const std::vector<InterfaceConfig> &interfaces) const override;
 };

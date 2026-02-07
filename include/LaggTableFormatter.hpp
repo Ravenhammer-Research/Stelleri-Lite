@@ -52,5 +52,6 @@ public:
    * @param interfaces List of InterfaceConfig with LAGG configurations
    * @return Formatted ASCII table string
    */
-  std::string format(const std::vector<InterfaceConfig> &interfaces) const override;
+  std::string
+  format(const std::vector<InterfaceConfig> &interfaces) const override;
 };

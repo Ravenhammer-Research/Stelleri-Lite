@@ -1,0 +1,111 @@
+/*
+ * Copyright (c) 2026, Ravenhammer Research Inc.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
+
+#include "SystemConfigurationManager.hpp"
+#include "VLANConfig.hpp"
+
+#include <cstring>
+#include <net/if.h>
+#include <net/if_vlan_var.h>
+#include <sys/ioctl.h>
+#include <sys/socket.h>
+#include <unistd.h>
+
+std::vector<VLANConfig> SystemConfigurationManager::GetVLANInterfaces(
+    const std::optional<VRFConfig> &vrf) const {
+  auto bases = GetInterfaces(vrf);
+  std::vector<VLANConfig> out;
+  for (const auto &ic : bases) {
+    if (ic.type == InterfaceType::VLAN) {
+      VLANConfig vconf(ic);
+
+      int vsock = socket(AF_INET, SOCK_DGRAM, 0);
+      if (vsock >= 0) {
+        (void)0;
+        struct vlanreq vreq;
+        std::memset(&vreq, 0, sizeof(vreq));
+        struct ifreq ifr;
+        std::memset(&ifr, 0, sizeof(ifr));
+        std::strncpy(ifr.ifr_name, ic.name.c_str(), IFNAMSIZ - 1);
+        ifr.ifr_data = reinterpret_cast<char *>(&vreq);
+
+        if (ioctl(vsock, SIOCGETVLAN, &ifr) == 0) {
+          vconf.id = static_cast<uint16_t>(vreq.vlr_tag & 0x0fff);
+          int pcp = (vreq.vlr_tag >> 13) & 0x7;
+          vconf.parent = std::string(vreq.vlr_parent);
+          vconf.pcp = static_cast<PriorityCodePoint>(pcp);
+          (void)0;
+
+          if (vreq.vlr_proto) {
+            uint16_t proto = static_cast<uint16_t>(vreq.vlr_proto);
+            if (proto == static_cast<uint16_t>(VLANProto::DOT1Q))
+              vconf.proto = VLANProto::DOT1Q;
+            else if (proto == static_cast<uint16_t>(VLANProto::DOT1AD))
+              vconf.proto = VLANProto::DOT1AD;
+            else
+              vconf.proto = VLANProto::OTHER;
+          }
+        } else {
+          (void)0;
+        }
+        close(vsock);
+
+        auto query_caps =
+            [&](const std::string &name) -> std::optional<uint32_t> {
+          int csock = socket(AF_INET, SOCK_DGRAM, 0);
+          if (csock < 0)
+            return std::nullopt;
+          struct ifreq cifr;
+          std::memset(&cifr, 0, sizeof(cifr));
+          std::strncpy(cifr.ifr_name, name.c_str(), IFNAMSIZ - 1);
+          if (ioctl(csock, SIOCGIFCAP, &cifr) == 0) {
+            unsigned int curcap = cifr.ifr_curcap;
+            (void)curcap;
+            close(csock);
+            return static_cast<uint32_t>(curcap);
+          } else {
+            close(csock);
+            return std::nullopt;
+          }
+        };
+
+        if (auto o = query_caps(ic.name); o) {
+          vconf.options_bits = *o;
+          (void)0;
+        } else if (vconf.parent) {
+          if (auto o = query_caps(*vconf.parent); o) {
+            vconf.options_bits = *o;
+            (void)0;
+          }
+        }
+      }
+
+      out.emplace_back(std::move(vconf));
+    }
+  }
+  return out;
+}

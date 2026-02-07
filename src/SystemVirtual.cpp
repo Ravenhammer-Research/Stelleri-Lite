@@ -25,32 +25,18 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @file TunnelTableFormatter.hpp
- * @brief Formatter for tunnel interface details
- */
+#include "SystemConfigurationManager.hpp"
+#include "VirtualInterfaceConfig.hpp"
 
-#pragma once
-
-#include "InterfaceConfig.hpp"
-#include "TableFormatter.hpp"
-#include <string>
-#include <vector>
-
-/**
- * @brief Formats tunnel interface configuration as ASCII table
- *
- * Shows tunnel-specific details like source, destination, tunnel-vrf (FIB).
- */
-class TunnelTableFormatter : public TableFormatter<InterfaceConfig> {
-public:
-  TunnelTableFormatter() = default;
-
-  /**
-   * @brief Format tunnel interfaces into a detailed table
-   * @param interfaces List of InterfaceConfig with tunnel configurations
-   * @return Formatted ASCII table string
-   */
-  std::string
-  format(const std::vector<InterfaceConfig> &interfaces) const override;
-};
+std::vector<VirtualInterfaceConfig>
+SystemConfigurationManager::GetVirtualInterfaces(
+    const std::optional<VRFConfig> &vrf) const {
+  auto bases = GetInterfaces(vrf);
+  std::vector<VirtualInterfaceConfig> out;
+  for (const auto &ic : bases) {
+    if (ic.type == InterfaceType::Virtual || ic.type == InterfaceType::Tun) {
+      out.emplace_back(ic);
+    }
+  }
+  return out;
+}

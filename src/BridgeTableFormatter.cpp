@@ -37,8 +37,8 @@
 #include <sstream>
 #include <vector>
 
-std::string
-BridgeTableFormatter::format(const std::vector<BridgeInterfaceConfig> &interfaces) const {
+std::string BridgeTableFormatter::format(
+    const std::vector<BridgeInterfaceConfig> &interfaces) const {
   if (interfaces.empty())
     return "No bridge interfaces found.\n";
 

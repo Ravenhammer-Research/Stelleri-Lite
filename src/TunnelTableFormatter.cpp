@@ -37,8 +37,8 @@
 #include <string>
 #include <vector>
 
-std::string
-TunnelTableFormatter::format(const std::vector<InterfaceConfig> &interfaces) const {
+std::string TunnelTableFormatter::format(
+    const std::vector<InterfaceConfig> &interfaces) const {
   if (interfaces.empty()) {
     return "No tunnel interfaces found.\n";
   }
@@ -55,8 +55,7 @@ TunnelTableFormatter::format(const std::vector<InterfaceConfig> &interfaces) con
   addColumn("ND6Opts", "ND6Opts", 1, 6, true);
 
   for (const auto &ic : interfaces) {
-    if (!(ic.type == InterfaceType::Tunnel ||
-          ic.type == InterfaceType::Gif ||
+    if (!(ic.type == InterfaceType::Tunnel || ic.type == InterfaceType::Gif ||
           ic.type == InterfaceType::Tun))
       continue;
 
@@ -109,7 +108,7 @@ TunnelTableFormatter::format(const std::vector<InterfaceConfig> &interfaces) con
       nd6Cell = *ic.nd6_options;
 
     addRow({ic.name, source, destination, flagsStr, metricStr, mtuStr,
-                groupsCell, fibStr, tunnelFibStr, nd6Cell});
+            groupsCell, fibStr, tunnelFibStr, nd6Cell});
   }
 
   auto out = renderTable(80);

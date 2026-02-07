@@ -27,10 +27,12 @@
 
 #pragma once
 
+#include "ArpConfig.hpp"
 #include "BridgeInterfaceConfig.hpp"
 #include "ConfigurationManager.hpp"
 #include "InterfaceConfig.hpp"
 #include "LaggConfig.hpp"
+#include "NdpConfig.hpp"
 #include "RouteConfig.hpp"
 #include "TunnelConfig.hpp"
 #include "VLANConfig.hpp"
@@ -74,4 +76,51 @@ public:
 
   /** @brief Get the number of configured FIBs from net.fibs sysctl */
   int GetFibs() const;
+
+  // ARP/NDP neighbor cache management
+  std::vector<ArpConfig>
+  GetArpEntries(const std::optional<std::string> &ip_filter = std::nullopt,
+                const std::optional<std::string> &iface_filter =
+                    std::nullopt) const override;
+  bool SetArpEntry(const std::string &ip, const std::string &mac,
+                   const std::optional<std::string> &iface = std::nullopt,
+                   bool temp = false, bool pub = false) const override;
+  bool DeleteArpEntry(
+      const std::string &ip,
+      const std::optional<std::string> &iface = std::nullopt) const override;
+
+  std::vector<NdpConfig>
+  GetNdpEntries(const std::optional<std::string> &ip_filter = std::nullopt,
+                const std::optional<std::string> &iface_filter =
+                    std::nullopt) const override;
+  bool SetNdpEntry(const std::string &ip, const std::string &mac,
+                   const std::optional<std::string> &iface = std::nullopt,
+                   bool temp = false) const override;
+  bool DeleteNdpEntry(
+      const std::string &ip,
+      const std::optional<std::string> &iface = std::nullopt) const override;
+
+private:
+  enum class IfreqIntField { Metric, Fib, Mtu };
+
+  // Helper methods for interface queries
+  void prepare_ifreq(struct ifreq &ifr, const std::string &name) const;
+  std::optional<int> query_ifreq_int(const std::string &ifname,
+                                     unsigned long req,
+                                     IfreqIntField which) const;
+  std::optional<std::pair<std::string, int>>
+  query_ifreq_sockaddr(const std::string &ifname, unsigned long req) const;
+  std::vector<std::string>
+  query_interface_groups(const std::string &ifname) const;
+  std::optional<std::string>
+  query_ifstatus_nd6(const std::string &ifname) const;
+  void populateInterfaceMetadata(InterfaceConfig &ic) const;
+
+  // Interface type detection
+  bool interfaceIsLagg(const std::string &ifname) const;
+  bool interfaceIsBridge(const std::string &ifname) const;
+
+  // VRF matching helper
+  bool matches_vrf(const InterfaceConfig &ic,
+                   const std::optional<VRFConfig> &vrf) const;
 };

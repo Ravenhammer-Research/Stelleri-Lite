@@ -47,5 +47,6 @@ class BridgeTableFormatter : public TableFormatter<BridgeInterfaceConfig> {
 public:
   BridgeTableFormatter() = default;
 
-  std::string format(const std::vector<BridgeInterfaceConfig> &interfaces) const override;
+  std::string
+  format(const std::vector<BridgeInterfaceConfig> &interfaces) const override;
 };

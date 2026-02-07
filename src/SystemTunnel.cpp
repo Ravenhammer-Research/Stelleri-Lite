@@ -25,32 +25,39 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @file TunnelTableFormatter.hpp
- * @brief Formatter for tunnel interface details
- */
+#include "SystemConfigurationManager.hpp"
+#include "TunnelConfig.hpp"
 
-#pragma once
+#include <sys/sockio.h>
 
-#include "InterfaceConfig.hpp"
-#include "TableFormatter.hpp"
-#include <string>
-#include <vector>
+std::vector<TunnelConfig> SystemConfigurationManager::GetTunnelInterfaces(
+    const std::optional<VRFConfig> &vrf) const {
+  auto bases = GetInterfaces(vrf);
+  std::vector<TunnelConfig> out;
+  for (const auto &ic : bases) {
+    if (ic.type == InterfaceType::Tunnel || ic.type == InterfaceType::Gif ||
+        ic.type == InterfaceType::Tun) {
+      TunnelConfig tconf(ic);
 
-/**
- * @brief Formats tunnel interface configuration as ASCII table
- *
- * Shows tunnel-specific details like source, destination, tunnel-vrf (FIB).
- */
-class TunnelTableFormatter : public TableFormatter<InterfaceConfig> {
-public:
-  TunnelTableFormatter() = default;
+      if (auto tf = query_ifreq_int(ic.name, SIOCGTUNFIB, IfreqIntField::Fib);
+          tf) {
+        tconf.tunnel_vrf = *tf;
+      }
+      if (auto src = query_ifreq_sockaddr(ic.name, SIOCGIFPSRCADDR); src) {
+        if (src->second == AF_INET)
+          tconf.source = std::make_unique<IPv4Address>(src->first);
+        else if (src->second == AF_INET6)
+          tconf.source = std::make_unique<IPv6Address>(src->first);
+      }
+      if (auto dst = query_ifreq_sockaddr(ic.name, SIOCGIFPDSTADDR); dst) {
+        if (dst->second == AF_INET)
+          tconf.destination = std::make_unique<IPv4Address>(dst->first);
+        else if (dst->second == AF_INET6)
+          tconf.destination = std::make_unique<IPv6Address>(dst->first);
+      }
 
-  /**
-   * @brief Format tunnel interfaces into a detailed table
-   * @param interfaces List of InterfaceConfig with tunnel configurations
-   * @return Formatted ASCII table string
-   */
-  std::string
-  format(const std::vector<InterfaceConfig> &interfaces) const override;
-};
+      out.emplace_back(std::move(tconf));
+    }
+  }
+  return out;
+}

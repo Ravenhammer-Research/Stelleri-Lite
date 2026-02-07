@@ -30,8 +30,8 @@
 #include <iomanip>
 #include <sstream>
 
-std::string
-LoopBackTableFormatter::format(const std::vector<InterfaceConfig> &items) const {
+std::string LoopBackTableFormatter::format(
+    const std::vector<InterfaceConfig> &items) const {
   addColumn("Interface", "Interface", 10, 4, true);
   addColumn("Address", "Address", 5, 7, true);
   addColumn("Status", "Status", 6, 6, true);

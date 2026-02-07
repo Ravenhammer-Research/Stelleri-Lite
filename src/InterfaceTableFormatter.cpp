@@ -159,7 +159,7 @@ std::string InterfaceTableFormatter::format(
       indexCell = B + std::to_string(*ic.index) + R;
 
     addRow({indexCell, ic.name, groupCell, interfaceTypeToString(ic.type),
-                addrCell, status, mtuCell, vrfCell, flagsCell});
+            addrCell, status, mtuCell, vrfCell, flagsCell});
   }
 
   // Sort by index numeric ascending by default

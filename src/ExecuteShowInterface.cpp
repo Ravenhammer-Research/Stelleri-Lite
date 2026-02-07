@@ -25,6 +25,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "BridgeInterfaceConfig.hpp"
 #include "BridgeTableFormatter.hpp"
 #include "CarpTableFormatter.hpp"
 #include "ConfigurationManager.hpp"
@@ -39,7 +40,6 @@
 #include "VLANTableFormatter.hpp"
 #include "VirtualTableFormatter.hpp"
 #include "WlanTableFormatter.hpp"
-#include "BridgeInterfaceConfig.hpp"
 #include <iomanip>
 #include <iostream>
 #include <sstream>
@@ -129,8 +129,7 @@ void netcli::Parser::executeShowInterface(const InterfaceToken &tok,
       allVlan = false;
     // Treat explicit tunnel-ish interface types as tunnels for formatting
     if (!(iface.type == InterfaceType::Tunnel ||
-          iface.type == InterfaceType::Gif ||
-          iface.type == InterfaceType::Tun))
+          iface.type == InterfaceType::Gif || iface.type == InterfaceType::Tun))
       allTunnel = false;
     if (iface.type != InterfaceType::Virtual)
       allVirtual = false;
@@ -139,20 +138,16 @@ void netcli::Parser::executeShowInterface(const InterfaceToken &tok,
     // SixToFour heuristics: treat tunnel-like interfaces whose name begins with
     // gif/stf/sit as six-to-four style
     if (!(iface.type == InterfaceType::Tunnel ||
-          iface.type == InterfaceType::Gif ||
-          iface.type == InterfaceType::Tun))
+          iface.type == InterfaceType::Gif || iface.type == InterfaceType::Tun))
       allSixToFour = false;
-    if (!(iface.name.rfind("gif", 0) == 0 ||
-          iface.name.rfind("stf", 0) == 0 ||
+    if (!(iface.name.rfind("gif", 0) == 0 || iface.name.rfind("stf", 0) == 0 ||
           iface.name.rfind("sit", 0) == 0))
       allSixToFour = false;
     // Tap heuristics: name starts with "tap" or treated as virtual
-    if (iface.type != InterfaceType::Virtual &&
-        iface.name.rfind("tap", 0) != 0)
+    if (iface.type != InterfaceType::Virtual && iface.name.rfind("tap", 0) != 0)
       allTap = false;
     // CARP heuristics: name starts with carp/ vh or virtual
-    if (iface.name.rfind("carp", 0) != 0 &&
-        iface.name.rfind("vh", 0) != 0 &&
+    if (iface.name.rfind("carp", 0) != 0 && iface.name.rfind("vh", 0) != 0 &&
         iface.type != InterfaceType::Virtual)
       allCarp = false;
   }

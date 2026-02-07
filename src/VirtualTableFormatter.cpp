@@ -38,8 +38,8 @@
 #include <sstream>
 #include <string>
 
-std::string
-VirtualTableFormatter::format(const std::vector<InterfaceConfig> &interfaces) const {
+std::string VirtualTableFormatter::format(
+    const std::vector<InterfaceConfig> &interfaces) const {
   if (interfaces.empty())
     return "No virtual interfaces found.\n";
 
@@ -115,7 +115,7 @@ VirtualTableFormatter::format(const std::vector<InterfaceConfig> &interfaces) co
     auto b_side = format_side(pi.b);
 
     addRow({name_a, a_side[0], a_side[1], a_side[2], a_side[3], name_b,
-                b_side[0], b_side[1], b_side[2], b_side[3]});
+            b_side[0], b_side[1], b_side[2], b_side[3]});
   }
 
   auto out = renderTable(80);

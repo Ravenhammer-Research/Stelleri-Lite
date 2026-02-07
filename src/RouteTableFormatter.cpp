@@ -28,9 +28,9 @@
 #include "RouteTableFormatter.hpp"
 #include "RouteConfig.hpp"
 #include <iomanip>
-#include <sys/socket.h>
 #include <net/route.h>
 #include <sstream>
+#include <sys/socket.h>
 
 std::string
 RouteTableFormatter::format(const std::vector<RouteConfig> &routes) const {

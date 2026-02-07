@@ -58,10 +58,9 @@ void netcli::Parser::executeSetInterface(const InterfaceToken &tok,
     // prepare a new base for creation. Initialize via copy-construction
     // to avoid relying on assignment operators.
     bool exists = InterfaceConfig::exists(name);
-    auto ifopt =
-        (exists && mgr) ? mgr->getInterface(name) : std::optional<InterfaceConfig>{};
-    InterfaceConfig base =
-        ifopt ? *ifopt : InterfaceConfig();
+    auto ifopt = (exists && mgr) ? mgr->getInterface(name)
+                                 : std::optional<InterfaceConfig>{};
+    InterfaceConfig base = ifopt ? *ifopt : InterfaceConfig();
     if (!ifopt)
       base.name = name;
 

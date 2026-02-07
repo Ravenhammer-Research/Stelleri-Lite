@@ -39,8 +39,10 @@
 #include <string>
 #include <vector>
 // Ensure configuration type declarations are available for method signatures
+#include "ArpConfig.hpp"
 #include "BridgeInterfaceConfig.hpp"
 #include "LaggConfig.hpp"
+#include "NdpConfig.hpp"
 #include "RouteConfig.hpp"
 #include "TunnelConfig.hpp"
 #include "VLANConfig.hpp"
@@ -81,10 +83,31 @@ public:
   virtual std::vector<VRFConfig>
   GetNetworkInstances(const std::optional<int> &table = std::nullopt) const = 0;
 
+  // ARP/NDP neighbor cache management
+  virtual std::vector<ArpConfig> GetArpEntries(
+      const std::optional<std::string> &ip_filter = std::nullopt,
+      const std::optional<std::string> &iface_filter = std::nullopt) const = 0;
+  virtual bool
+  SetArpEntry(const std::string &ip, const std::string &mac,
+              const std::optional<std::string> &iface = std::nullopt,
+              bool temp = false, bool pub = false) const = 0;
+  virtual bool DeleteArpEntry(
+      const std::string &ip,
+      const std::optional<std::string> &iface = std::nullopt) const = 0;
+
+  virtual std::vector<NdpConfig> GetNdpEntries(
+      const std::optional<std::string> &ip_filter = std::nullopt,
+      const std::optional<std::string> &iface_filter = std::nullopt) const = 0;
+  virtual bool
+  SetNdpEntry(const std::string &ip, const std::string &mac,
+              const std::optional<std::string> &iface = std::nullopt,
+              bool temp = false) const = 0;
+  virtual bool DeleteNdpEntry(
+      const std::string &ip,
+      const std::optional<std::string> &iface = std::nullopt) const = 0;
+
   // Backwards-compatible helper: return interfaces as sliced `ConfigData`
-  std::vector<InterfaceConfig> getInterfaces() const {
-    return GetInterfaces();
-  }
+  std::vector<InterfaceConfig> getInterfaces() const { return GetInterfaces(); }
 
   // Backwards-compatible helper: get single interface by name
   std::optional<InterfaceConfig> getInterface(const std::string &name) const {
@@ -98,7 +121,5 @@ public:
   }
 
   // Backwards-compatible helper: get routes as sliced ConfigData
-  std::vector<RouteConfig> getRoutes() const {
-    return GetRoutes();
-  }
+  std::vector<RouteConfig> getRoutes() const { return GetRoutes(); }
 };
