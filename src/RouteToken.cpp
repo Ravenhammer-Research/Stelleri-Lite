@@ -62,7 +62,30 @@ size_t RouteToken::parseOptions(const std::vector<std::string> &tokens,
   }
   while (j < tokens.size()) {
     const auto &opt = tokens[j];
-    if (opt == "next-hop" && j + 1 < tokens.size()) {
+    if ((opt == "next-hop" || opt == "nexthop") && j + 1 < tokens.size()) {
+      const std::string nh = tokens[j + 1];
+      // support shorthand: "nexthop reject" or "nexthop blackhole"
+      if (nh == "reject") {
+        reject = true;
+        j += 2;
+        continue;
+      }
+      if (nh == "blackhole") {
+        blackhole = true;
+        j += 2;
+        continue;
+      }
+      std::unique_ptr<IPAddress> addr = IPAddress::fromString(nh);
+      if (!addr) {
+        auto net = IPNetwork::fromString(nh);
+        if (net)
+          addr = net->address();
+      }
+      nexthop = std::move(addr);
+      j += 2;
+      continue;
+    }
+    if (opt == "gw" && j + 1 < tokens.size()) {
       const std::string nh = tokens[j + 1];
       std::unique_ptr<IPAddress> addr = IPAddress::fromString(nh);
       if (!addr) {
@@ -71,6 +94,12 @@ size_t RouteToken::parseOptions(const std::vector<std::string> &tokens,
           addr = net->address();
       }
       nexthop = std::move(addr);
+      j += 2;
+      continue;
+    }
+    if (opt == "dest" && j + 1 < tokens.size()) {
+      // allow explicit 'dest <prefix>' syntax
+      prefix_ = tokens[j + 1];
       j += 2;
       continue;
     }
