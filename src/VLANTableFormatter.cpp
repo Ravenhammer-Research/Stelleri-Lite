@@ -80,7 +80,7 @@ static std::string vlanCapsToString(uint32_t mask) {
 }
 
 std::string
-VLANTableFormatter::format(const std::vector<ConfigData> &interfaces) const {
+VLANTableFormatter::format(const std::vector<InterfaceConfig> &interfaces) const {
   if (interfaces.empty()) {
     return "No VLAN interfaces found.\n";
   }
@@ -94,11 +94,9 @@ VLANTableFormatter::format(const std::vector<ConfigData> &interfaces) const {
       << "\n";
   oss << std::string(72, '-') << "\n";
 
-  for (const auto &cd : interfaces) {
-    if (!cd.iface || cd.iface->type != InterfaceType::VLAN)
+  for (const auto &ic : interfaces) {
+    if (ic.type != InterfaceType::VLAN)
       continue;
-
-    const auto &ic = *cd.iface;
 
     // Try to use explicit VLAN payload if present; otherwise derive from name
     int vid = -1;

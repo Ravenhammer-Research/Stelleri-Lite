@@ -82,41 +82,23 @@ public:
   GetNetworkInstances(const std::optional<int> &table = std::nullopt) const = 0;
 
   // Backwards-compatible helper: return interfaces as sliced `ConfigData`
-  std::vector<ConfigData> getInterfaces() const {
-    std::vector<ConfigData> out;
-    auto ifs = GetInterfaces();
-    out.reserve(ifs.size());
-    for (auto &i : ifs) {
-      ConfigData cd;
-      cd.iface = std::make_shared<InterfaceConfig>(std::move(i));
-      out.push_back(std::move(cd));
-    }
-    return out;
+  std::vector<InterfaceConfig> getInterfaces() const {
+    return GetInterfaces();
   }
 
   // Backwards-compatible helper: get single interface by name
-  std::optional<ConfigData> getInterface(const std::string &name) const {
+  std::optional<InterfaceConfig> getInterface(const std::string &name) const {
     auto ifs = GetInterfaces();
     for (auto &i : ifs) {
       if (i.name == name) {
-        ConfigData cd;
-        cd.iface = std::make_shared<InterfaceConfig>(std::move(i));
-        return std::optional<ConfigData>(std::move(cd));
+        return std::optional<InterfaceConfig>(std::move(i));
       }
     }
     return std::nullopt;
   }
 
   // Backwards-compatible helper: get routes as sliced ConfigData
-  std::vector<ConfigData> getRoutes() const {
-    std::vector<ConfigData> out;
-    auto rs = GetRoutes();
-    out.reserve(rs.size());
-    for (auto &r : rs) {
-      ConfigData cd;
-      cd.route = std::make_shared<RouteConfig>(std::move(r));
-      out.push_back(std::move(cd));
-    }
-    return out;
+  std::vector<RouteConfig> getRoutes() const {
+    return GetRoutes();
   }
 };

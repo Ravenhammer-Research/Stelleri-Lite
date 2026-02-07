@@ -58,11 +58,11 @@ void netcli::Parser::executeSetInterface(const InterfaceToken &tok,
     // prepare a new base for creation. Initialize via copy-construction
     // to avoid relying on assignment operators.
     bool exists = InterfaceConfig::exists(name);
-    auto cdopt =
-        (exists && mgr) ? mgr->getInterface(name) : std::optional<ConfigData>{};
+    auto ifopt =
+        (exists && mgr) ? mgr->getInterface(name) : std::optional<InterfaceConfig>{};
     InterfaceConfig base =
-        (cdopt && cdopt->iface) ? *cdopt->iface : InterfaceConfig();
-    if (!(cdopt && cdopt->iface))
+        ifopt ? *ifopt : InterfaceConfig();
+    if (!ifopt)
       base.name = name;
 
     // If the token requested a specific VRF/FIB table, apply it to the base

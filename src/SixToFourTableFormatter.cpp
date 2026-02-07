@@ -26,23 +26,17 @@
  */
 
 #include "SixToFourTableFormatter.hpp"
-#include "AbstractTableFormatter.hpp"
-#include "ConfigData.hpp"
 #include "InterfaceConfig.hpp"
 #include <sstream>
 
 std::string
-SixToFourTableFormatter::format(const std::vector<ConfigData> &items) const {
-  AbstractTableFormatter atf;
-  atf.addColumn("Interface", "Interface", 10, 4, true);
-  atf.addColumn("Address", "Address", 5, 7, true);
-  atf.addColumn("Status", "Status", 6, 6, true);
-  atf.addColumn("VRF", "VRF", 4, 3, true);
+SixToFourTableFormatter::format(const std::vector<InterfaceConfig> &items) const {
+  addColumn("Interface", "Interface", 10, 4, true);
+  addColumn("Address", "Address", 5, 7, true);
+  addColumn("Status", "Status", 6, 6, true);
+  addColumn("VRF", "VRF", 4, 3, true);
 
-  for (const auto &cd : items) {
-    if (!cd.iface)
-      continue;
-    const auto &ic = *cd.iface;
+  for (const auto &ic : items) {
 
     // Heuristic: treat Tunnel-type interfaces whose name starts with "gif" or
     // "stf" as 6to4/SIT-like
@@ -82,8 +76,8 @@ SixToFourTableFormatter::format(const std::vector<ConfigData> &items) const {
     if (ic.vrf && ic.vrf->table)
       vrf = std::to_string(ic.vrf->table);
 
-    atf.addRow({ic.name, addrCell, status, vrf});
+    addRow({ic.name, addrCell, status, vrf});
   }
 
-  return atf.format(80);
+  return renderTable(80);
 }

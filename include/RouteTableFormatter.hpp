@@ -32,15 +32,15 @@
 
 #pragma once
 
-#include "ConfigData.hpp"
+#include "RouteConfig.hpp"
 #include "TableFormatter.hpp"
 #include <string>
 #include <vector>
 
-class RouteTableFormatter : public TableFormatter {
+class RouteTableFormatter : public TableFormatter<RouteConfig> {
 public:
   RouteTableFormatter() = default;
 
   // Format routes as ASCII table
-  std::string format(const std::vector<ConfigData> &routes) const override;
+  std::string format(const std::vector<RouteConfig> &routes) const override;
 };

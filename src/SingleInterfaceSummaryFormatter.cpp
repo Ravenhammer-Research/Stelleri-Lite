@@ -36,11 +36,7 @@
 #include <sstream>
 
 std::string
-SingleInterfaceSummaryFormatter::format(const ConfigData &cd) const {
-  if (!cd.iface)
-    return "Interface not found.\n";
-
-  const auto &ic = *cd.iface;
+SingleInterfaceSummaryFormatter::format(const InterfaceConfig &ic) const {
   std::ostringstream oss;
 
   oss << "Interface: " << ic.name << "\n";

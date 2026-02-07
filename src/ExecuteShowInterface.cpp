@@ -39,6 +39,7 @@
 #include "VLANTableFormatter.hpp"
 #include "VirtualTableFormatter.hpp"
 #include "WlanTableFormatter.hpp"
+#include "BridgeInterfaceConfig.hpp"
 #include <iomanip>
 #include <iostream>
 #include <sstream>
@@ -49,121 +50,46 @@ void netcli::Parser::executeShowInterface(const InterfaceToken &tok,
     std::cout << "No ConfigurationManager provided\n";
     return;
   }
-  std::vector<ConfigData> interfaces;
+  std::vector<InterfaceConfig> interfaces;
   if (!tok.name().empty()) {
     // Prefer to query the ConfigurationManager for the named interface
-    auto cdopt = mgr->getInterface(tok.name());
-    if (cdopt) {
-      if (cdopt->iface && cdopt->iface->type == InterfaceType::Bridge) {
-        // Retrieve bridge-specific representation (members, etc.)
-        auto brs = mgr->GetBridgeInterfaces();
-        for (auto &b : brs) {
-          if (b.name == tok.name()) {
-            ConfigData cd;
-            cd.iface = std::make_shared<BridgeInterfaceConfig>(std::move(b));
-            interfaces.push_back(std::move(cd));
+    auto ifopt = mgr->getInterface(tok.name());
+    if (ifopt) {
+      interfaces.push_back(std::move(*ifopt));
+    }
+  } else if (tok.type() != InterfaceType::Unknown) {
+    // Get all interfaces and filter by type and group
+    auto allIfaces = mgr->getInterfaces();
+    for (auto &iface : allIfaces) {
+      if (tok.group) {
+        bool has = false;
+        for (const auto &g : iface.groups) {
+          if (g == *tok.group) {
+            has = true;
             break;
           }
         }
-      } else {
-        interfaces.push_back(std::move(*cdopt));
+        if (!has)
+          continue;
       }
-    }
-  } else if (tok.type() != InterfaceType::Unknown) {
-    if (tok.type() == InterfaceType::Bridge) {
-      auto brs = mgr->GetBridgeInterfaces();
-      for (auto &b : brs) {
-        if (tok.group && std::find(b.groups.begin(), b.groups.end(),
-                                   *tok.group) == b.groups.end())
-          continue;
-        ConfigData cd;
-        cd.iface = std::make_shared<BridgeInterfaceConfig>(std::move(b));
-        interfaces.push_back(std::move(cd));
-      }
-    } else if (tok.type() == InterfaceType::Lagg) {
-      auto lgs = mgr->GetLaggInterfaces();
-      for (auto &l : lgs) {
-        if (tok.group && std::find(l.groups.begin(), l.groups.end(),
-                                   *tok.group) == l.groups.end())
-          continue;
-        ConfigData cd;
-        cd.iface = std::make_shared<LaggConfig>(std::move(l));
-        interfaces.push_back(std::move(cd));
-      }
-    } else if (tok.type() == InterfaceType::VLAN) {
-      auto vls = mgr->GetVLANInterfaces();
-      for (auto &v : vls) {
-        if (tok.group && std::find(v.groups.begin(), v.groups.end(),
-                                   *tok.group) == v.groups.end())
-          continue;
-        ConfigData cd;
-        cd.iface = std::make_shared<VLANConfig>(std::move(v));
-        interfaces.push_back(std::move(cd));
-      }
-    } else if (tok.type() == InterfaceType::Tunnel ||
-               tok.type() == InterfaceType::Gif ||
-               tok.type() == InterfaceType::Tun) {
-      auto tfs = mgr->GetTunnelInterfaces();
-      for (auto &t : tfs) {
-        if (tok.group && std::find(t.groups.begin(), t.groups.end(),
-                                   *tok.group) == t.groups.end())
-          continue;
-        ConfigData cd;
-        cd.iface = std::make_shared<TunnelConfig>(std::move(t));
-        interfaces.push_back(std::move(cd));
-      }
-    } else if (tok.type() == InterfaceType::Virtual) {
-      auto vifs = mgr->GetVirtualInterfaces();
-      for (auto &v : vifs) {
-        if (tok.group && std::find(v.groups.begin(), v.groups.end(),
-                                   *tok.group) == v.groups.end())
-          continue;
-        ConfigData cd;
-        cd.iface = std::make_shared<VirtualInterfaceConfig>(std::move(v));
-        interfaces.push_back(std::move(cd));
-      }
-    } else {
-      // Fallback: inspect all interfaces and select those matching type and
-      // group
-      auto allIfaces = mgr->getInterfaces();
-      for (auto &iface : allIfaces) {
-        if (!iface.iface)
-          continue;
-        if (tok.group) {
-          bool has = false;
-          for (const auto &g : iface.iface->groups) {
-            if (g == *tok.group) {
-              has = true;
-              break;
-            }
-          }
-          if (!has)
-            continue;
-        }
-        if (tok.type() == InterfaceType::Tunnel ||
-            tok.type() == InterfaceType::Gif ||
-            tok.type() == InterfaceType::Tun) {
-          if (iface.iface->type == InterfaceType::Tunnel ||
-              iface.iface->type == InterfaceType::Gif ||
-              iface.iface->type == InterfaceType::Tun) {
-            interfaces.push_back(std::move(iface));
-          }
-          continue;
-        }
-
-        if (iface.iface->type == tok.type())
+      if (tok.type() == InterfaceType::Tunnel ||
+          tok.type() == InterfaceType::Gif ||
+          tok.type() == InterfaceType::Tun) {
+        if (iface.type == InterfaceType::Tunnel ||
+            iface.type == InterfaceType::Gif ||
+            iface.type == InterfaceType::Tun) {
           interfaces.push_back(std::move(iface));
+        }
+        continue;
       }
+
+      if (iface.type == tok.type())
+        interfaces.push_back(std::move(iface));
     }
   } else {
     if (tok.group) {
       // Filter the main interfaces table by group
-      auto ifs = mgr->GetInterfacesByGroup(std::nullopt, *tok.group);
-      for (auto &ic : ifs) {
-        ConfigData cd;
-        cd.iface = std::make_shared<InterfaceConfig>(std::move(ic));
-        interfaces.push_back(std::move(cd));
-      }
+      interfaces = mgr->GetInterfacesByGroup(std::nullopt, *tok.group);
     } else {
       interfaces = mgr->getInterfaces();
     }
@@ -194,48 +120,57 @@ void netcli::Parser::executeShowInterface(const InterfaceToken &tok,
   bool allTap = true;
   bool allCarp = true;
 
-  for (const auto &cd : interfaces) {
-    if (!cd.iface)
-      continue;
-    if (cd.iface->type != InterfaceType::Bridge)
+  for (const auto &iface : interfaces) {
+    if (iface.type != InterfaceType::Bridge)
       allBridge = false;
-    if (cd.iface->type != InterfaceType::Lagg)
+    if (iface.type != InterfaceType::Lagg)
       allLagg = false;
-    if (cd.iface->type != InterfaceType::VLAN)
+    if (iface.type != InterfaceType::VLAN)
       allVlan = false;
     // Treat explicit tunnel-ish interface types as tunnels for formatting
-    if (!(cd.iface->type == InterfaceType::Tunnel ||
-          cd.iface->type == InterfaceType::Gif ||
-          cd.iface->type == InterfaceType::Tun))
+    if (!(iface.type == InterfaceType::Tunnel ||
+          iface.type == InterfaceType::Gif ||
+          iface.type == InterfaceType::Tun))
       allTunnel = false;
-    if (cd.iface->type != InterfaceType::Virtual)
+    if (iface.type != InterfaceType::Virtual)
       allVirtual = false;
-    if (cd.iface->type != InterfaceType::Wireless)
+    if (iface.type != InterfaceType::Wireless)
       allWlan = false;
     // SixToFour heuristics: treat tunnel-like interfaces whose name begins with
     // gif/stf/sit as six-to-four style
-    if (!(cd.iface->type == InterfaceType::Tunnel ||
-          cd.iface->type == InterfaceType::Gif ||
-          cd.iface->type == InterfaceType::Tun))
+    if (!(iface.type == InterfaceType::Tunnel ||
+          iface.type == InterfaceType::Gif ||
+          iface.type == InterfaceType::Tun))
       allSixToFour = false;
-    if (!(cd.iface->name.rfind("gif", 0) == 0 ||
-          cd.iface->name.rfind("stf", 0) == 0 ||
-          cd.iface->name.rfind("sit", 0) == 0))
+    if (!(iface.name.rfind("gif", 0) == 0 ||
+          iface.name.rfind("stf", 0) == 0 ||
+          iface.name.rfind("sit", 0) == 0))
       allSixToFour = false;
     // Tap heuristics: name starts with "tap" or treated as virtual
-    if (cd.iface->type != InterfaceType::Virtual &&
-        cd.iface->name.rfind("tap", 0) != 0)
+    if (iface.type != InterfaceType::Virtual &&
+        iface.name.rfind("tap", 0) != 0)
       allTap = false;
     // CARP heuristics: name starts with carp/ vh or virtual
-    if (cd.iface->name.rfind("carp", 0) != 0 &&
-        cd.iface->name.rfind("vh", 0) != 0 &&
-        cd.iface->type != InterfaceType::Virtual)
+    if (iface.name.rfind("carp", 0) != 0 &&
+        iface.name.rfind("vh", 0) != 0 &&
+        iface.type != InterfaceType::Virtual)
       allCarp = false;
   }
 
   if (allBridge && !interfaces.empty()) {
+    // Build vector of BridgeInterfaceConfig
+    auto bridgeIfaces = mgr->GetBridgeInterfaces();
+    std::vector<BridgeInterfaceConfig> bridgeVec;
+    for (const auto &iface : interfaces) {
+      for (auto &b : bridgeIfaces) {
+        if (b.name == iface.name) {
+          bridgeVec.push_back(std::move(b));
+          break;
+        }
+      }
+    }
     BridgeTableFormatter formatter;
-    std::cout << formatter.format(interfaces);
+    std::cout << formatter.format(bridgeVec);
     return;
   } else if (allLagg && !interfaces.empty()) {
     LaggTableFormatter formatter;

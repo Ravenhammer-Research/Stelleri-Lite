@@ -26,23 +26,17 @@
  */
 
 #include "TapTableFormatter.hpp"
-#include "AbstractTableFormatter.hpp"
-#include "ConfigData.hpp"
 #include "InterfaceConfig.hpp"
 #include <sstream>
 
 std::string
-TapTableFormatter::format(const std::vector<ConfigData> &items) const {
-  AbstractTableFormatter atf;
-  atf.addColumn("Interface", "Interface", 10, 4, true);
-  atf.addColumn("Address", "Address", 5, 7, true);
-  atf.addColumn("Status", "Status", 6, 6, true);
-  atf.addColumn("MTU", "MTU", 6, 6, true);
+TapTableFormatter::format(const std::vector<InterfaceConfig> &items) const {
+  addColumn("Interface", "Interface", 10, 4, true);
+  addColumn("Address", "Address", 5, 7, true);
+  addColumn("Status", "Status", 6, 6, true);
+  addColumn("MTU", "MTU", 6, 6, true);
 
-  for (const auto &cd : items) {
-    if (!cd.iface)
-      continue;
-    const auto &ic = *cd.iface;
+  for (const auto &ic : items) {
 
     // Heuristic: consider interfaces with names starting with "tap" or type
     // Virtual
@@ -77,8 +71,8 @@ TapTableFormatter::format(const std::vector<ConfigData> &items) const {
 
     std::string mtu = ic.mtu ? std::to_string(*ic.mtu) : std::string("-");
 
-    atf.addRow({ic.name, addrCell, status, mtu});
+    addRow({ic.name, addrCell, status, mtu});
   }
 
-  return atf.format(80);
+  return renderTable(80);
 }

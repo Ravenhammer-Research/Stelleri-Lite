@@ -32,7 +32,7 @@
 
 #pragma once
 
-#include "ConfigData.hpp"
+#include "InterfaceConfig.hpp"
 #include "TableFormatter.hpp"
 #include <string>
 #include <vector>
@@ -42,14 +42,14 @@
  *
  * Shows VLAN-specific details like VLAN ID, parent interface, PCP.
  */
-class VLANTableFormatter : public TableFormatter {
+class VLANTableFormatter : public TableFormatter<InterfaceConfig> {
 public:
   VLANTableFormatter() = default;
 
   /**
    * @brief Format VLAN interfaces into a detailed table
-   * @param interfaces List of ConfigData with VLAN configurations
+   * @param interfaces List of InterfaceConfig with VLAN configurations
    * @return Formatted ASCII table string
    */
-  std::string format(const std::vector<ConfigData> &interfaces) const;
+  std::string format(const std::vector<InterfaceConfig> &interfaces) const override;
 };

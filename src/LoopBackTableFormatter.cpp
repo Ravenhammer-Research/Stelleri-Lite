@@ -26,23 +26,17 @@
  */
 
 #include "LoopBackTableFormatter.hpp"
-#include "AbstractTableFormatter.hpp"
-#include "ConfigData.hpp"
 #include "InterfaceConfig.hpp"
 #include <iomanip>
 #include <sstream>
 
 std::string
-LoopBackTableFormatter::format(const std::vector<ConfigData> &items) const {
-  AbstractTableFormatter atf;
-  atf.addColumn("Interface", "Interface", 10, 4, true);
-  atf.addColumn("Address", "Address", 5, 7, true);
-  atf.addColumn("Status", "Status", 6, 6, true);
+LoopBackTableFormatter::format(const std::vector<InterfaceConfig> &items) const {
+  addColumn("Interface", "Interface", 10, 4, true);
+  addColumn("Address", "Address", 5, 7, true);
+  addColumn("Status", "Status", 6, 6, true);
 
-  for (const auto &cd : items) {
-    if (!cd.iface)
-      continue;
-    const auto &ic = *cd.iface;
+  for (const auto &ic : items) {
     if (ic.type != InterfaceType::Loopback)
       continue;
 
@@ -72,8 +66,8 @@ LoopBackTableFormatter::format(const std::vector<ConfigData> &items) const {
         status = "down";
     }
 
-    atf.addRow({ic.name, addrCell, status});
+    addRow({ic.name, addrCell, status});
   }
 
-  return atf.format(80);
+  return renderTable(80);
 }

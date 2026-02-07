@@ -32,7 +32,7 @@
 
 #pragma once
 
-#include "ConfigData.hpp"
+#include "InterfaceConfig.hpp"
 #include <string>
 
 /**
@@ -46,8 +46,8 @@ public:
 
   /**
    * @brief Format a single interface into a detailed summary
-   * @param data ConfigData containing interface information
+   * @param ic InterfaceConfig containing interface information
    * @return Formatted summary string
    */
-  std::string format(const ConfigData &data) const;
+  std::string format(const InterfaceConfig &ic) const;
 };

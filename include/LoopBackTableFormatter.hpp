@@ -27,11 +27,12 @@
 
 #pragma once
 
+#include "InterfaceConfig.hpp"
 #include "TableFormatter.hpp"
 #include <vector>
 
-class LoopBackTableFormatter : public TableFormatter {
+class LoopBackTableFormatter : public TableFormatter<InterfaceConfig> {
 public:
   LoopBackTableFormatter() = default;
-  std::string format(const std::vector<ConfigData> &items) const override;
+  std::string format(const std::vector<InterfaceConfig> &items) const override;
 };

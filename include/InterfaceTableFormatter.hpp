@@ -32,7 +32,7 @@
 
 #pragma once
 
-#include "ConfigData.hpp"
+#include "InterfaceConfig.hpp"
 #include "TableFormatter.hpp"
 #include <string>
 #include <vector>
@@ -43,14 +43,14 @@
  * General-purpose formatter that handles mixed interface types.
  * For uniform interface types, specialized formatters may be preferred.
  */
-class InterfaceTableFormatter : public TableFormatter {
+class InterfaceTableFormatter : public TableFormatter<InterfaceConfig> {
 public:
   InterfaceTableFormatter() = default;
 
   /**
    * @brief Format interface list as ASCII table
-   * @param interfaces Vector of interface ConfigData objects
+   * @param interfaces Vector of InterfaceConfig objects
    * @return Formatted table string with interface information
    */
-  std::string format(const std::vector<ConfigData> &interfaces) const;
+  std::string format(const std::vector<InterfaceConfig> &interfaces) const override;
 };

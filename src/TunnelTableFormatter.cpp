@@ -26,7 +26,6 @@
  */
 
 #include "TunnelTableFormatter.hpp"
-#include "AbstractTableFormatter.hpp"
 #include "InterfaceConfig.hpp"
 #include "InterfaceFlags.hpp"
 #include "InterfaceType.hpp"
@@ -39,32 +38,27 @@
 #include <vector>
 
 std::string
-TunnelTableFormatter::format(const std::vector<ConfigData> &interfaces) const {
+TunnelTableFormatter::format(const std::vector<InterfaceConfig> &interfaces) const {
   if (interfaces.empty()) {
     return "No tunnel interfaces found.\n";
   }
 
-  AbstractTableFormatter atf;
-  atf.addColumn("Interface", "Interface", 10, 4, true);
-  atf.addColumn("Source", "Source", 5, 6, true);
-  atf.addColumn("Destination", "Destination", 5, 6, true);
-  atf.addColumn("Flags", "Flags", 5, 3, true);
-  atf.addColumn("Metric", "Metric", 4, 3, false);
-  atf.addColumn("MTU", "MTU", 4, 3, false);
-  atf.addColumn("Groups", "Groups", 2, 6, true);
-  atf.addColumn("FIB", "FIB", 5, 3, false);
-  atf.addColumn("TunFIB", "TunFIB", 4, 3, false);
-  atf.addColumn("ND6Opts", "ND6Opts", 1, 6, true);
+  addColumn("Interface", "Interface", 10, 4, true);
+  addColumn("Source", "Source", 5, 6, true);
+  addColumn("Destination", "Destination", 5, 6, true);
+  addColumn("Flags", "Flags", 5, 3, true);
+  addColumn("Metric", "Metric", 4, 3, false);
+  addColumn("MTU", "MTU", 4, 3, false);
+  addColumn("Groups", "Groups", 2, 6, true);
+  addColumn("FIB", "FIB", 5, 3, false);
+  addColumn("TunFIB", "TunFIB", 4, 3, false);
+  addColumn("ND6Opts", "ND6Opts", 1, 6, true);
 
-  for (const auto &cd : interfaces) {
-    if (!cd.iface)
+  for (const auto &ic : interfaces) {
+    if (!(ic.type == InterfaceType::Tunnel ||
+          ic.type == InterfaceType::Gif ||
+          ic.type == InterfaceType::Tun))
       continue;
-    if (!(cd.iface->type == InterfaceType::Tunnel ||
-          cd.iface->type == InterfaceType::Gif ||
-          cd.iface->type == InterfaceType::Tun))
-      continue;
-
-    const auto &ic = *cd.iface;
 
     std::string source = "-";
     std::string destination = "-";
@@ -114,11 +108,11 @@ TunnelTableFormatter::format(const std::vector<ConfigData> &interfaces) const {
     if (ic.nd6_options)
       nd6Cell = *ic.nd6_options;
 
-    atf.addRow({ic.name, source, destination, flagsStr, metricStr, mtuStr,
+    addRow({ic.name, source, destination, flagsStr, metricStr, mtuStr,
                 groupsCell, fibStr, tunnelFibStr, nd6Cell});
   }
 
-  auto out = atf.format(80);
+  auto out = renderTable(80);
   out += "\n";
   return out;
 }

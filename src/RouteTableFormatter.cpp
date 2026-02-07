@@ -26,36 +26,30 @@
  */
 
 #include "RouteTableFormatter.hpp"
-#include "AbstractTableFormatter.hpp"
 #include "RouteConfig.hpp"
 #include <iomanip>
+#include <sys/socket.h>
 #include <net/route.h>
 #include <sstream>
-#include <sys/socket.h>
 
 std::string
-RouteTableFormatter::format(const std::vector<ConfigData> &routes) const {
+RouteTableFormatter::format(const std::vector<RouteConfig> &routes) const {
   if (routes.empty())
     return "No routes found.\n";
 
   // Determine VRF context (first route's VRF if present)
   std::string vrfContext = "Global";
-  if (!routes.empty() && routes[0].route && routes[0].route->vrf)
-    vrfContext = *routes[0].route->vrf;
+  if (!routes.empty() && routes[0].vrf)
+    vrfContext = *routes[0].vrf;
 
-  AbstractTableFormatter atf;
-  atf.addColumn("Destination", "Destination", 8, 10, true);
-  atf.addColumn("Gateway", "Gateway", 6, 7, true);
-  atf.addColumn("Interface", "Interface", 6, 4, true);
-  atf.addColumn("Flags", "Flags", 3, 2, true);
-  atf.addColumn("Scope", "Scope", 5, 6, true);
-  atf.addColumn("Expire", "Expire", 6, 8, true);
+  addColumn("Destination", "Destination", 8, 10, true);
+  addColumn("Gateway", "Gateway", 6, 7, true);
+  addColumn("Interface", "Interface", 6, 4, true);
+  addColumn("Flags", "Flags", 3, 2, true);
+  addColumn("Scope", "Scope", 5, 6, true);
+  addColumn("Expire", "Expire", 6, 8, true);
 
-  for (const auto &cd : routes) {
-    if (!cd.route)
-      continue;
-    const auto &route = *cd.route;
-
+  for (const auto &route : routes) {
     std::string dest = route.prefix.empty() ? "-" : route.prefix;
     std::string gateway = route.nexthop.value_or("-");
     std::string iface = route.iface.value_or("-");
@@ -80,7 +74,7 @@ RouteTableFormatter::format(const std::vector<ConfigData> &routes) const {
     if (route.reject)
       flags += "R";
 
-    atf.addRow({dest, gateway, iface, flags, scope, expire});
+    addRow({dest, gateway, iface, flags, scope, expire});
   }
 
   // Display VRF header: if kernel reported a fib name like "fibN", show
@@ -100,6 +94,6 @@ RouteTableFormatter::format(const std::vector<ConfigData> &routes) const {
          "\x1b[1mG\x1b[0m=gateway, " + "\x1b[1mH\x1b[0m=host, " +
          "\x1b[1mS\x1b[0m=static, " + "\x1b[1mB\x1b[0m=blackhole, " +
          "\x1b[1mR\x1b[0m=reject\n\n";
-  out += atf.format(80);
+  out += renderTable(80);
   return out;
 }

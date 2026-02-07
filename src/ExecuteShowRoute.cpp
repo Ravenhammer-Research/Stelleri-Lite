@@ -48,23 +48,15 @@ void netcli::Parser::executeShowRoute(const RouteToken &tok,
     vrfOpt = std::move(v);
   }
 
-  std::vector<ConfigData> routes;
-  // Retrieve RouteConfig entries for the requested VRF (or global) and
-  // convert them into ConfigData for the formatter.
+  std::vector<RouteConfig> routes;
+  // Retrieve RouteConfig entries for the requested VRF (or global).
   auto routeConfs = mgr->GetRoutes(vrfOpt);
   if (tok.prefix().empty()) {
-    routes.reserve(routeConfs.size());
-    for (auto &rc : routeConfs) {
-      ConfigData cd;
-      cd.route = std::make_shared<RouteConfig>(std::move(rc));
-      routes.push_back(std::move(cd));
-    }
+    routes = std::move(routeConfs);
   } else {
     for (auto &rc : routeConfs) {
       if (rc.prefix == tok.prefix()) {
-        ConfigData cd;
-        cd.route = std::make_shared<RouteConfig>(std::move(rc));
-        routes.push_back(std::move(cd));
+        routes.push_back(std::move(rc));
         break;
       }
     }
@@ -76,8 +68,8 @@ void netcli::Parser::executeShowRoute(const RouteToken &tok,
   }
 
   std::string vrfContext = "Global";
-  if (!routes.empty() && routes[0].route && routes[0].route->vrf) {
-    vrfContext = *routes[0].route->vrf;
+  if (!routes.empty() && routes[0].vrf) {
+    vrfContext = *routes[0].vrf;
   }
 
   RouteTableFormatter formatter;

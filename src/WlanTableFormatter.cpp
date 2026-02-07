@@ -26,29 +26,23 @@
  */
 
 #include "WlanTableFormatter.hpp"
-#include "AbstractTableFormatter.hpp"
-#include "ConfigData.hpp"
 #include "InterfaceConfig.hpp"
 #include "WlanAuthMode.hpp"
 #include "WlanConfig.hpp"
 #include <sstream>
 
 std::string
-WlanTableFormatter::format(const std::vector<ConfigData> &items) const {
-  AbstractTableFormatter atf;
-  atf.addColumn("Interface", "Interface", 10, 4, true);
-  atf.addColumn("SSID", "SSID", 20, 8, true);
-  atf.addColumn("Channel", "Chan", 6, 3, true);
-  atf.addColumn("Parent", "Parent", 10, 6, true);
-  atf.addColumn("Status", "Status", 10, 6, true);
-  atf.addColumn("Auth", "Auth", 6, 4, true);
-  atf.addColumn("Address", "Address", 5, 7, true);
-  atf.addColumn("MTU", "MTU", 6, 6, true);
+WlanTableFormatter::format(const std::vector<InterfaceConfig> &items) const {
+  addColumn("Interface", "Interface", 10, 4, true);
+  addColumn("SSID", "SSID", 20, 8, true);
+  addColumn("Channel", "Chan", 6, 3, true);
+  addColumn("Parent", "Parent", 10, 6, true);
+  addColumn("Status", "Status", 10, 6, true);
+  addColumn("Auth", "Auth", 6, 4, true);
+  addColumn("Address", "Address", 5, 7, true);
+  addColumn("MTU", "MTU", 6, 6, true);
 
-  for (const auto &cd : items) {
-    if (!cd.iface)
-      continue;
-    const auto &ic = *cd.iface;
+  for (const auto &ic : items) {
     if (ic.type != InterfaceType::Wireless)
       continue;
 
@@ -102,8 +96,8 @@ WlanTableFormatter::format(const std::vector<ConfigData> &items) const {
       }
     }
 
-    atf.addRow({ssid, channel, parent, status, auth, ic.name, addrCell, mtu});
+    addRow({ssid, channel, parent, status, auth, ic.name, addrCell, mtu});
   }
 
-  return atf.format(80);
+  return renderTable(80);
 }

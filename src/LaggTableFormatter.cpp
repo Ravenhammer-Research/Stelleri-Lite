@@ -26,7 +26,6 @@
  */
 
 #include "LaggTableFormatter.hpp"
-#include "AbstractTableFormatter.hpp"
 #include "InterfaceConfig.hpp"
 #include "InterfaceFlags.hpp"
 #include "InterfaceType.hpp"
@@ -86,7 +85,7 @@ static std::string protocolToString(LaggProtocol proto) {
 }
 
 std::string
-LaggTableFormatter::format(const std::vector<ConfigData> &interfaces) const {
+LaggTableFormatter::format(const std::vector<InterfaceConfig> &interfaces) const {
   if (interfaces.empty())
     return "No LAGG interfaces found.\n";
 
@@ -115,13 +114,9 @@ LaggTableFormatter::format(const std::vector<ConfigData> &interfaces) const {
 
   std::vector<Row> rows;
 
-  for (const auto &cd : interfaces) {
-    if (!cd.iface)
-      continue;
-    const auto &ic = *cd.iface;
-
+  for (const auto &ic : interfaces) {
     const LaggConfig *laggPtr =
-        dynamic_cast<const LaggConfig *>(cd.iface.get());
+        dynamic_cast<const LaggConfig *>(&ic);
 
     if (!laggPtr)
       continue;
@@ -197,14 +192,13 @@ LaggTableFormatter::format(const std::vector<ConfigData> &interfaces) const {
   flagsWidth += 2;
   statusWidth += 2;
 
-  AbstractTableFormatter atf;
-  atf.addColumn("Interface", "Interface", 10, 4, true);
-  atf.addColumn("Protocol", "Protocol", 8, 4, true);
-  atf.addColumn("HashPolicy", "HashPolicy", 3, 3, true);
-  atf.addColumn("Members", "Members", 3, 6, true);
-  atf.addColumn("MTU", "MTU", 4, 3, false);
-  atf.addColumn("Flags", "Flags", 3, 3, true);
-  atf.addColumn("Status", "Status", 6, 6, true);
+  addColumn("Interface", "Interface", 10, 4, true);
+  addColumn("Protocol", "Protocol", 8, 4, true);
+  addColumn("HashPolicy", "HashPolicy", 3, 3, true);
+  addColumn("Members", "Members", 3, 6, true);
+  addColumn("MTU", "MTU", 4, 3, false);
+  addColumn("Flags", "Flags", 3, 3, true);
+  addColumn("Status", "Status", 6, 6, true);
 
   for (const auto &r : rows) {
     // Combine hash items into multiline cell if present
@@ -262,9 +256,9 @@ LaggTableFormatter::format(const std::vector<ConfigData> &interfaces) const {
       flagsCell = flagsToString(*r.flags);
     }
 
-    atf.addRow(
+    addRow(
         {r.name, r.proto, hashCell, membersCell, mtuCell, flagsCell, r.status});
   }
 
-  return atf.format(80);
+  return renderTable(80);
 }

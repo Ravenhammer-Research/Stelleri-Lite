@@ -27,11 +27,12 @@
 
 #pragma once
 
+#include "InterfaceConfig.hpp"
 #include "TableFormatter.hpp"
 #include <vector>
 
-class CarpTableFormatter : public TableFormatter {
+class CarpTableFormatter : public TableFormatter<InterfaceConfig> {
 public:
   CarpTableFormatter() = default;
-  std::string format(const std::vector<ConfigData> &items) const override;
+  std::string format(const std::vector<InterfaceConfig> &items) const override;
 };

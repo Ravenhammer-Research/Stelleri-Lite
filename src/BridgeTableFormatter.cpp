@@ -26,7 +26,6 @@
  */
 
 #include "BridgeTableFormatter.hpp"
-#include "AbstractTableFormatter.hpp"
 #include "BridgeInterfaceConfig.hpp"
 #include "InterfaceConfig.hpp"
 #include "InterfaceFlags.hpp"
@@ -39,48 +38,43 @@
 #include <vector>
 
 std::string
-BridgeTableFormatter::format(const std::vector<ConfigData> &interfaces) const {
+BridgeTableFormatter::format(const std::vector<BridgeInterfaceConfig> &interfaces) const {
   if (interfaces.empty())
     return "No bridge interfaces found.\n";
 
-  AbstractTableFormatter atf;
-  atf.addColumn("Interface", "Interface", 10, 4, true);
-  atf.addColumn("STP", "STP", 6, 3, true);
-  atf.addColumn("VLANFiltering", "VLANFiltering", 5, 3, true);
-  atf.addColumn("Priority", "Priority", 4, 3, false);
-  atf.addColumn("Members", "Members", 3, 6, true);
-  atf.addColumn("MTU", "MTU", 4, 3, false);
-  atf.addColumn("Flags", "Flags", 3, 3, true);
+  addColumn("Interface", "Interface", 10, 4, true);
+  addColumn("STP", "STP", 6, 3, true);
+  addColumn("VLANFiltering", "VLANFiltering", 5, 3, true);
+  addColumn("Priority", "Priority", 4, 3, false);
+  addColumn("Members", "Members", 3, 6, true);
+  addColumn("MTU", "MTU", 4, 3, false);
+  addColumn("Flags", "Flags", 3, 3, true);
 
-  for (const auto &cd : interfaces) {
-    if (!cd.iface || cd.iface->type != InterfaceType::Bridge)
+  for (const auto &br : interfaces) {
+    if (br.type != InterfaceType::Bridge)
       continue;
 
-    const auto &ic = *cd.iface;
-    const auto *br =
-        dynamic_cast<const BridgeInterfaceConfig *>(cd.iface.get());
-
-    std::string stp = (br && br->stp) ? "yes" : "no";
-    std::string vlanf = (br && br->vlanFiltering) ? "yes" : "no";
+    std::string stp = br.stp ? "yes" : "no";
+    std::string vlanf = br.vlanFiltering ? "yes" : "no";
     std::string prio =
-        (br && br->priority) ? std::to_string(*br->priority) : std::string("-");
-    std::string mtu = ic.mtu ? std::to_string(*ic.mtu) : std::string("-");
+        br.priority ? std::to_string(*br.priority) : std::string("-");
+    std::string mtu = br.mtu ? std::to_string(*br.mtu) : std::string("-");
     std::string flags =
-        (ic.flags ? flagsToString(*ic.flags) : std::string("-"));
+        (br.flags ? flagsToString(*br.flags) : std::string("-"));
 
     std::string membersCell = "-";
-    if (br && !br->members.empty()) {
+    if (!br.members.empty()) {
       std::ostringstream moss;
-      for (size_t i = 0; i < br->members.size(); ++i) {
+      for (size_t i = 0; i < br.members.size(); ++i) {
         if (i)
           moss << '\n';
-        moss << br->members[i];
+        moss << br.members[i];
       }
       membersCell = moss.str();
     }
 
-    atf.addRow({ic.name, stp, vlanf, prio, membersCell, mtu, flags});
+    addRow({br.name, stp, vlanf, prio, membersCell, mtu, flags});
   }
 
-  return atf.format(80);
+  return renderTable(80);
 }

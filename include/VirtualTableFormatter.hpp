@@ -32,7 +32,7 @@
 
 #pragma once
 
-#include "ConfigData.hpp"
+#include "InterfaceConfig.hpp"
 #include "TableFormatter.hpp"
 #include <string>
 #include <vector>
@@ -43,14 +43,14 @@
  * Shows virtual interface details like epair peers, tap devices, routing
  * domain.
  */
-class VirtualTableFormatter : public TableFormatter {
+class VirtualTableFormatter : public TableFormatter<InterfaceConfig> {
 public:
   VirtualTableFormatter() = default;
 
   /**
    * @brief Format virtual interfaces into a detailed table
-   * @param interfaces List of ConfigData with virtual interface configurations
+   * @param interfaces List of InterfaceConfig with virtual interface configurations
    * @return Formatted ASCII table string
    */
-  std::string format(const std::vector<ConfigData> &interfaces) const;
+  std::string format(const std::vector<InterfaceConfig> &interfaces) const override;
 };

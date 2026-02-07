@@ -32,7 +32,7 @@
 
 #pragma once
 
-#include "ConfigData.hpp"
+#include "InterfaceConfig.hpp"
 #include "TableFormatter.hpp"
 #include <string>
 #include <vector>
@@ -42,14 +42,14 @@
  *
  * Shows tunnel-specific details like source, destination, tunnel-vrf (FIB).
  */
-class TunnelTableFormatter : public TableFormatter {
+class TunnelTableFormatter : public TableFormatter<InterfaceConfig> {
 public:
   TunnelTableFormatter() = default;
 
   /**
    * @brief Format tunnel interfaces into a detailed table
-   * @param interfaces List of ConfigData with tunnel configurations
+   * @param interfaces List of InterfaceConfig with tunnel configurations
    * @return Formatted ASCII table string
    */
-  std::string format(const std::vector<ConfigData> &interfaces) const;
+  std::string format(const std::vector<InterfaceConfig> &interfaces) const override;
 };

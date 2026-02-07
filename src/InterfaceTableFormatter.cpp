@@ -26,7 +26,6 @@
  */
 
 #include "InterfaceTableFormatter.hpp"
-#include "AbstractTableFormatter.hpp"
 #include "InterfaceConfig.hpp"
 #include "InterfaceFlags.hpp"
 #include "InterfaceType.hpp"
@@ -75,27 +74,23 @@ static std::string interfaceTypeToString(InterfaceType t) {
 }
 
 std::string InterfaceTableFormatter::format(
-    const std::vector<ConfigData> &interfaces) const {
+    const std::vector<InterfaceConfig> &interfaces) const {
   if (interfaces.empty()) {
     return "No interfaces found.\n";
   }
 
-  AbstractTableFormatter atf;
   // Define columns (key, title, priority, minWidth)
-  atf.addColumn("Index", "Index", 8, 2, true);
-  atf.addColumn("Interface", "Interface", 10, 4, true);
-  atf.addColumn("Group", "Group", 8, 4, true);
-  atf.addColumn("Type", "Type", 8, 6, true);
-  atf.addColumn("Address", "Address", 5, 7, true);
-  atf.addColumn("Status", "Status", 6, 6, true);
-  atf.addColumn("MTU", "MTU", 4, 3, false);
-  atf.addColumn("VRF", "VRF", 5, 3, false);
-  atf.addColumn("Flags", "Flags", 3, 3, true);
+  addColumn("Index", "Index", 8, 2, true);
+  addColumn("Interface", "Interface", 10, 4, true);
+  addColumn("Group", "Group", 8, 4, true);
+  addColumn("Type", "Type", 8, 6, true);
+  addColumn("Address", "Address", 5, 7, true);
+  addColumn("Status", "Status", 6, 6, true);
+  addColumn("MTU", "MTU", 4, 3, false);
+  addColumn("VRF", "VRF", 5, 3, false);
+  addColumn("Flags", "Flags", 3, 3, true);
 
-  for (const auto &cd : interfaces) {
-    if (!cd.iface)
-      continue;
-    const auto &ic = *cd.iface;
+  for (const auto &ic : interfaces) {
 
     std::string status = "-";
     if (ic.flags) {
@@ -163,12 +158,12 @@ std::string InterfaceTableFormatter::format(
     if (ic.index)
       indexCell = B + std::to_string(*ic.index) + R;
 
-    atf.addRow({indexCell, ic.name, groupCell, interfaceTypeToString(ic.type),
+    addRow({indexCell, ic.name, groupCell, interfaceTypeToString(ic.type),
                 addrCell, status, mtuCell, vrfCell, flagsCell});
   }
 
   // Sort by index numeric ascending by default
-  atf.setSortColumn(0);
+  setSortColumn(0);
 
   const std::string B = "\x1b[1m";
   const std::string R = "\x1b[0m";
@@ -200,7 +195,7 @@ std::string InterfaceTableFormatter::format(
   legend += "\n\n";
 
   // Bold index numbers in rows: wrap when adding rows above. Call format
-  auto out = atf.format(80);
+  auto out = renderTable(80);
   out = legend + out;
   return out;
 }

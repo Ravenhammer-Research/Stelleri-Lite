@@ -27,11 +27,12 @@
 
 #pragma once
 
+#include "InterfaceConfig.hpp"
 #include "TableFormatter.hpp"
 #include <vector>
 
-class WlanTableFormatter : public TableFormatter {
+class WlanTableFormatter : public TableFormatter<InterfaceConfig> {
 public:
   WlanTableFormatter() = default;
-  std::string format(const std::vector<ConfigData> &items) const override;
+  std::string format(const std::vector<InterfaceConfig> &items) const override;
 };

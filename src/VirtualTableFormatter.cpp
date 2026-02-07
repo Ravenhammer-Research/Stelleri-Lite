@@ -26,7 +26,6 @@
  */
 
 #include "VirtualTableFormatter.hpp"
-#include "AbstractTableFormatter.hpp"
 #include "InterfaceConfig.hpp"
 #include "InterfaceFlags.hpp"
 #include "InterfaceType.hpp"
@@ -40,23 +39,22 @@
 #include <string>
 
 std::string
-VirtualTableFormatter::format(const std::vector<ConfigData> &interfaces) const {
+VirtualTableFormatter::format(const std::vector<InterfaceConfig> &interfaces) const {
   if (interfaces.empty())
     return "No virtual interfaces found.\n";
 
-  AbstractTableFormatter atf;
   // Columns: peer_a | VRF | MTU | Status | Flags | peer_b | VRF | MTU | Status
   // | Flags
-  atf.addColumn("peer_a", "peer_a", 12, 2, true);
-  atf.addColumn("vrf_a", "VRF", 4, 1, false);
-  atf.addColumn("mtu_a", "MTU", 5, 1, false);
-  atf.addColumn("status_a", "Status", 6, 1, false);
-  atf.addColumn("flags_a", "Flags", 6, 1, true);
-  atf.addColumn("peer_b", "peer_b", 12, 2, true);
-  atf.addColumn("vrf_b", "VRF", 4, 1, false);
-  atf.addColumn("mtu_b", "MTU", 5, 1, false);
-  atf.addColumn("status_b", "Status", 6, 1, false);
-  atf.addColumn("flags_b", "Flags", 6, 1, true);
+  addColumn("peer_a", "peer_a", 12, 2, true);
+  addColumn("vrf_a", "VRF", 4, 1, false);
+  addColumn("mtu_a", "MTU", 5, 1, false);
+  addColumn("status_a", "Status", 6, 1, false);
+  addColumn("flags_a", "Flags", 6, 1, true);
+  addColumn("peer_b", "peer_b", 12, 2, true);
+  addColumn("vrf_b", "VRF", 4, 1, false);
+  addColumn("mtu_b", "MTU", 5, 1, false);
+  addColumn("status_b", "Status", 6, 1, false);
+  addColumn("flags_b", "Flags", 6, 1, true);
 
   // Build a map of pairs keyed by base name (strip trailing a/b when
   // applicable)
@@ -67,10 +65,9 @@ VirtualTableFormatter::format(const std::vector<ConfigData> &interfaces) const {
 
   std::map<std::string, PairInfo> pairs;
 
-  for (const auto &cd : interfaces) {
-    if (!cd.iface || cd.iface->type != InterfaceType::Virtual)
+  for (const auto &ic : interfaces) {
+    if (ic.type != InterfaceType::Virtual)
       continue;
-    const InterfaceConfig &ic = *cd.iface;
     std::string nm = ic.name;
     // detect trailing 'a' or 'b' (e.g., epair14a)
     if (!nm.empty()) {
@@ -117,11 +114,11 @@ VirtualTableFormatter::format(const std::vector<ConfigData> &interfaces) const {
     std::string name_b = pi.b ? pi.b->name : std::string("-");
     auto b_side = format_side(pi.b);
 
-    atf.addRow({name_a, a_side[0], a_side[1], a_side[2], a_side[3], name_b,
+    addRow({name_a, a_side[0], a_side[1], a_side[2], a_side[3], name_b,
                 b_side[0], b_side[1], b_side[2], b_side[3]});
   }
 
-  auto out = atf.format(80);
+  auto out = renderTable(80);
   out += "\n";
   return out;
 }

@@ -37,9 +37,6 @@
 #include <memory>
 #include <string_view>
 
-class InterfaceConfig; // forward
-class RouteConfig;     // forward
-
 /**
  * @brief Lightweight configuration container/base type
  *
@@ -58,18 +55,4 @@ public:
   // Destroy this configuration on the system (e.g., remove interface).
   // Concrete types may override to perform deletion/teardown. Default is no-op.
   virtual void destroy() const {}
-
-  // (Interface existence helper moved to `InterfaceConfig`)
-
-  // Optional pointer to an InterfaceConfig payload used by formatters and
-  // consumers that aggregate heterogeneous configuration objects.
-  // Use shared_ptr so it can be declared with a forward declaration.
-  std::shared_ptr<InterfaceConfig> iface;
-  // Optional pointer to a RouteConfig when this ConfigData carries a route
-  std::shared_ptr<RouteConfig> route;
-
-public:
-  // Default constructor allows creating lightweight container instances
-  // that hold `iface` or `route` payload pointers.
-  ConfigData() = default;
 };
