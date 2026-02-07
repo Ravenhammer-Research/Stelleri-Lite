@@ -71,7 +71,7 @@ SingleInterfaceSummaryFormatter::format(const ConfigData &cd) const {
   }
 
   if (ic.vrf) {
-    oss << "VRF:       " << ic.vrf->name << "\n";
+    oss << "VRF:       " << ic.vrf->table << "\n";
   }
 
   // Tunnel details (use dynamic_cast to access derived TunnelConfig)

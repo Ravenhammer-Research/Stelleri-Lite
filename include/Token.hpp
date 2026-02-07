@@ -48,10 +48,10 @@ public:
   virtual ~Token() = default;
 
   /**
-   * NOTE: `toString()` was removed from the token interface. Tokens no
-   * longer expose a textual reconstruction helper; use parsing/formatting
-   * utilities instead when needed.
+   * @brief Convert token chain to command string
+   * @return String representation of this token and its chain
    */
+  virtual std::string toString() const = 0;
 
   /**
    * @brief Provide completion suggestions for partial input

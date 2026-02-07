@@ -96,9 +96,8 @@ VirtualTableFormatter::format(const std::vector<ConfigData> &interfaces) const {
       if (!opt.has_value())
         return std::array<std::string, 4>{"-", "-", "-", "-"};
       const InterfaceConfig &ii = *opt;
-      std::string vrf = (ii.vrf && ii.vrf->table.has_value())
-                            ? std::to_string(*ii.vrf->table)
-                            : std::string("-");
+      std::string vrf =
+          ii.vrf ? std::to_string(ii.vrf->table) : std::string("-");
       std::string mtu = ii.mtu ? std::to_string(*ii.mtu) : std::string("-");
       std::string status = "-";
       if (ii.flags) {

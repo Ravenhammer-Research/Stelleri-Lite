@@ -39,18 +39,18 @@
 /**
  * @brief Token representing a VRF (Virtual Routing and Forwarding) instance
  *
- * VRFs provide routing table isolation. Each VRF has a name and optional
- * routing table ID.
+ * VRFs provide routing table isolation using FreeBSD FIB table IDs.
  */
 class VRFToken : public Token {
 public:
   /**
-   * @brief Construct VRF token with name
-   * @param name VRF instance name
+   * @brief Construct VRF token with table ID
+   * @param table FIB table ID (0-65535)
    */
-  explicit VRFToken(std::string name);
+  explicit VRFToken(int table);
 
-  /** @brief textual reconstruction removed */
+  /** @brief Convert to command string */
+  std::string toString() const override;
 
   /** @brief Get autocomplete suggestions (none for VRF) */
   std::vector<std::string> autoComplete(std::string_view) const override;
@@ -58,12 +58,9 @@ public:
   /** @brief Clone the token */
   std::unique_ptr<Token> clone() const override;
 
-  /** @brief Get VRF name */
-  const std::string &name() const { return name_; }
-
-  /** @brief Optional routing table ID for FreeBSD setfib() */
-  std::optional<int> table;
+  /** @brief Get VRF table ID */
+  int table() const { return table_; }
 
 private:
-  std::string name_;
+  int table_;
 };

@@ -33,5 +33,5 @@
 void netcli::Parser::executeShowVRF(const VRFToken &tok,
                                     ConfigurationManager *mgr) const {
   (void)mgr;
-  std::cout << "VRF: " << tok.name() << "\n";
+  std::cout << "VRF table: " << tok.table() << "\n";
 }

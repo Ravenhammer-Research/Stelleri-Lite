@@ -29,7 +29,32 @@
 
 RouteToken::RouteToken(std::string prefix) : prefix_(std::move(prefix)) {}
 
-// textual reconstruction removed from RouteToken
+std::string RouteToken::toString() const {
+  std::string result = "route protocol static dest " + prefix_;
+
+  if (blackhole) {
+    result += " nexthop blackhole";
+  } else if (reject) {
+    result += " nexthop reject";
+  } else if (nexthop) {
+    result += " nexthop " + nexthop->toString();
+    if (interface) {
+      result += " interface " + interface->name();
+    }
+  } else if (interface) {
+    // No nexthop IP, only interface - use nexthop-interface
+    result += " nexthop-interface " + interface->name();
+  }
+
+  if (vrf) {
+    result += " vrf " + std::to_string(vrf->table());
+  }
+
+  if (next_) {
+    result += " " + next_->toString();
+  }
+  return result;
+}
 
 std::vector<std::string> RouteToken::autoComplete(std::string_view) const {
   return {"interface", "next-hop", "blackhole", "reject", "vrf"};
@@ -53,7 +78,7 @@ void RouteToken::debugOutput(std::ostream &os) const {
   if (nexthop)
     os << " nexthop='" << nexthop->toString() << "'";
   if (vrf)
-    os << " vrf='" << vrf->name() << "'";
+    os << " vrf='" << vrf->table() << "'";
   if (interface)
     os << " interface='" << interface->name() << "'";
   if (blackhole)
@@ -131,7 +156,7 @@ size_t RouteToken::parseOptions(const std::vector<std::string> &tokens,
       continue;
     }
     if (opt == "vrf" && j + 1 < tokens.size()) {
-      vrf = std::make_unique<VRFToken>(tokens[j + 1]);
+      vrf = std::make_unique<VRFToken>(std::stoi(tokens[j + 1]));
       j += 2;
       continue;
     }

@@ -56,7 +56,6 @@ VLANConfig::VLANConfig(const InterfaceConfig &base) {
 }
 
 VLANConfig::VLANConfig(const InterfaceConfig &base, uint16_t id_,
-                       std::optional<std::string> name_,
                        std::optional<std::string> parent_,
                        std::optional<PriorityCodePoint> pcp_) {
   name = base.name;
@@ -75,7 +74,6 @@ VLANConfig::VLANConfig(const InterfaceConfig &base, uint16_t id_,
   mtu = base.mtu;
 
   id = id_;
-  name = name_ ? *name_ : name;
   parent = parent_;
   pcp = pcp_;
 }

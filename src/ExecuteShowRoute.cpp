@@ -44,19 +44,7 @@ void netcli::Parser::executeShowRoute(const RouteToken &tok,
   // that routing table. Otherwise request global routes.
   std::optional<VRFConfig> vrfOpt = std::nullopt;
   if (tok.vrf) {
-    VRFConfig v;
-    std::string nm = tok.vrf->name();
-    // If the VRF token is numeric, treat it as a FIB/table id.
-    bool isnumeric =
-        !nm.empty() && std::all_of(nm.begin(), nm.end(),
-                                   [](char c) { return c >= '0' && c <= '9'; });
-    if (isnumeric) {
-      int t = std::stoi(nm);
-      v.table = t;
-      v.name = std::string("fib") + std::to_string(t);
-    } else {
-      v.name = nm;
-    }
+    VRFConfig v(tok.vrf->table());
     vrfOpt = std::move(v);
   }
 

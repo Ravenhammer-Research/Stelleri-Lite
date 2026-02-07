@@ -397,8 +397,6 @@ void BridgeInterfaceConfig::loadMembers() {
   // Try with a small buffer first, then retry with a larger buffer if needed.
   const size_t small_entries = 64;
   const size_t large_entries = 1024;
-  size_t used_bytes = 0;
-  bool success = false;
   for (size_t entries : {small_entries, large_entries}) {
     std::vector<struct ifbreq> buf(entries);
     std::memset(buf.data(), 0, buf.size() * sizeof(struct ifbreq));
@@ -419,15 +417,13 @@ void BridgeInterfaceConfig::loadMembers() {
 
     if (ioctl(sock, SIOCGDRVSPEC, &ifd) < 0) {
       int e = errno;
-      std::cerr << "loadMembers: ioctl failed for bridge '" << name
-                << "': " << strerror(e) << " (errno=" << e << ")\n";
       // If ioctl fails with EINVAL on the small buffer, try a larger one.
       if (entries == large_entries || e != EINVAL)
         break;
       continue;
     }
 
-    used_bytes = static_cast<size_t>(ifbic.ifbic_len);
+    size_t used_bytes = static_cast<size_t>(ifbic.ifbic_len);
     size_t count = (used_bytes / sizeof(struct ifbreq));
     if (count > buf.size())
       count = buf.size();
@@ -437,22 +433,10 @@ void BridgeInterfaceConfig::loadMembers() {
         members.emplace_back(std::string(buf[i].ifbr_ifsname));
     }
 
-    success = true;
     // If kernel filled the buffer fully, it may have more entries; retry with
     // the larger buffer on the next loop iteration would have already run.
     if (!members.empty() || entries == large_entries)
       break;
-  }
-
-  if (!success) {
-    std::cerr << "loadMembers: failed to retrieve members for bridge '" << name
-              << "'\n";
-  } else {
-    std::cerr << "loadMembers: bridge '" << name << "' returned "
-              << members.size() << " members (used_bytes=" << used_bytes
-              << ")\n";
-    for (const auto &m : members)
-      std::cerr << "  member: " << m << "\n";
   }
 
   close(sock);

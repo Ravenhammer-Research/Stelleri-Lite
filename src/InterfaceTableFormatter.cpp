@@ -130,9 +130,9 @@ std::string InterfaceTableFormatter::format(
     std::string vrfCell = "-";
     if (ic.vrf) {
       if (ic.vrf->table)
-        vrfCell = std::to_string(*ic.vrf->table);
+        vrfCell = std::to_string(ic.vrf->table);
       else
-        vrfCell = ic.vrf->name;
+        vrfCell = std::to_string(ic.vrf->table);
     }
 
     std::string flagsCell =

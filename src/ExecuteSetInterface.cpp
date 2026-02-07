@@ -67,15 +67,10 @@ void netcli::Parser::executeSetInterface(const InterfaceToken &tok,
 
     // If the token requested a specific VRF/FIB table, apply it to the base
     if (tok.vrf) {
-      try {
-        int tbl = std::stoi(*tok.vrf);
-        if (!base.vrf)
-          base.vrf = std::make_unique<VRFConfig>();
-        base.vrf->table = tbl;
-        base.vrf->name = std::string("fib") + std::to_string(tbl);
-      } catch (...) {
-        // ignore invalid fib value
-      }
+      if (!base.vrf)
+        base.vrf = std::make_unique<VRFConfig>(*tok.vrf);
+      else
+        base.vrf->table = *tok.vrf;
     }
 
     // Decide effective type: token > existing > name prefix
@@ -137,8 +132,7 @@ void netcli::Parser::executeSetInterface(const InterfaceToken &tok,
                      "parent <parent_iface>\n";
         return;
       }
-      VLANConfig vc(base, tok.vlan->id, tok.vlan->name, tok.vlan->parent,
-                    tok.vlan->pcp);
+      VLANConfig vc(base, tok.vlan->id, tok.vlan->parent, tok.vlan->pcp);
       vc.InterfaceConfig::name = name;
       vc.save();
       std::cout << "set interface: " << (exists ? "updated" : "created")

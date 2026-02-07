@@ -42,6 +42,7 @@ public:
   SetToken() = default;
   ~SetToken() override = default;
 
+  std::string toString() const override;
   std::vector<std::string> autoComplete(std::string_view) const override;
 
   std::unique_ptr<Token> clone() const override;

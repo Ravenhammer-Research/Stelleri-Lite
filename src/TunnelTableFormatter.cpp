@@ -103,9 +103,9 @@ TunnelTableFormatter::format(const std::vector<ConfigData> &interfaces) const {
 
     if (ic.vrf) {
       if (ic.vrf->table)
-        fibStr = std::to_string(*ic.vrf->table);
-      else if (!ic.vrf->name.empty())
-        fibStr = ic.vrf->name;
+        fibStr = std::to_string(ic.vrf->table);
+      else if (ic.vrf->table >= 0)
+        fibStr = std::to_string(ic.vrf->table);
     }
 
     if (tptr && tptr->tunnel_vrf)

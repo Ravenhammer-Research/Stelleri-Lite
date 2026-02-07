@@ -42,18 +42,19 @@ class InterfaceToken : public Token {
 public:
   InterfaceToken(InterfaceType t, std::string name);
 
-  // textual reconstruction removed
+  std::string toString() const override;
   std::vector<std::string> autoComplete(std::string_view) const override;
   std::unique_ptr<Token> clone() const override;
 
   const std::string &name() const { return name_; }
   InterfaceType type() const { return type_; }
-  std::optional<std::string> vrf;
+  std::optional<int> vrf;
   std::optional<std::string> group;
   std::optional<int> tunnel_vrf;
   std::optional<std::string> address;
   std::optional<int> address_family; // AF_INET or AF_INET6 when inet/inet6 used
   std::optional<int> mtu;
+  std::optional<bool> status; // true=up, false=down
   std::optional<BridgeInterfaceConfig> bridge;
   std::optional<LaggConfig> lagg;
   std::optional<VLANConfig> vlan;

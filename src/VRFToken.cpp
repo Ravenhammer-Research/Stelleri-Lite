@@ -27,7 +27,15 @@
 
 #include "VRFToken.hpp"
 
-VRFToken::VRFToken(std::string name) : name_(std::move(name)) {}
+VRFToken::VRFToken(int table) : table_(table) {}
+
+std::string VRFToken::toString() const {
+  std::string result = "vrf " + std::to_string(table_);
+  if (next_) {
+    result += " " + next_->toString();
+  }
+  return result;
+}
 
 std::vector<std::string> VRFToken::autoComplete(std::string_view) const {
   return {};

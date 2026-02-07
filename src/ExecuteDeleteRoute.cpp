@@ -53,7 +53,7 @@ void netcli::Parser::executeDeleteRoute(const RouteToken &tok,
   if (tok.interface)
     rc.iface = tok.interface->name();
   if (tok.vrf)
-    rc.vrf = tok.vrf->name();
+    rc.vrf = tok.vrf->table();
   rc.blackhole = tok.blackhole;
   rc.reject = tok.reject;
 
@@ -71,21 +71,7 @@ void netcli::Parser::executeDeleteRoute(const RouteToken &tok,
   }
 
   if (rc.vrf) {
-    std::string v = *rc.vrf;
-    int fib = -1;
-    if (v.rfind("fib", 0) == 0) {
-      try {
-        fib = std::stoi(v.substr(3));
-      } catch (...) {
-        fib = -1;
-      }
-    } else {
-      try {
-        fib = std::stoi(v);
-      } catch (...) {
-        fib = -1;
-      }
-    }
+    int fib = *rc.vrf;
     if (fib >= 0) {
       setsockopt(s, SOL_SOCKET, SO_SETFIB, &fib, sizeof(fib));
     }

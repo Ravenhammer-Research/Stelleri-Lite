@@ -27,6 +27,14 @@
 
 #include "ShowToken.hpp"
 
+std::string ShowToken::toString() const {
+  std::string result = "show";
+  if (next_) {
+    result += " " + next_->toString();
+  }
+  return result;
+}
+
 std::vector<std::string> ShowToken::autoComplete(std::string_view) const {
   return {"interfaces", "route", "vrf"};
 }

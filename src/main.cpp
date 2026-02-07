@@ -26,34 +26,49 @@
  */
 
 #include "CLI.hpp"
+#include "GenerateConfig.hpp"
 #include "SystemConfigurationManager.hpp"
 #include <getopt.h>
 #include <iostream>
 
 int main(int argc, char *argv[]) {
   std::string onecmd;
+  bool generate = false;
 
   struct option longopts[] = {{"command", required_argument, nullptr, 'c'},
                               {"file", required_argument, nullptr, 'f'},
+                              {"generate", no_argument, nullptr, 'g'},
                               {"interactive", no_argument, nullptr, 'i'},
                               {"help", no_argument, nullptr, 'h'},
                               {0, 0, 0, 0}};
 
   int ch;
-  while ((ch = getopt_long(argc, argv, "c:f:ih", longopts, nullptr)) != -1) {
+  while ((ch = getopt_long(argc, argv, "c:f:gih", longopts, nullptr)) != -1) {
     switch (ch) {
     case 'c':
       onecmd = optarg;
+      break;
+    case 'g':
+      generate = true;
       break;
     case 'i':
       // Interactive mode (default anyway)
       break;
     case 'h':
-      std::cout << "Usage: netcli [-c command] [-i]\n";
+      std::cout << "Usage: netcli [-c command] [-g] [-i]\n";
+      std::cout << "  -c, --command     Execute a single command\n";
+      std::cout << "  -g, --generate    Generate configuration from system\n";
+      std::cout << "  -i, --interactive Enter interactive mode\n";
+      std::cout << "  -h, --help        Show this help message\n";
       return 0;
     default:
       break;
     }
+  }
+
+  if (generate) {
+    netcli::generateConfiguration();
+    return 0;
   }
 
   auto mgr = std::make_unique<SystemConfigurationManager>();

@@ -155,7 +155,7 @@ void InterfaceConfig::save() const {
     struct ifreq fib_ifr;
     std::memset(&fib_ifr, 0, sizeof(fib_ifr));
     std::strncpy(fib_ifr.ifr_name, name.c_str(), IFNAMSIZ - 1);
-    fib_ifr.ifr_fib = *vrf->table;
+    fib_ifr.ifr_fib = vrf->table;
     if (ioctl(sock, SIOCSIFFIB, &fib_ifr) < 0) {
       int err = errno;
       close(sock);

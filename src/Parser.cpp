@@ -91,7 +91,7 @@ namespace netcli {
       }
     } else if (target == "vrf") {
       if (idx + 1 < tokens.size()) {
-        auto vt = std::make_shared<VRFToken>(tokens[idx + 1]);
+        auto vt = std::make_shared<VRFToken>(std::stoi(tokens[idx + 1]));
         cmd->addToken(vt);
       }
     }

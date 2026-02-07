@@ -43,8 +43,10 @@
  */
 class VRFConfig : public ConfigData {
 public:
-  std::string name;         ///< VRF name
-  std::optional<int> table; ///< FIB table number (0-65535)
+  int table; ///< FIB table number (0-65535)
+
+  VRFConfig() : table(0) {}
+  explicit VRFConfig(int t) : table(t) {}
 
   // Persist VRF configuration (no-op placeholder)
   void save() const override {}

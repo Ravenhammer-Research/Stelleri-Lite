@@ -127,7 +127,7 @@ VLANTableFormatter::format(const std::vector<ConfigData> &interfaces) const {
     std::string vidStr = (vid >= 0) ? std::to_string(vid) : std::string("-");
     std::string pcpStr =
         pcp ? std::to_string(static_cast<int>(*pcp)) : std::string("-");
-    std::string nameStr = (vptr && vptr->name) ? *vptr->name : std::string("-");
+    std::string nameStr = vptr ? vptr->name : std::string("-");
     std::string protoStr =
         (vptr ? vlanProtoToString(vptr->proto) : std::string("-"));
     std::string flagsStr =

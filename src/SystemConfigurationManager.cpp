@@ -232,8 +232,8 @@ std::vector<RouteConfig> SystemConfigurationManager::GetStaticRoutes(
   // number. This mirrors the approach used by the system `netstat` tool and
   // lets the kernel return routes for the requested FIB directly.
   int fibnum = 0;
-  if (vrf && vrf->table)
-    fibnum = *vrf->table;
+  if (vrf)
+    fibnum = vrf->table;
   int mib[7] = {CTL_NET, PF_ROUTE, 0, AF_UNSPEC, NET_RT_DUMP, 0, fibnum};
   size_t needed = 0;
   if (sysctl(mib, 7, nullptr, &needed, nullptr, 0) < 0 || needed == 0)
@@ -273,10 +273,10 @@ std::vector<RouteConfig> SystemConfigurationManager::GetStaticRoutes(
     RouteConfig rc;
 
     // If caller requested a VRF and we switched FIB above, mark the route
-    // as belonging to that VRF name so higher-level filtering/formatting
+    // as belonging to that VRF table so higher-level filtering/formatting
     // can make use of the information.
-    if (vrf && vrf->name.size())
-      rc.vrf = vrf->name;
+    if (vrf)
+      rc.vrf = vrf->table;
 
     if (rti_info[RTAX_DST]) {
       char buf_dst[INET6_ADDRSTRLEN] = {0};
@@ -357,12 +357,12 @@ std::vector<RouteConfig> SystemConfigurationManager::GetStaticRoutes(
       rc.expire = static_cast<int>(rtm->rtm_rmx.rmx_expire);
 
     if (!rc.prefix.empty()) {
-      // VRF filtering: kernel route records may not include VRF names.
+      // VRF filtering: kernel route records may not include VRF info.
       // If a VRF filter is supplied and the route record lacks VRF info,
       // skip the route to be conservative.
       if (vrf) {
         if (!rc.vrf) { /* cannot determine VRF for this route, skip */
-        } else if (*rc.vrf != vrf->name) { /* skip */
+        } else if (*rc.vrf != vrf->table) { /* skip */
         } else
           routes.push_back(rc);
       } else {
@@ -382,28 +382,29 @@ std::vector<VRFConfig> SystemConfigurationManager::GetNetworkInstances(
   // VRF/FIB enumeration: collect unique VRF entries reported on
   // interfaces. This is a conservative, portable approach that does
   // not rely on platform-specific sysctls for VRF lists.
-  std::unordered_map<std::string, VRFConfig> seen;
+  std::unordered_map<int, VRFConfig> seen;
   auto ifs = GetInterfaces(std::nullopt);
   for (const auto &ic : ifs) {
     if (!ic.vrf)
       continue;
     // If caller requested a specific table, filter by it.
-    if (table && ic.vrf->table) {
-      if (*table != *ic.vrf->table)
-        continue;
-    } else if (table && !ic.vrf->table) {
+    if (table && *table != ic.vrf->table)
       continue;
-    }
-    VRFConfig v;
-    v.name = ic.vrf->name;
-    v.table = ic.vrf->table;
-    if (v.name.empty() && v.table)
-      v.name = std::string("fib") + std::to_string(*v.table);
-    seen[v.name] = v;
+    VRFConfig v = *ic.vrf;
+    seen[v.table] = v;
   }
   for (const auto &kv : seen)
     out.emplace_back(kv.second);
   return out;
+}
+
+int SystemConfigurationManager::GetFibs() const {
+  int fibs = 1;
+  size_t len = sizeof(fibs);
+  if (sysctlbyname("net.fibs", &fibs, &len, nullptr, 0) == 0) {
+    return fibs;
+  }
+  return 1;
 }
 
 // Return true if interface `ic` belongs to the optional `vrf` filter.
@@ -422,11 +423,7 @@ static bool matches_vrf(const InterfaceConfig &ic,
     return true;
   if (!ic.vrf)
     return false;
-  if (ic.vrf->name != vrf->name)
-    return false;
-  if (vrf->table && ic.vrf->table)
-    return *vrf->table == *ic.vrf->table;
-  return true;
+  return ic.vrf->table == vrf->table;
 }
 
 // Fill additional per-interface metadata (metric, VRF/FIB, tunnel
@@ -441,9 +438,9 @@ static void populateInterfaceMetadata(InterfaceConfig &ic) {
   }
   if (auto f = query_ifreq_int(ic.name, SIOCGIFFIB, IfreqIntField::Fib); f) {
     if (!ic.vrf)
-      ic.vrf = std::make_unique<VRFConfig>();
-    ic.vrf->table = *f;
-    ic.vrf->name = std::string("fib") + std::to_string(*f);
+      ic.vrf = std::make_unique<VRFConfig>(*f);
+    else
+      ic.vrf->table = *f;
   }
   // Interface index
   unsigned int ifidx = if_nametoindex(ic.name.c_str());

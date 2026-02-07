@@ -80,7 +80,7 @@ SixToFourTableFormatter::format(const std::vector<ConfigData> &items) const {
 
     std::string vrf = "-";
     if (ic.vrf && ic.vrf->table)
-      vrf = std::to_string(*ic.vrf->table);
+      vrf = std::to_string(ic.vrf->table);
 
     atf.addRow({ic.name, addrCell, status, vrf});
   }

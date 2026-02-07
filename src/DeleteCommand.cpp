@@ -27,6 +27,14 @@
 
 #include "DeleteCommand.hpp"
 
+std::string DeleteCommand::toString() const {
+  std::string result = "delete";
+  if (next_) {
+    result += " " + next_->toString();
+  }
+  return result;
+}
+
 std::vector<std::string> DeleteCommand::autoComplete(std::string_view) const {
   return {};
 }

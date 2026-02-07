@@ -41,7 +41,78 @@
 InterfaceToken::InterfaceToken(InterfaceType t, std::string name)
     : type_(t), name_(std::move(name)) {}
 
-// textual reconstruction removed from InterfaceToken
+std::string InterfaceToken::toString() const {
+  std::string result = "interface";
+
+  // Always use "name <name>" format
+  result += " name " + name_;
+
+  // Add type keyword for interface types that need explicit creation
+  if (type_ == InterfaceType::VLAN) {
+    result += " type vlan";
+  } else if (type_ == InterfaceType::Lagg) {
+    result += " type lagg";
+  } else if (type_ == InterfaceType::Bridge) {
+    result += " type bridge";
+  } else if (type_ == InterfaceType::Tunnel || type_ == InterfaceType::Gif) {
+    result += " type tunnel";
+  } else if (type_ == InterfaceType::Virtual) {
+    result += " type epair";
+  } else if (type_ == InterfaceType::Loopback) {
+    result += " type loopback";
+  }
+
+  if (vrf) {
+    result += " vrf " + std::to_string(*vrf);
+  }
+  if (address) {
+    if (address_family) {
+      result += (*address_family == AF_INET) ? " inet" : " inet6";
+    }
+    result += " address " + *address;
+  }
+  if (mtu) {
+    result += " mtu " + std::to_string(*mtu);
+  }
+  if (vlan) {
+    result += " vid " + std::to_string(vlan->id);
+    if (vlan->parent) {
+      result += " parent " + *vlan->parent;
+    }
+  }
+  if (lagg) {
+    for (const auto &member : lagg->members) {
+      result += " member " + member;
+    }
+  }
+  if (bridge) {
+    if (bridge->stp) {
+      result += " stp";
+    }
+    for (const auto &member : bridge->members) {
+      result += " member " + member;
+    }
+  }
+  if (tunnel) {
+    if (tunnel->source) {
+      result += " source " + tunnel->source->toString();
+    }
+    if (tunnel->destination) {
+      result += " destination " + tunnel->destination->toString();
+    }
+  }
+  if (tunnel_vrf && *tunnel_vrf != 0) {
+    result += " tunnel-vrf " + std::to_string(*tunnel_vrf);
+  }
+  if (status) {
+    result += *status ? " status up" : " status down";
+  }
+
+  if (next_) {
+    result += " " + next_->toString();
+  }
+  return result;
+}
 
 std::vector<std::string> InterfaceToken::autoComplete(std::string_view) const {
   return {}; // suggestions could query ConfigurationManager; keep empty for
@@ -106,7 +177,7 @@ InterfaceToken::parseFromTokens(const std::vector<std::string> &tokens,
           continue;
         }
         if ((kw == "fib" || kw == "vrf") && cur + 1 < tokens.size()) {
-          tok->vrf = tokens[cur + 1];
+          tok->vrf = std::stoi(tokens[cur + 1]);
           cur += 2;
           continue;
         }
@@ -245,7 +316,7 @@ InterfaceToken::parseFromTokens(const std::vector<std::string> &tokens,
             continue;
           }
           if ((kw == "fib" || kw == "vrf") && cur + 1 < tokens.size()) {
-            tok->vrf = tokens[cur + 1];
+            tok->vrf = std::stoi(tokens[cur + 1]);
             cur += 2;
             continue;
           }

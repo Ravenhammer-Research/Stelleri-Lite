@@ -27,6 +27,14 @@
 
 #include "SetToken.hpp"
 
+std::string SetToken::toString() const {
+  std::string result = "set";
+  if (next_) {
+    result += " " + next_->toString();
+  }
+  return result;
+}
+
 std::vector<std::string> SetToken::autoComplete(std::string_view) const {
   return {"interfaces", "route", "vrf", "protocols"};
 }

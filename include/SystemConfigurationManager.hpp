@@ -71,4 +71,7 @@ public:
   GetRoutes(const std::optional<VRFConfig> &vrf = std::nullopt) const override;
   std::vector<VRFConfig> GetNetworkInstances(
       const std::optional<int> &table = std::nullopt) const override;
+
+  /** @brief Get the number of configured FIBs from net.fibs sysctl */
+  int GetFibs() const;
 };
