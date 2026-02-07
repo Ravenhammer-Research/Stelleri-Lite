@@ -30,6 +30,8 @@
 #include "SystemConfigurationManager.hpp"
 #include <getopt.h>
 #include <iostream>
+#include <unistd.h>
+#include <string>
 
 int main(int argc, char *argv[]) {
   std::string onecmd;
@@ -78,6 +80,20 @@ int main(int argc, char *argv[]) {
   if (!onecmd.empty()) {
     // simple one-shot
     cli.processLine(onecmd);
+    return 0;
+  }
+
+  // Check if STDIN is redirected (pipe or file)
+  if (!isatty(STDIN_FILENO)) {
+    // Read commands from STDIN
+    std::string line;
+    while (std::getline(std::cin, line)) {
+      if (line.empty() || line[0] == '#') {
+        // Skip empty lines and comments
+        continue;
+      }
+      cli.processLine(line);
+    }
     return 0;
   }
 

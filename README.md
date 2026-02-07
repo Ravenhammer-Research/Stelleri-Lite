@@ -1,215 +1,218 @@
 # net
 
-net is a small command-line network interface management utility. It provides a simple interactive shell for showing and modifying network interface configuration (listing interfaces, showing details by type/group, and adding/removing addresses).
+A command-line network management utility for BSD systems. Provides an interactive shell and direct command execution for managing network interfaces, addresses, routes, ARP/NDP caches, VRFs, bridges, VLANs, LAGGs, and tunnels.
 
-Prerequisites
-- C++ toolchain (g++/clang++)
-- CMake 3.13 or newer
-- Make
+## Features
 
-Build
-1. Configure and generate the build files (out-of-source build recommended):
-
-	cmake -S . -B build
-
-2. Build the project (example uses 2 parallel jobs):
-
-	cmake --build build -- -j2
-
-This produces the `net` executable at `build/net`.
-
-Run
-Launch the interactive CLI:
-
-	./build/net
-
-The prompt is `net>` and supports commands such as `show interface`, `delete interface`, `set`, and others.
-
-
-Usage examples
-Below is the exact CLI session transcript you provided demonstrating build, run, queries, and address removal (including the need for elevated privileges):
-
-```text
-msi%  cmake --build build -- -j2
-[  1%] Building CXX object CMakeFiles/net.dir/src/InterfaceToken.cpp.o
-[  3%] Linking CXX executable net
-# net
+- **Interface Management**: View and configure Ethernet, loopback, bridge, LAGG, VLAN, tunnel, and virtual (epair) interfaces
+- **Address Management**: Add/remove IPv4 and IPv6 addresses with prefix lengths
+- **Routing**: Display and manipulate routing tables across multiple VRFs
+- **ARP/NDP**: Show and manage neighbor caches (IPv4 ARP and IPv6 NDP)
+- **VRF Support**: Multi-VRF routing tables and interface assignment
+- **Configuration Export**: Generate reproducible configuration commands from live system state
+- **Interactive Shell**: Tab-completion and command history via libedit
+- **Direct Execution**: Run single commands via `-c` flag without entering shell
 
 ## Overview
 
-net is a small command-line network interface management utility. It provides a simple interactive shell for showing and modifying network interface configuration (listing interfaces, showing details by type/group, and adding/removing addresses).
+`net` is a network management tool designed for BSD systems that provides an intuitive command-line interface for viewing and modifying network configuration. It supports both interactive mode with a persistent shell and non-interactive mode for scripting.
 
 ## Prerequisites
 
-- C++ toolchain (g++/clang++)
+- BSD operating system (FreeBSD tested)
+- C++17 compatible compiler (g++/clang++)
 - CMake 3.13 or newer
-- Make
+- libedit (for command-line editing and history)
+- Root privileges required for configuration changes
 
 ## Building
 
-1. Configure and generate the build files (out-of-source build recommended):
+1. **Configure** the build (out-of-source recommended):
 
 ```bash
 cmake -S . -B build
 ```
 
-2. Build the project (example uses 2 parallel jobs):
+2. **Build** the project:
 
 ```bash
-cmake --build build -- -j2
+cmake --build build -- -j$(sysctl -n hw.ncpu)
 ```
 
 This produces the `net` executable at `build/net`.
 
-## Running
+3. **Install** (optional):
 
-Launch the interactive CLI:
+```bash
+sudo cmake --install build
+```
+
+## Usage
+
+### Interactive Mode
+
+Launch the interactive shell:
 
 ```bash
 ./build/net
 ```
 
-The prompt is `net>` and supports commands such as `show interface`, `delete interface`, `set`, and others.
+The prompt `net>` accepts commands with tab-completion and history navigation.
 
-## Usage examples
+### Direct Command Mode
 
-### Build output
+Execute a single command:
 
-```text
-msi%  cmake --build build -- -j2
-[  1%] Building CXX object CMakeFiles/net.dir/src/InterfaceToken.cpp.o
-[  3%] Linking CXX executable net
-[100%] Built target net
+```bash
+./build/net -c "show interface"
 ```
 
-### Start CLI
+### Reading from STDIN
 
-```text
-msi% ./build/net
+Commands can be read from a file or pipe:
+
+```bash
+# From a file
+sudo ./build/net < config.txt
+
+# From a pipe
+cat config.txt | sudo ./build/net
+
+# From command output
+./build/net -g | sudo ./build/net
 ```
 
-### Show all interfaces
+Empty lines and lines starting with `#` are treated as comments and skipped.
+
+### Configuration Generation
+
+Export current network state as CLI commands:
+
+```bash
+./build/net -g > network-config.txt
+```
+
+## Command Reference
+
+### Show Commands
 
 ```text
-net> show interface
+show interface [name <name>] [type <type>] [group <group>]
+show routes [vrf <number>]
+show arp [ip <address>] [interface <name>]
+show ndp [ip <address>] [interface <name>]
+```
+
+### Set Commands
+
+```text
+set interface name <name> [type <type>] [inet|inet6 address <addr/prefix>] [mtu <bytes>] [vrf <num>] [status up|down]
+set route [protocol static] dest <prefix> [nexthop <ip>] [interface <iface>] [vrf <num>] [blackhole|reject]
+set arp ip <address> mac <mac> [interface <name>] [permanent|temp] [pub]
+set ndp ip <address> mac <mac> [interface <name>] [permanent|temp]
+set vrf fibs <count>
+```
+
+### Delete Commands
+
+```text
+delete interface name <name> [inet|inet6 address <addr/prefix>]
+delete route dest <prefix> [nexthop <ip>] [vrf <num>]
+delete arp ip <address> [interface <name>]
+delete ndp ip <address> [interface <name>]
+```
+
+## Examples
+
+### Show All Interfaces
+
+```bash
+./build/net -c "show interface"
+```
+
+Output:
+```text
 Flags: U=UP, B=BROADCAST, D=DEBUG, L=LOOPBACK, P=POINTOPOINT,
-	   e=NEEDSEPOCH, R=RUNNING, N=NOARP, O=PROMISC, p=PPROMISC,
-	   A=ALLMULTI, a=PALLMULTI, M=MULTICAST, s=SIMPLEX, q=OACTIVE,
-	   0/1/2=LINK0/1/2, C=CANTCONFIG, m=MONITOR, x=DYING, z=RENAMING
+       e=NEEDSEPOCH, R=RUNNING, N=NOARP, O=PROMISC, p=PPROMISC,
+       A=ALLMULTI, a=PALLMULTI, M=MULTICAST, s=SIMPLEX, q=OACTIVE,
+       0/1/2=LINK0/1/2, C=CANTCONFIG, m=MONITOR, x=DYING, z=RENAMING
 
-Index     Interface Group  Type          Address      Status   MTU VRF Flags
---------- --------- ------ ------------- ------------ ------ ----- --- -----
-1         re0       -      Ethernet      -            active  1500   0 UBRMs
-2         lo0       lo     Loopback      ::1/128      active 16384   0 ULRM 
-										 fe80::1/64                         
-										 127.0.0.1/8                        
-3         re0.25    vlan   VLAN          10.1.0.21/18 active  1500   0 UBRMs
-4         bridge0   bridge Bridge        -            down    1500   0 BMs  
-5         gif0      gif    GenericTunnel -            down    1280   2 PM   
-6         lagg0     lagg   LinkAggregate -            down    1500   2 BMs  
-7         lo1       lo     Loopback      fe80::1/64   active 16384   0 ULRM 
-8         epair14a  epair  Virtual       -            active  1500   0 BRMs 
-9         epair14b  epair  Virtual       192.0.0.2/31 active  1500   2 UBRMs
-										 192.0.0.4/31                       
+Index Interface Group  Type          Address       Status   MTU VRF Flags
+----- --------- ------ ------------- ------------- ------  ---- --- -----
+1     re0       -      Ethernet      -             active  1500   0 UBRMs
+2     lo0       lo     Loopback      ::1/128       active 16384   0 ULRM 
+                                     fe80::1/64                         
+                                     127.0.0.1/8                        
+3     re0.25    vlan   VLAN          10.1.0.21/18  active  1500   0 UBRMs
+4     bridge0   bridge Bridge        -             down    1500   0 BMs  
+5     gif0      gif    GenericTunnel -             down    1280   2 PM   
+6     lagg0     lagg   LinkAggregate -             down    1500   2 BMs  
+7     lo1       lo     Loopback      fe80::1/64    active 16384   0 ULRM 
+8     epair14a  epair  Virtual       -             active  1500   0 BRMs 
+9     epair14b  epair  Virtual       192.0.0.2/31  active  1500   2 UBRMs
 ```
 
-### Show interfaces by type: virtual
+### Filter by Type
 
+Show only virtual (epair) interfaces:
+
+```bash
+./build/net -c "show interface type virtual"
+```
+
+Output:
 ```text
-net> show interface type virtual
 peer_a   VRF  MTU Status Flags peer_b   VRF  MTU Status Flags
 -------- --- ---- ------ ----- -------- --- ---- ------ -----
 epair14a   0 1500   DOWN BRMs  epair14b   2 1500     UP UBRMs
 ```
 
-### Show interface type: gif
+### Filter by Group
 
-```text
-net> show interface type gif
-Interface Source    Destination Flags Metric  MTU Groups FIB TunFIB 
---------- --------- ----------- ----- ------ ---- ------ --- ------ 
-gif0      192.0.0.0 192.0.0.1   PM         - 1280 all      2      3       
-												 gif                      
+Show interfaces in a specific group:
+
+```bash
+./build/net -c "show interface group epair"
 ```
 
-### Show interface group: epair
+### Managing Addresses
 
-```text
-net> show interface group epair
-Flags: U=UP, B=BROADCAST, D=DEBUG, L=LOOPBACK, P=POINTOPOINT,
-	   e=NEEDSEPOCH, R=RUNNING, N=NOARP, O=PROMISC, p=PPROMISC,
-	   A=ALLMULTI, a=PALLMULTI, M=MULTICAST, s=SIMPLEX, q=OACTIVE,
-	   0/1/2=LINK0/1/2, C=CANTCONFIG, m=MONITOR, x=DYING, z=RENAMING
+Add an IPv4 address to an interface (requires root):
 
-Index     Interface Group Type    Address      Status  MTU VRF Flags
---------- --------- ----- ------- ------------ ------ ---- --- -----
-8         epair14a  epair Virtual -            active 1500   0 BRMs 
-9         epair14b  epair Virtual 192.0.0.2/31 active 1500   2 UBRMs
-								  192.0.0.4/31                      
+```bash
+sudo ./build/net -c "set interface name epair14b inet address 192.0.0.8/31"
 ```
 
-### Delete address (permission denied)
+Add an IPv6 address:
+
+```bash
+sudo ./build/net -c "set interface name lo1 inet6 address 2001:db8::1/64"
+```
+
+Delete an address from an interface (requires root):
+
+```bash
+sudo ./build/net
+net> delete interface name epair14b inet address 192.0.0.4/31
+```
+
+**Note:** Write operations require root privileges. Without root access:
 
 ```text
 net> delete interface name epair14b inet address 192.0.0.4/31
 delete interface: failed to remove address '192.0.0.4/31': Operation not permitted
 ```
 
-### Delete address (with sudo)
+### Routing Tables
 
-```text
-msi% sudo ./build/net
-net> delete interface name epair14b inet address 192.0.0.4/31
-delete interface: removed address '192.0.0.4/31' from 'epair14b'
+Show routes in default VRF:
 
-net> show interface group epair
-Flags: U=UP, B=BROADCAST, D=DEBUG, L=LOOPBACK, P=POINTOPOINT,
-	   e=NEEDSEPOCH, R=RUNNING, N=NOARP, O=PROMISC, p=PPROMISC,
-	   A=ALLMULTI, a=PALLMULTI, M=MULTICAST, s=SIMPLEX, q=OACTIVE,
-	   0/1/2=LINK0/1/2, C=CANTCONFIG, m=MONITOR, x=DYING, z=RENAMING
-
-Index     Interface Group Type    Address      Status  MTU VRF Flags
---------- --------- ----- ------- ------------ ------ ---- --- -----
-8         epair14a  epair Virtual -            active 1500   0 BRMs 
-9         epair14b  epair Virtual 192.0.0.2/31 active 1500   2 UBRMs
+```bash
+./build/net -c "show routes"
 ```
 
-### Set address (with sudo)
-
+Output:
 ```text
-sudo build/net -c "set interface name epair14b inet address 192.0.0.8/31"
-set interface: updated virtual iface 'epair14b'
-```
-
-### Show after set
-
-```text
-sudo ./build/net -c "show interface"
-Flags: U=UP, B=BROADCAST, D=DEBUG, L=LOOPBACK, P=POINTOPOINT,
-	   e=NEEDSEPOCH, R=RUNNING, N=NOARP, O=PROMISC, p=PPROMISC,
-	   A=ALLMULTI, a=PALLMULTI, M=MULTICAST, s=SIMPLEX, q=OACTIVE,
-	   0/1/2=LINK0/1/2, C=CANTCONFIG, m=MONITOR, x=DYING, z=RENAMING
-
-Index     Interface Group  Type          Address      Status   MTU VRF Flags
---------- --------- ------ ------------- ------------ ------ ----- --- -----
-1         re0       -      Ethernet      -            active  1500   0 UBRMs
-2         lo0       lo     Loopback      ::1/128      active 16384   0 ULRM 
-										 fe80::1/64                         
-										 127.0.0.1/8                        
-3         re0.25    vlan   VLAN          10.1.0.21/18 active  1500   0 UBRMs
-4         bridge0   bridge Bridge        -            down    1500   0 BMs  
-5         gif0      gif    GenericTunnel -            down    1280   2 PM   
-6         lagg0     lagg   LinkAggregate -            down    1500   2 BMs  
-7         lo1       lo     Loopback      fe80::1/64   active 16384   0 ULRM 
-8         epair14a  epair  Virtual       -            active  1500   0 BRMs 
-9         epair14b  epair  Virtual       192.0.0.2/31 active  1500   2 UBRMs
-										 192.0.0.8/31                       
-```
-
-### Show routes
-
-```text
-msi% build/net -c "show routes"
 Routes (VRF: 0)
 
 Flags: U=up, G=gateway, H=host, S=static, B=blackhole, R=reject
@@ -218,73 +221,90 @@ Destination       Gateway  Interface Flags Scope Expire
 ----------------- -------- --------- ----- ----- ------
 0.0.0.0/0         10.1.0.1 re0.25    UGS   -     -     
 10.1.0.0/18       link#3   re0.25    U     -     -     
-10.1.0.21/32      link#3   lo0       UHS   -     -     
 127.0.0.1/32      link#2   lo0       UH    -     -     
-192.0.0.2/31      link#9   epair14b  U     -     -     
-192.0.0.2/32      link#9   lo0       UHS   -     -     
-::/96             ::1      lo0       USR   -     -     
-::1/128           link#2   lo0       UHS   -     -     
-::ffff:0.0.0.0/96 ::1      lo0       USR   -     -     
-fe80::/10         ::1      lo0       USR   -     -     
-fe80::/64         link#2   lo0       U     lo0   -     
-fe80::/64         link#7   lo1       U     lo1   -     
-fe80::1/128       link#2   lo0       UHS   lo0   -     
-fe80::1/128       link#7   lo0       UHS   lo1   -     
-ff02::/16         ::1      lo0       USR   -     -     
+```
 
-msi% build/net -c "show routes vrf 2"
-Routes (VRF: 2)
+Show routes in specific VRF:
 
-Flags: U=up, G=gateway, H=host, S=static, B=blackhole, R=reject
+```bash
+./build/net -c "show routes vrf 2"
+```
 
-Destination  Gateway Interface Flags Scope Expire
------------- ------- --------- ----- ----- ------
-192.0.0.8/31 link#9  epair14b  U     -     -     
-192.0.0.8/32 link#9  lo0       UHS   -     -     
-msi%
+Add a static route (requires root):
 
-### Set / Delete routes
+```bash
+sudo ./build/net -c "set route protocol static dest 192.168.52.0/24 nexthop 10.1.0.1 interface re0.25"
+```
 
+Add a blackhole/reject route (requires root):
+
+```bash
+sudo ./build/net -c "set route protocol static dest 192.168.100.0/24 nexthop reject vrf 2"
+```
+
+Delete a route (requires root):
+
+```bash
+sudo ./build/net -c "delete route protocol static dest 192.168.52.0/24 nexthop 10.1.0.1"
+```
+
+### ARP and NDP Management
+
+Show ARP cache:
+
+```bash
+./build/net -c "show arp"
+```
+
+Output:
 ```text
-msi% sudo build/net -c "set route dest 192.168.52.0/32 nexthop reject vrf 2"
-set route: 192.168.52.0/32 added
-msi% sudo build/net -c "delete route dest 192.168.52.0/32 nexthop reject vrf 2"
-delete route: 192.168.52.0/32 removed
-msi% build/net -c "show routes vrf 2"
-Routes (VRF: 2)
+IP Address    MAC Address       Interface Expire   Flags
+------------- ----------------- --------- -------- -----
+10.1.0.1      aa:bb:cc:dd:ee:ff re0.25    23:59:45 -    
+10.1.0.50     00:11:22:33:44:55 re0.25    -        P    
+```
 
-Flags: U=up, G=gateway, H=host, S=static, B=blackhole, R=reject
+Show NDP (IPv6 neighbor discovery) cache:
 
-Destination  Gateway Interface Flags Scope Expire
------------- ------- --------- ----- ----- ------
-192.0.0.8/31 link#9  epair14b  U     -     -     
-192.0.0.8/32 link#9  lo0       UHS   -     -     
-msi%
+```bash
+./build/net -c "show ndp"
+```
+
+Add a static ARP entry (requires root):
+
+```bash
+sudo ./build/net -c "set arp ip 10.1.0.50 mac 00:11:22:33:44:55 interface re0.25 permanent"
+```
+
+Add a static NDP entry (requires root):
+
+```bash
+sudo ./build/net -c "set ndp ip fe80::1234 mac 00:11:22:33:44:55 interface re0 permanent"
+```
+
+Delete an ARP entry (requires root):
+
+```bash
+sudo ./build/net -c "delete arp ip 10.1.0.50"
 ```
 
 ## Configuration Generation
 
-Generate CLI commands from the current system state:
+The `-g` flag generates a complete set of CLI commands that reproduce the current network configuration. This is useful for persisting the router configuration state across reboots.
+
+Generate configuration:
 
 ```bash
-build/net -g
+./build/net -g > network-config.txt
 ```
 
-This will output a series of `set` commands that can recreate the current network configuration:
+Example output:
 
 ```text
 set vrf fibs 255
-set interface name lo1 type loopback inet6 address fe80::1/64 mtu 16384 status up
 set interface name lo0 type loopback inet6 address ::1/128 mtu 16384 status up
-set interface name lo0 type loopback inet6 address fe80::1/64
 set interface name lo0 type loopback inet address 127.0.0.1/8
-set interface name epair1b type epair status up
-set interface name epair14a type epair status down
-set interface name epair0b type epair status up
-set interface name epair0a type epair status up
-set interface name epair1a type epair status up
 set interface name epair14b type epair vrf 2 inet address 192.0.0.2/31 status up
-set interface name epair14b type epair inet address 192.0.0.8/31
 set interface name re0 mtu 1500 status up
 set interface name bridge0 type bridge member epair0a member epair1a status up
 set interface name lagg0 type lagg vrf 2 member epair0b member epair1b status up
@@ -292,17 +312,103 @@ set interface name re0.25 type vlan inet address 10.1.0.21/18 vid 25 parent re0 
 set interface name gif0 type tunnel vrf 2 source 192.0.0.0 destination 192.0.0.1 tunnel-vrf 3 status down
 set route protocol static dest 0.0.0.0/0 nexthop 10.1.0.1 interface re0.25
 set route protocol static dest 10.1.0.0/18 nexthop-interface re0.25
-set route protocol static dest 10.1.0.21/32 nexthop-interface lo0
-set route protocol static dest 127.0.0.1/32 nexthop-interface lo0
-set route protocol static dest 192.0.0.2/32 nexthop-interface lo0
-set route protocol static dest 192.0.0.2/31 nexthop-interface epair14b
-set route protocol static dest ::/96 nexthop reject
-set route protocol static dest ::1/128 nexthop-interface lo0
-set route protocol static dest ::ffff:0.0.0.0/96 nexthop reject
-set route protocol static dest fe80::/10 nexthop reject
-set route protocol static dest fe80::/64 nexthop-interface lo0
-set route protocol static dest fe80::1/128 nexthop-interface lo0
-set route protocol static dest fe80::/64 nexthop-interface lo1
-set route protocol static dest fe80::1/128 nexthop-interface lo0
-set route protocol static dest ff02::/16 nexthop reject
 ```
+
+The generated commands can be saved to a file and later replayed to restore configuration:
+
+```bash
+# Generate and save configuration
+./build/net -g > backup-$(date +%Y%m%d).txt
+
+# Restore configuration by piping to STDIN
+sudo ./build/net < backup-20260207.txt
+
+# Or using cat
+cat backup-20260207.txt | sudo ./build/net
+```
+
+**Note:** When commands are read from STDIN (via pipe or file redirection), empty lines and lines starting with `#` are automatically skipped as comments.
+
+## Architecture
+
+### BSD System Calls Used
+
+- `getifaddrs()`: Retrieve interface list and addresses
+- `ioctl(SIOCGIFFLAGS)`: Get interface flags and status
+- `ioctl(SIOCAIFADDR)`: Add addresses to interfaces
+- `ioctl(SIOCDIFADDR)`: Delete addresses from interfaces
+- `sysctl(NET_RT_DUMP)`: Retrieve routing tables
+- `sysctl(NET_RT_FLAGS)`: Retrieve ARP/NDP neighbor caches
+- Routing socket messages (RTM_ADD, RTM_DELETE): Add/delete routes
+
+## License
+
+See [LICENSE](LICENSE) file for details.
+
+## Contributing
+
+This project follows BSD coding conventions. When contributing:
+
+1. Match existing code style (tabs for indentation)
+2. Add appropriate error handling and validation
+3. Update relevant table formatters for new features
+4. Test on FreeBSD before submitting
+5. Document new commands in this README
+
+## Platform Support
+
+Currently tested on FreeBSD 15+. The code uses BSD-specific APIs (`ioctl`, `sysctl`, routing sockets) and is not yet been ported to any other platform.
+
+## Known Limitations
+
+- ARP/NDP set and delete operations are partially implemented (show commands fully working)
+- No support for wireless interface configuration beyond display
+- CARP (Common Address Redundancy Protocol) display only, no configuration
+- Limited tunnel protocol support (GIF tested, other tunnel types may work)
+- No DHCPv4/v6 client control
+- No firewall rule management (use pf/ipfw directly)
+
+## Troubleshooting
+
+### Permission Denied Errors
+
+Most configuration changes require root privileges. Run with `sudo`:
+
+```bash
+sudo ./build/net -c "set interface name em0 inet address 192.168.1.10/24"
+```
+
+### Interface Not Found
+
+Verify the interface exists:
+
+```bash
+./build/net -c "show interface"
+```
+
+### Build Errors
+
+Ensure all dependencies are installed:
+
+```bash
+# FreeBSD
+pkg install cmake
+```
+
+Clean and rebuild:
+
+```bash
+rm -rf build/
+cmake -S . -B build
+cmake --build build
+```
+
+## See Also
+
+This tool combines the functionality of several BSD utilities into a cohesive configuration syntax that can be easily maintained:
+
+- `ifconfig(8)` - BSD interface configuration utility
+- `route(8)` - BSD routing table manipulation
+- `arp(8)` - BSD ARP cache management
+- `ndp(8)` - BSD IPv6 neighbor discovery protocol management
+- `netstat(1)` - Network statistics
