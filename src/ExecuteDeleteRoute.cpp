@@ -1,20 +1,47 @@
+/*
+ * Copyright (c) 2026, Ravenhammer Research Inc.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
+
 #include "ConfigurationManager.hpp"
+#include "IPNetwork.hpp"
 #include "Parser.hpp"
+#include "RouteConfig.hpp"
 #include "RouteToken.hpp"
 #include <iostream>
-#include "RouteConfig.hpp"
-#include "IPNetwork.hpp"
 
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <net/route.h>
+#include <arpa/inet.h>
+#include <cstring>
+#include <errno.h>
 #include <net/if.h>
 #include <net/if_dl.h>
+#include <net/route.h>
 #include <netinet/in.h>
-#include <arpa/inet.h>
+#include <sys/socket.h>
+#include <sys/types.h>
 #include <unistd.h>
-#include <errno.h>
-#include <cstring>
 
 void netcli::Parser::executeDeleteRoute(const RouteToken &tok,
                                         ConfigurationManager *mgr) const {
@@ -47,9 +74,17 @@ void netcli::Parser::executeDeleteRoute(const RouteToken &tok,
     std::string v = *rc.vrf;
     int fib = -1;
     if (v.rfind("fib", 0) == 0) {
-      try { fib = std::stoi(v.substr(3)); } catch (...) { fib = -1; }
+      try {
+        fib = std::stoi(v.substr(3));
+      } catch (...) {
+        fib = -1;
+      }
     } else {
-      try { fib = std::stoi(v); } catch (...) { fib = -1; }
+      try {
+        fib = std::stoi(v);
+      } catch (...) {
+        fib = -1;
+      }
     }
     if (fib >= 0) {
       setsockopt(s, SOL_SOCKET, SO_SETFIB, &fib, sizeof(fib));
@@ -145,12 +180,13 @@ void netcli::Parser::executeDeleteRoute(const RouteToken &tok,
     }
   }
 
-  rtm->rtm_msglen = static_cast<u_short>(cp - reinterpret_cast<char *>(&m_rtmsg));
+  rtm->rtm_msglen =
+      static_cast<u_short>(cp - reinterpret_cast<char *>(&m_rtmsg));
 
   ssize_t w = write(s, &m_rtmsg, rtm->rtm_msglen);
   if (w == -1) {
-    std::cout << "delete route: write to routing socket failed: " << strerror(errno)
-              << "\n";
+    std::cout << "delete route: write to routing socket failed: "
+              << strerror(errno) << "\n";
     close(s);
     return;
   }

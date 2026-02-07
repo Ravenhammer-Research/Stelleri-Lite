@@ -1,3 +1,30 @@
+/*
+ * Copyright (c) 2026, Ravenhammer Research Inc.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
+
 #include "InterfaceToken.hpp"
 #include "BridgeTableFormatter.hpp"
 #include "InterfaceFlags.hpp"
@@ -52,7 +79,7 @@ InterfaceToken::parseFromTokens(const std::vector<std::string> &tokens,
     if (a == "name") {
       std::string name = b;
       size_t nnext = start + 3;
-      
+
       auto tok = std::make_shared<InterfaceToken>(InterfaceType::Unknown, name);
       // parse trailing options (vlan/lagg/etc.)
       size_t cur = nnext;
@@ -192,7 +219,7 @@ InterfaceToken::parseFromTokens(const std::vector<std::string> &tokens,
         }
         next =
             start + (name.empty() ? 3 : (tokens[start + 3] == "name" ? 5 : 4));
-        
+
         auto tok = std::make_shared<InterfaceToken>(itype, name);
         // Parse optional args after the name
         size_t cur = next;
@@ -323,7 +350,7 @@ InterfaceToken::parseFromTokens(const std::vector<std::string> &tokens,
         itype = InterfaceType::Virtual;
       if (itype != InterfaceType::Unknown) {
         next = start + 3;
-        
+
         auto tok = std::make_shared<InterfaceToken>(itype, nameTok);
         // parse additional args after nameTok
         size_t cur = next;
