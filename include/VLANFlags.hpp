@@ -40,10 +40,10 @@ namespace netcli {
 
   /// VLAN / interface capability bits (matches FreeBSD IFCAP_* masks).
   enum class VLANFlag : uint32_t {
-    RXCSUM    = 0x00000001, // IFCAP_RXCSUM   (1 << 0)
-    TXCSUM    = 0x00000002, // IFCAP_TXCSUM   (1 << 1)
+    RXCSUM = 0x00000001,     // IFCAP_RXCSUM   (1 << 0)
+    TXCSUM = 0x00000002,     // IFCAP_TXCSUM   (1 << 1)
     VLAN_HWTAG = 0x00000010, // IFCAP_VLAN_HWTAGGING (1 << 4)
-    LINKSTATE = 0x00080000, // IFCAP_LINKSTATE (1 << 19)
+    LINKSTATE = 0x00080000,  // IFCAP_LINKSTATE (1 << 19)
   };
 
   inline constexpr uint32_t to_mask(VLANFlag f) {

@@ -54,8 +54,7 @@ public:
 protected:
   // Table building methods for use by derived classes
   void addColumn(const std::string &key, const std::string &title,
-                 int priority = 1, int minWidth = 3,
-                 bool leftAlign = true);
+                 int priority = 1, int minWidth = 3, bool leftAlign = true);
 
   void addRow(const std::vector<std::string> &cells);
 
@@ -110,8 +109,7 @@ template <typename T> void TableFormatter<T>::clearTable() {
   sortColumn_ = 0;
 }
 
-template <typename T>
-std::string TableFormatter<T>::renderTable(int maxWidth) {
+template <typename T> std::string TableFormatter<T>::renderTable(int maxWidth) {
   if (columns_.empty())
     return std::string();
 

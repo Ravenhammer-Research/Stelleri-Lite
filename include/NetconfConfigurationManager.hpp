@@ -42,8 +42,8 @@ class NetconfConfigurationManager : public ConfigurationManager {
 public:
   // ── Enumeration / query API ──────────────────────────────────────────
 
-  std::vector<InterfaceConfig>
-  GetInterfaces(const std::optional<VRFConfig> & /*vrf*/ = std::nullopt) const override {
+  std::vector<InterfaceConfig> GetInterfaces(
+      const std::optional<VRFConfig> & /*vrf*/ = std::nullopt) const override {
     return {};
   }
 
@@ -53,50 +53,51 @@ public:
     return {};
   }
 
-  std::vector<BridgeInterfaceConfig>
-  GetBridgeInterfaces(const std::optional<VRFConfig> & /*vrf*/ = std::nullopt) const override {
+  std::vector<BridgeInterfaceConfig> GetBridgeInterfaces(
+      const std::optional<VRFConfig> & /*vrf*/ = std::nullopt) const override {
     return {};
   }
 
-  std::vector<LaggConfig>
-  GetLaggInterfaces(const std::optional<VRFConfig> & /*vrf*/ = std::nullopt) const override {
+  std::vector<LaggConfig> GetLaggInterfaces(
+      const std::optional<VRFConfig> & /*vrf*/ = std::nullopt) const override {
     return {};
   }
 
-  std::vector<VLANConfig>
-  GetVLANInterfaces(const std::optional<VRFConfig> & /*vrf*/ = std::nullopt) const override {
+  std::vector<VLANConfig> GetVLANInterfaces(
+      const std::optional<VRFConfig> & /*vrf*/ = std::nullopt) const override {
     return {};
   }
 
-  std::vector<TunnelConfig>
-  GetTunnelInterfaces(const std::optional<VRFConfig> & /*vrf*/ = std::nullopt) const override {
+  std::vector<TunnelConfig> GetTunnelInterfaces(
+      const std::optional<VRFConfig> & /*vrf*/ = std::nullopt) const override {
     return {};
   }
 
-  std::vector<VirtualInterfaceConfig>
-  GetVirtualInterfaces(const std::optional<VRFConfig> & /*vrf*/ = std::nullopt) const override {
+  std::vector<VirtualInterfaceConfig> GetVirtualInterfaces(
+      const std::optional<VRFConfig> & /*vrf*/ = std::nullopt) const override {
     return {};
   }
 
-  std::vector<RouteConfig>
-  GetStaticRoutes(const std::optional<VRFConfig> & /*vrf*/ = std::nullopt) const override {
+  std::vector<RouteConfig> GetStaticRoutes(
+      const std::optional<VRFConfig> & /*vrf*/ = std::nullopt) const override {
     return {};
   }
 
-  std::vector<RouteConfig>
-  GetRoutes(const std::optional<VRFConfig> & /*vrf*/ = std::nullopt) const override {
+  std::vector<RouteConfig> GetRoutes(
+      const std::optional<VRFConfig> & /*vrf*/ = std::nullopt) const override {
     return {};
   }
 
-  std::vector<VRFConfig>
-  GetNetworkInstances(const std::optional<int> & /*table*/ = std::nullopt) const override {
+  std::vector<VRFConfig> GetNetworkInstances(
+      const std::optional<int> & /*table*/ = std::nullopt) const override {
     return {};
   }
 
   // ARP/NDP
   std::vector<ArpConfig>
   GetArpEntries(const std::optional<std::string> & /*ip*/ = std::nullopt,
-                const std::optional<std::string> & /*iface*/ = std::nullopt) const override {
+                const std::optional<std::string> & /*iface*/ =
+                    std::nullopt) const override {
     return {};
   }
 
@@ -107,13 +108,15 @@ public:
   }
 
   bool DeleteArpEntry(const std::string & /*ip*/,
-                      const std::optional<std::string> & /*iface*/ = std::nullopt) const override {
+                      const std::optional<std::string> & /*iface*/ =
+                          std::nullopt) const override {
     return false;
   }
 
   std::vector<NdpConfig>
   GetNdpEntries(const std::optional<std::string> & /*ip*/ = std::nullopt,
-                const std::optional<std::string> & /*iface*/ = std::nullopt) const override {
+                const std::optional<std::string> & /*iface*/ =
+                    std::nullopt) const override {
     return {};
   }
 
@@ -124,7 +127,8 @@ public:
   }
 
   bool DeleteNdpEntry(const std::string & /*ip*/,
-                      const std::optional<std::string> & /*iface*/ = std::nullopt) const override {
+                      const std::optional<std::string> & /*iface*/ =
+                          std::nullopt) const override {
     return false;
   }
 
@@ -137,16 +141,21 @@ public:
                               const std::string & /*addr*/) const override {}
   void RemoveInterfaceGroup(const std::string & /*ifname*/,
                             const std::string & /*group*/) const override {}
-  bool InterfaceExists(std::string_view /*name*/) const override { return false; }
+  bool InterfaceExists(std::string_view /*name*/) const override {
+    return false;
+  }
   std::vector<std::string>
-  GetInterfaceAddresses(const std::string & /*ifname*/, int /*family*/) const override {
+  GetInterfaceAddresses(const std::string & /*ifname*/,
+                        int /*family*/) const override {
     return {};
   }
 
   void CreateBridge(const std::string & /*name*/) const override {}
   void SaveBridge(const BridgeInterfaceConfig & /*bic*/) const override {}
   std::vector<std::string>
-  GetBridgeMembers(const std::string & /*name*/) const override { return {}; }
+  GetBridgeMembers(const std::string & /*name*/) const override {
+    return {};
+  }
 
   void CreateLagg(const std::string & /*name*/) const override {}
   void SaveLagg(const LaggConfig & /*lac*/) const override {}

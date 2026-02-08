@@ -32,28 +32,27 @@
 
 namespace netcli {
 
-void executeShowNdp(const NdpToken &tok,
-                            ConfigurationManager *mgr) {
-  if (!mgr) {
-    std::cout << "No ConfigurationManager provided\n";
-    return;
+  void executeShowNdp(const NdpToken &tok, ConfigurationManager *mgr) {
+    if (!mgr) {
+      std::cout << "No ConfigurationManager provided\n";
+      return;
+    }
+
+    std::optional<std::string> ip_filter = std::nullopt;
+    if (!tok.ip().empty()) {
+      ip_filter = tok.ip();
+    }
+
+    std::optional<std::string> iface_filter = tok.iface;
+
+    auto entries = mgr->GetNdpEntries(ip_filter, iface_filter);
+
+    if (entries.empty()) {
+      std::cout << "No NDP entries found.\n";
+      return;
+    }
+
+    NdpTableFormatter formatter;
+    std::cout << formatter.format(entries);
   }
-
-  std::optional<std::string> ip_filter = std::nullopt;
-  if (!tok.ip().empty()) {
-    ip_filter = tok.ip();
-  }
-
-  std::optional<std::string> iface_filter = tok.iface;
-
-  auto entries = mgr->GetNdpEntries(ip_filter, iface_filter);
-
-  if (entries.empty()) {
-    std::cout << "No NDP entries found.\n";
-    return;
-  }
-
-  NdpTableFormatter formatter;
-  std::cout << formatter.format(entries);
-}
-}
+} // namespace netcli

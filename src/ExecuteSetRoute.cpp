@@ -41,23 +41,22 @@
 
 namespace netcli {
 
-void executeSetRoute(const RouteToken &tok,
-                             ConfigurationManager *mgr) {
-  RouteConfig rc;
-  rc.prefix = tok.prefix();
-  if (tok.nexthop)
-    rc.nexthop = tok.nexthop->toString();
-  if (tok.interface)
-    rc.iface = tok.interface->name();
-  if (tok.vrf)
-    rc.vrf = tok.vrf->table();
-  rc.blackhole = tok.blackhole;
-  rc.reject = tok.reject;
-  try {
-    rc.save(*mgr);
-    std::cout << "set route: " << rc.prefix << " added\n";
-  } catch (const std::exception &e) {
-    std::cout << "set route: failed: " << e.what() << "\n";
+  void executeSetRoute(const RouteToken &tok, ConfigurationManager *mgr) {
+    RouteConfig rc;
+    rc.prefix = tok.prefix();
+    if (tok.nexthop)
+      rc.nexthop = tok.nexthop->toString();
+    if (tok.interface)
+      rc.iface = tok.interface->name();
+    if (tok.vrf)
+      rc.vrf = tok.vrf->table();
+    rc.blackhole = tok.blackhole;
+    rc.reject = tok.reject;
+    try {
+      rc.save(*mgr);
+      std::cout << "set route: " << rc.prefix << " added\n";
+    } catch (const std::exception &e) {
+      std::cout << "set route: failed: " << e.what() << "\n";
+    }
   }
-}
-}
+} // namespace netcli

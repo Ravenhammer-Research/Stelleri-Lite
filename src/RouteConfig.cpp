@@ -7,4 +7,6 @@
 
 void RouteConfig::save(ConfigurationManager &mgr) const { mgr.AddRoute(*this); }
 
-void RouteConfig::destroy(ConfigurationManager &mgr) const { mgr.DeleteRoute(*this); }
+void RouteConfig::destroy(ConfigurationManager &mgr) const {
+  mgr.DeleteRoute(*this);
+}

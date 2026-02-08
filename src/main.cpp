@@ -34,8 +34,8 @@
 #endif
 #include <getopt.h>
 #include <iostream>
-#include <unistd.h>
 #include <string>
+#include <unistd.h>
 
 int main(int argc, char *argv[]) {
   std::string onecmd;

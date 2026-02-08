@@ -43,6 +43,7 @@
 #include "ArpConfig.hpp"
 #include "BridgeInterfaceConfig.hpp"
 #include "CarpConfig.hpp"
+#include "GREConfig.hpp"
 #include "LaggConfig.hpp"
 #include "NdpConfig.hpp"
 #include "RouteConfig.hpp"
@@ -50,10 +51,9 @@
 #include "TunnelConfig.hpp"
 #include "VLANConfig.hpp"
 #include "VRFConfig.hpp"
-#include "VirtualInterfaceConfig.hpp"
 #include "VXLANConfig.hpp"
+#include "VirtualInterfaceConfig.hpp"
 #include "WlanConfig.hpp"
-#include "GREConfig.hpp"
 
 /**
  * @brief Abstract base class for configuration storage and retrieval
@@ -128,8 +128,8 @@ public:
   virtual void RemoveInterfaceGroup(const std::string &ifname,
                                     const std::string &group) const = 0;
   virtual bool InterfaceExists(std::string_view name) const = 0;
-  virtual std::vector<std::string> GetInterfaceAddresses(
-      const std::string &ifname, int family) const = 0;
+  virtual std::vector<std::string>
+  GetInterfaceAddresses(const std::string &ifname, int family) const = 0;
 
   // Bridge operations
   virtual void CreateBridge(const std::string &name) const = 0;

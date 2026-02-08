@@ -43,14 +43,14 @@
 
 namespace {
 
-// Format a 6-byte Ethernet address as "xx:xx:xx:xx:xx:xx".
-std::string formatMAC(const struct ether_addr *ea) {
-  char buf[32];
-  std::snprintf(buf, sizeof(buf), "%02x:%02x:%02x:%02x:%02x:%02x",
-                ea->octet[0], ea->octet[1], ea->octet[2],
-                ea->octet[3], ea->octet[4], ea->octet[5]);
-  return buf;
-}
+  // Format a 6-byte Ethernet address as "xx:xx:xx:xx:xx:xx".
+  std::string formatMAC(const struct ether_addr *ea) {
+    char buf[32];
+    std::snprintf(buf, sizeof(buf), "%02x:%02x:%02x:%02x:%02x:%02x",
+                  ea->octet[0], ea->octet[1], ea->octet[2], ea->octet[3],
+                  ea->octet[4], ea->octet[5]);
+    return buf;
+  }
 
 } // namespace
 

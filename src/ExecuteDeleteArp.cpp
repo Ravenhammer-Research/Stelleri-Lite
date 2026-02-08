@@ -31,19 +31,18 @@
 
 namespace netcli {
 
-void executeDeleteArp(const ArpToken &tok,
-                              ConfigurationManager *mgr) {
-  if (!mgr) {
-    std::cout << "No ConfigurationManager provided\n";
-    return;
-  }
+  void executeDeleteArp(const ArpToken &tok, ConfigurationManager *mgr) {
+    if (!mgr) {
+      std::cout << "No ConfigurationManager provided\n";
+      return;
+    }
 
-  bool success = mgr->DeleteArpEntry(tok.ip(), tok.iface);
+    bool success = mgr->DeleteArpEntry(tok.ip(), tok.iface);
 
-  if (success) {
-    std::cout << "ARP entry deleted successfully\n";
-  } else {
-    std::cout << "Failed to delete ARP entry\n";
+    if (success) {
+      std::cout << "ARP entry deleted successfully\n";
+    } else {
+      std::cout << "Failed to delete ARP entry\n";
+    }
   }
-}
-}
+} // namespace netcli

@@ -97,7 +97,7 @@ void BridgeInterfaceConfig::save(ConfigurationManager &mgr) const {
   if (!InterfaceConfig::exists(mgr, name)) {
     mgr.CreateBridge(name);
   }
-  
+
   // Always apply generic interface settings (VRF, MTU, flags, groups, etc.)
   InterfaceConfig::save(mgr);
 

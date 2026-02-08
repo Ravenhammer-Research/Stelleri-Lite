@@ -45,7 +45,9 @@ public:
   std::vector<std::string> autoComplete(std::string_view) const override;
   std::unique_ptr<Token> clone() const override;
 
-  static std::shared_ptr<NdpToken> parseFromTokens(const std::vector<std::string> &tokens, size_t start, size_t &next);
+  static std::shared_ptr<NdpToken>
+  parseFromTokens(const std::vector<std::string> &tokens, size_t start,
+                  size_t &next);
 
   const std::string &ip() const { return ip_; }
   std::optional<std::string> mac;

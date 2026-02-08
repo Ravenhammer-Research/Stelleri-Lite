@@ -53,6 +53,5 @@ public:
    * configurations
    * @return Formatted ASCII table string
    */
-  std::string
-  format(const std::vector<InterfaceConfig> &interfaces) override;
+  std::string format(const std::vector<InterfaceConfig> &interfaces) override;
 };

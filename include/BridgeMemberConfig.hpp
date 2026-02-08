@@ -40,19 +40,20 @@
  */
 class BridgeMemberConfig {
 public:
-  std::string name;              ///< Member interface name
-  std::optional<int> priority;   ///< Port priority (0-255, default 128)
-  std::optional<int> path_cost;  ///< STP path cost (1-200000000, auto=0)
-  bool stp = true;               ///< Enable STP on this port
-  bool edge = false;             ///< Edge port (skip listening/learning)
-  bool autoedge = true;          ///< Auto-detect edge ports
-  bool ptp = false;              ///< Point-to-point link
-  bool autoptp = true;           ///< Auto-detect PTP links
-  std::optional<uint8_t> state;  ///< STP state (ifbr_state, read-only)
-  std::optional<uint8_t> role;   ///< STP role (ifbr_role, read-only)
-  std::optional<uint8_t> portno; ///< Port number (ifbr_portno, read-only)
-  std::optional<uint32_t> addrmax;  ///< Max learned addresses (ifbr_addrmax)
-  std::optional<uint32_t> addrcnt;  ///< Current learned address count (read-only)
+  std::string name;                ///< Member interface name
+  std::optional<int> priority;     ///< Port priority (0-255, default 128)
+  std::optional<int> path_cost;    ///< STP path cost (1-200000000, auto=0)
+  bool stp = true;                 ///< Enable STP on this port
+  bool edge = false;               ///< Edge port (skip listening/learning)
+  bool autoedge = true;            ///< Auto-detect edge ports
+  bool ptp = false;                ///< Point-to-point link
+  bool autoptp = true;             ///< Auto-detect PTP links
+  std::optional<uint8_t> state;    ///< STP state (ifbr_state, read-only)
+  std::optional<uint8_t> role;     ///< STP role (ifbr_role, read-only)
+  std::optional<uint8_t> portno;   ///< Port number (ifbr_portno, read-only)
+  std::optional<uint32_t> addrmax; ///< Max learned addresses (ifbr_addrmax)
+  std::optional<uint32_t>
+      addrcnt; ///< Current learned address count (read-only)
   std::optional<uint32_t> ifsflags; ///< Member interface flags (IFBIF_*)
   std::optional<uint16_t> pvid;     ///< Port VLAN ID (ifbr_pvid)
 };

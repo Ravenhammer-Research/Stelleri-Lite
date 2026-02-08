@@ -29,7 +29,8 @@
 
 namespace netcli {
 
-  void ConfigurationGenerator::generateConfiguration(ConfigurationManager &mgr) {
+  void
+  ConfigurationGenerator::generateConfiguration(ConfigurationManager &mgr) {
     std::set<std::string> processedInterfaces;
 
     // Generate VRFs

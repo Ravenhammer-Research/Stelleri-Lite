@@ -49,7 +49,7 @@ public:
   std::optional<WlanAuthMode> authmode;
   std::optional<std::string> media;
   std::optional<std::string> status;
-  std::optional<int> opmode;          ///< Operating mode (IEEE80211_M_STA, etc.)
+  std::optional<int> opmode; ///< Operating mode (IEEE80211_M_STA, etc.)
   std::optional<std::string> macaddr; ///< Locally-assigned MAC address
   // Copy constructor from another WlanConfig
   WlanConfig(const WlanConfig &o) : InterfaceConfig(o) {

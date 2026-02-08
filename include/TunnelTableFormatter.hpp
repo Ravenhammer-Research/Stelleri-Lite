@@ -51,6 +51,5 @@ public:
    * @param interfaces List of InterfaceConfig with tunnel configurations
    * @return Formatted ASCII table string
    */
-  std::string
-  format(const std::vector<InterfaceConfig> &interfaces) override;
+  std::string format(const std::vector<InterfaceConfig> &interfaces) override;
 };

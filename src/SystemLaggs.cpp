@@ -27,8 +27,8 @@
 
 #include "LaggConfig.hpp"
 #include "LaggFlags.hpp"
-#include "SystemConfigurationManager.hpp"
 #include "Socket.hpp"
+#include "SystemConfigurationManager.hpp"
 
 #include <cstring>
 #include <iostream>
@@ -85,94 +85,94 @@ std::vector<LaggConfig> SystemConfigurationManager::GetLaggInterfaces(
         ls->rf.rf_flags = 0;
       }
 
-    std::strncpy(ls->ra.ra_ifname, ic.name.c_str(), IFNAMSIZ - 1);
-    if (ioctl(sock, SIOCGLAGG, &ls->ra) == 0) {
-      if (ls->ra.ra_proto) {
-        switch (ls->ra.ra_proto) {
-        case LAGG_PROTO_FAILOVER:
-          lac.protocol = LaggProtocol::FAILOVER;
-          break;
-        case LAGG_PROTO_LOADBALANCE:
-          lac.protocol = LaggProtocol::LOADBALANCE;
-          break;
-        case LAGG_PROTO_LACP:
-          lac.protocol = LaggProtocol::LACP;
-          break;
-        case LAGG_PROTO_ROUNDROBIN:
-          lac.protocol = LaggProtocol::ROUNDROBIN;
-          break;
-        case LAGG_PROTO_BROADCAST:
-          lac.protocol = LaggProtocol::BROADCAST;
-          break;
-        default:
-          lac.protocol = LaggProtocol::NONE;
-          break;
+      std::strncpy(ls->ra.ra_ifname, ic.name.c_str(), IFNAMSIZ - 1);
+      if (ioctl(sock, SIOCGLAGG, &ls->ra) == 0) {
+        if (ls->ra.ra_proto) {
+          switch (ls->ra.ra_proto) {
+          case LAGG_PROTO_FAILOVER:
+            lac.protocol = LaggProtocol::FAILOVER;
+            break;
+          case LAGG_PROTO_LOADBALANCE:
+            lac.protocol = LaggProtocol::LOADBALANCE;
+            break;
+          case LAGG_PROTO_LACP:
+            lac.protocol = LaggProtocol::LACP;
+            break;
+          case LAGG_PROTO_ROUNDROBIN:
+            lac.protocol = LaggProtocol::ROUNDROBIN;
+            break;
+          case LAGG_PROTO_BROADCAST:
+            lac.protocol = LaggProtocol::BROADCAST;
+            break;
+          default:
+            lac.protocol = LaggProtocol::NONE;
+            break;
+          }
         }
-      }
 
-      int nports = ls->ra.ra_ports;
-      if (nports > LAGG_MAX_PORTS)
-        nports = LAGG_MAX_PORTS;
-      for (int i = 0; i < nports; ++i) {
-        std::string pname = ls->rpbuf[i].rp_portname;
-        if (!pname.empty()) {
-          uint32_t flags = ls->rpbuf[i].rp_flags;
-          lac.members.emplace_back(pname);
-          lac.member_flag_bits.emplace_back(flags);
-          // Convert known flag bits into human-readable label
-          std::string lbl;
-          if (flags & LAGG_PORT_MASTER) {
-            if (!lbl.empty())
-              lbl += ',';
-            lbl += "MASTER";
+        int nports = ls->ra.ra_ports;
+        if (nports > LAGG_MAX_PORTS)
+          nports = LAGG_MAX_PORTS;
+        for (int i = 0; i < nports; ++i) {
+          std::string pname = ls->rpbuf[i].rp_portname;
+          if (!pname.empty()) {
+            uint32_t flags = ls->rpbuf[i].rp_flags;
+            lac.members.emplace_back(pname);
+            lac.member_flag_bits.emplace_back(flags);
+            // Convert known flag bits into human-readable label
+            std::string lbl;
+            if (flags & LAGG_PORT_MASTER) {
+              if (!lbl.empty())
+                lbl += ',';
+              lbl += "MASTER";
+            }
+            if (flags & LAGG_PORT_STACK) {
+              if (!lbl.empty())
+                lbl += ',';
+              lbl += "STACK";
+            }
+            if (flags & LAGG_PORT_ACTIVE) {
+              if (!lbl.empty())
+                lbl += ',';
+              lbl += "ACTIVE";
+            }
+            if (flags & LAGG_PORT_COLLECTING) {
+              if (!lbl.empty())
+                lbl += ',';
+              lbl += "COLLECTING";
+            }
+            if (flags & LAGG_PORT_DISTRIBUTING) {
+              if (!lbl.empty())
+                lbl += ',';
+              lbl += "DISTRIBUTING";
+            }
+            lac.member_flags.emplace_back(lbl);
           }
-          if (flags & LAGG_PORT_STACK) {
-            if (!lbl.empty())
-              lbl += ',';
-            lbl += "STACK";
-          }
-          if (flags & LAGG_PORT_ACTIVE) {
-            if (!lbl.empty())
-              lbl += ',';
-            lbl += "ACTIVE";
-          }
-          if (flags & LAGG_PORT_COLLECTING) {
-            if (!lbl.empty())
-              lbl += ',';
-            lbl += "COLLECTING";
-          }
-          if (flags & LAGG_PORT_DISTRIBUTING) {
-            if (!lbl.empty())
-              lbl += ',';
-            lbl += "DISTRIBUTING";
-          }
-          lac.member_flags.emplace_back(lbl);
         }
-      }
 
-      uint32_t hf =
-          ls->rf.rf_flags & (LAGG_F_HASHL2 | LAGG_F_HASHL3 | LAGG_F_HASHL4);
-      if (hf) {
-        lac.hash_policy = hf;
-      }
+        uint32_t hf =
+            ls->rf.rf_flags & (LAGG_F_HASHL2 | LAGG_F_HASHL3 | LAGG_F_HASHL4);
+        if (hf) {
+          lac.hash_policy = hf;
+        }
 
-      struct lagg_reqopts ro{};
-      std::strncpy(ro.ro_ifname, ic.name.c_str(), IFNAMSIZ - 1);
-      struct ifreq ifro;
-      prepare_ifreq(ifro, ic.name);
-      ifro.ifr_data = reinterpret_cast<char *>(&ro);
-      if (ioctl(sock, SIOCGLAGGOPTS, &ifro) == 0) {
-        lac.options = ro.ro_opts;
-        lac.active_ports = static_cast<int>(ro.ro_active);
-        lac.flapping = static_cast<int>(ro.ro_flapping);
-        if (ro.ro_flowid_shift)
-          lac.flowid_shift = ro.ro_flowid_shift;
-        if (ro.ro_bkt)
-          lac.rr_stride = ro.ro_bkt;
-      }
+        struct lagg_reqopts ro{};
+        std::strncpy(ro.ro_ifname, ic.name.c_str(), IFNAMSIZ - 1);
+        struct ifreq ifro;
+        prepare_ifreq(ifro, ic.name);
+        ifro.ifr_data = reinterpret_cast<char *>(&ro);
+        if (ioctl(sock, SIOCGLAGGOPTS, &ifro) == 0) {
+          lac.options = ro.ro_opts;
+          lac.active_ports = static_cast<int>(ro.ro_active);
+          lac.flapping = static_cast<int>(ro.ro_flapping);
+          if (ro.ro_flowid_shift)
+            lac.flowid_shift = ro.ro_flowid_shift;
+          if (ro.ro_bkt)
+            lac.rr_stride = ro.ro_bkt;
+        }
 
-      out.emplace_back(std::move(lac));
-    }
+        out.emplace_back(std::move(lac));
+      }
     } catch (...) {
       // Socket creation failed, skip this interface
       continue;

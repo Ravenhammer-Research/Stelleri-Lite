@@ -52,6 +52,5 @@ public:
    * @param interfaces Vector of InterfaceConfig objects
    * @return Formatted table string with interface information
    */
-  std::string
-  format(const std::vector<InterfaceConfig> &interfaces) override;
+  std::string format(const std::vector<InterfaceConfig> &interfaces) override;
 };

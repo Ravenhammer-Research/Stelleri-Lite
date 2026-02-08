@@ -74,9 +74,8 @@ public:
   std::optional<int>
       aging_time; ///< MAC address aging time in seconds (10-1000000)
   std::optional<int>
-      max_addresses; ///< Maximum number of MAC addresses in cache
-  std::optional<int>
-      holdcount; ///< STP transmit hold count (ifbop_holdcount)
+      max_addresses;            ///< Maximum number of MAC addresses in cache
+  std::optional<int> holdcount; ///< STP transmit hold count (ifbop_holdcount)
   std::optional<int>
       stp_protocol; ///< STP protocol variant (ifbop_protocol: 0=STP, 2=RSTP)
   std::optional<uint16_t>

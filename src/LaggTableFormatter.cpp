@@ -63,8 +63,8 @@ static std::string protocolToString(LaggProtocol proto) {
   }
 }
 
-std::string LaggTableFormatter::format(
-    const std::vector<InterfaceConfig> &interfaces) {
+std::string
+LaggTableFormatter::format(const std::vector<InterfaceConfig> &interfaces) {
   if (interfaces.empty())
     return "No LAGG interfaces found.\n";
 

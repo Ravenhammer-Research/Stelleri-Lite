@@ -30,8 +30,7 @@
 #include <iomanip>
 #include <sstream>
 
-std::string
-ArpTableFormatter::format(const std::vector<ArpConfig> &entries) {
+std::string ArpTableFormatter::format(const std::vector<ArpConfig> &entries) {
   if (entries.empty())
     return "No ARP entries found.\n";
 

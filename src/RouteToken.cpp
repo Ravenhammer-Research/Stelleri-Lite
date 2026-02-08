@@ -88,12 +88,14 @@ void RouteToken::debugOutput(std::ostream &os) const {
   os << '\n';
 }
 
-std::shared_ptr<RouteToken> RouteToken::parseFromTokens(const std::vector<std::string> &tokens, size_t start, size_t &next) {
-  next = start + 1;  // consume the 'route' or 'routes' token
-  
+std::shared_ptr<RouteToken>
+RouteToken::parseFromTokens(const std::vector<std::string> &tokens,
+                            size_t start, size_t &next) {
+  next = start + 1; // consume the 'route' or 'routes' token
+
   std::string prefix;
   size_t j = next;
-  
+
   // Check if there's a potential prefix at the next position
   if (j < tokens.size()) {
     const std::string &candidate = tokens[j];
@@ -103,9 +105,9 @@ std::shared_ptr<RouteToken> RouteToken::parseFromTokens(const std::vector<std::s
       ++j;
     }
   }
-  
+
   auto tok = std::make_shared<RouteToken>(prefix);
-  
+
   while (j < tokens.size()) {
     const auto &opt = tokens[j];
     if ((opt == "next-hop" || opt == "nexthop") && j + 1 < tokens.size()) {
@@ -156,7 +158,7 @@ std::shared_ptr<RouteToken> RouteToken::parseFromTokens(const std::vector<std::s
     }
     if (opt == "interface" && j + 1 < tokens.size()) {
       tok->interface = std::make_unique<InterfaceToken>(InterfaceType::Unknown,
-                                                   tokens[j + 1]);
+                                                        tokens[j + 1]);
       j += 2;
       continue;
     }
@@ -174,7 +176,7 @@ std::shared_ptr<RouteToken> RouteToken::parseFromTokens(const std::vector<std::s
     }
     break;
   }
-  
+
   next = j;
   return tok;
 }

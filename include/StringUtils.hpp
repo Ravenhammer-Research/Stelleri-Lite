@@ -37,16 +37,17 @@
 
 namespace strutil {
 
-/// Split a string into lines (at '\n' boundaries).
-std::vector<std::string> splitLines(const std::string &s);
+  /// Split a string into lines (at '\n' boundaries).
+  std::vector<std::string> splitLines(const std::string &s);
 
-/// Return the visible length of a string, ignoring ANSI escape sequences.
-int visibleLength(const std::string &s);
+  /// Return the visible length of a string, ignoring ANSI escape sequences.
+  int visibleLength(const std::string &s);
 
-/// Truncate a string to at most `w` visible characters, preserving ANSI codes.
-std::string truncateVisible(const std::string &s, int w);
+  /// Truncate a string to at most `w` visible characters, preserving ANSI
+  /// codes.
+  std::string truncateVisible(const std::string &s, int w);
 
-/// Strip all ANSI escape sequences from a string, returning plain text.
-std::string stripAnsi(const std::string &s);
+  /// Strip all ANSI escape sequences from a string, returning plain text.
+  std::string stripAnsi(const std::string &s);
 
 } // namespace strutil

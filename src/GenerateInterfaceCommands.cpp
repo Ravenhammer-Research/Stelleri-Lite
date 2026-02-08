@@ -34,8 +34,7 @@
 namespace netcli {
 
   void CommandGenerator::generateBasicInterfaces(
-      ConfigurationManager &mgr,
-      std::set<std::string> &processedInterfaces) {
+      ConfigurationManager &mgr, std::set<std::string> &processedInterfaces) {
     auto interfaces = mgr.GetInterfaces();
 
     // Create interfaces (only Ethernet - others have specialized handlers)

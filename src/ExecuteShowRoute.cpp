@@ -35,45 +35,44 @@
 
 namespace netcli {
 
-void executeShowRoute(const RouteToken &tok,
-                              ConfigurationManager *mgr) {
-  if (!mgr) {
-    std::cout << "No ConfigurationManager provided\n";
-    return;
-  }
-  // If a VRF token was provided, build a VRFConfig to request routes from
-  // that routing table. Otherwise request global routes.
-  std::optional<VRFConfig> vrfOpt = std::nullopt;
-  if (tok.vrf) {
-    VRFConfig v(tok.vrf->table());
-    vrfOpt = std::move(v);
-  }
+  void executeShowRoute(const RouteToken &tok, ConfigurationManager *mgr) {
+    if (!mgr) {
+      std::cout << "No ConfigurationManager provided\n";
+      return;
+    }
+    // If a VRF token was provided, build a VRFConfig to request routes from
+    // that routing table. Otherwise request global routes.
+    std::optional<VRFConfig> vrfOpt = std::nullopt;
+    if (tok.vrf) {
+      VRFConfig v(tok.vrf->table());
+      vrfOpt = std::move(v);
+    }
 
-  std::vector<RouteConfig> routes;
-  // Retrieve RouteConfig entries for the requested VRF (or global).
-  auto routeConfs = mgr->GetRoutes(vrfOpt);
-  if (tok.prefix().empty()) {
-    routes = std::move(routeConfs);
-  } else {
-    for (auto &rc : routeConfs) {
-      if (rc.prefix == tok.prefix()) {
-        routes.push_back(std::move(rc));
-        break;
+    std::vector<RouteConfig> routes;
+    // Retrieve RouteConfig entries for the requested VRF (or global).
+    auto routeConfs = mgr->GetRoutes(vrfOpt);
+    if (tok.prefix().empty()) {
+      routes = std::move(routeConfs);
+    } else {
+      for (auto &rc : routeConfs) {
+        if (rc.prefix == tok.prefix()) {
+          routes.push_back(std::move(rc));
+          break;
+        }
       }
     }
-  }
 
-  if (routes.empty()) {
-    std::cout << "No routes found.\n";
-    return;
-  }
+    if (routes.empty()) {
+      std::cout << "No routes found.\n";
+      return;
+    }
 
-  std::string vrfContext = "Global";
-  if (!routes.empty() && routes[0].vrf) {
-    vrfContext = *routes[0].vrf;
-  }
+    std::string vrfContext = "Global";
+    if (!routes.empty() && routes[0].vrf) {
+      vrfContext = *routes[0].vrf;
+    }
 
-  RouteTableFormatter formatter;
-  std::cout << formatter.format(routes);
-}
-}
+    RouteTableFormatter formatter;
+    std::cout << formatter.format(routes);
+  }
+} // namespace netcli

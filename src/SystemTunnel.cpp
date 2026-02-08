@@ -2,9 +2,9 @@
  * Tunnel system helper implementations
  */
 
+#include "Socket.hpp"
 #include "SystemConfigurationManager.hpp"
 #include "TunnelConfig.hpp"
-#include "Socket.hpp"
 
 #include "IPAddress.hpp"
 
@@ -77,8 +77,7 @@ void SystemConfigurationManager::CreateTunnel(const std::string &nm) const {
   cloneInterface(nm, SIOCIFCREATE);
 }
 
-std::vector<TunnelConfig>
-SystemConfigurationManager::GetTunnelInterfaces(
+std::vector<TunnelConfig> SystemConfigurationManager::GetTunnelInterfaces(
     const std::optional<VRFConfig> &vrf) const {
   auto bases = GetInterfaces(vrf);
   std::vector<TunnelConfig> out;

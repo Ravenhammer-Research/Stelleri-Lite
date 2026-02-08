@@ -33,61 +33,61 @@
 
 namespace netcli {
 
-void executeDeleteInterface(const InterfaceToken &tok,
-                                    ConfigurationManager *mgr) {
-  const std::string name = tok.name();
-  if (name.empty()) {
-    std::cerr << "delete interface: missing interface name\n";
-    return;
-  }
-
-  if (!InterfaceConfig::exists(*mgr, name)) {
-    std::cerr << "delete interface: interface '" << name << "' not found\n";
-    return;
-  }
-
-  InterfaceConfig ic;
-  ic.name = name;
-  try {
-    // If token requests group deletion, remove just the group
-    if (tok.group) {
-      mgr->RemoveInterfaceGroup(name, *tok.group);
-      std::cout << "delete interface: removed group '" << *tok.group
-                << "' from '" << name << "'\n";
+  void executeDeleteInterface(const InterfaceToken &tok,
+                              ConfigurationManager *mgr) {
+    const std::string name = tok.name();
+    if (name.empty()) {
+      std::cerr << "delete interface: missing interface name\n";
       return;
     }
 
-    // If token requests address-level deletion (inet/inet6), handle
-    // targeted removal rather than destroying the entire interface.
-    if (tok.address || tok.address_family) {
-      std::vector<std::string> to_remove;
-      if (tok.address) {
-        to_remove.push_back(*tok.address);
-      } else if (tok.address_family && *tok.address_family == AF_INET) {
-        to_remove = mgr->GetInterfaceAddresses(name, AF_INET);
-      } else if (tok.address_family && *tok.address_family == AF_INET6) {
-        to_remove = mgr->GetInterfaceAddresses(name, AF_INET6);
+    if (!InterfaceConfig::exists(*mgr, name)) {
+      std::cerr << "delete interface: interface '" << name << "' not found\n";
+      return;
+    }
+
+    InterfaceConfig ic;
+    ic.name = name;
+    try {
+      // If token requests group deletion, remove just the group
+      if (tok.group) {
+        mgr->RemoveInterfaceGroup(name, *tok.group);
+        std::cout << "delete interface: removed group '" << *tok.group
+                  << "' from '" << name << "'\n";
+        return;
       }
 
-      for (const auto &a : to_remove) {
-        try {
-          ic.removeAddress(*mgr, a);
-          std::cout << "delete interface: removed address '" << a
-                    << "' from '" << name << "'\n";
-        } catch (const std::exception &e) {
-          std::cerr << "delete interface: failed to remove address '" << a
-                    << "': " << e.what() << "\n";
+      // If token requests address-level deletion (inet/inet6), handle
+      // targeted removal rather than destroying the entire interface.
+      if (tok.address || tok.address_family) {
+        std::vector<std::string> to_remove;
+        if (tok.address) {
+          to_remove.push_back(*tok.address);
+        } else if (tok.address_family && *tok.address_family == AF_INET) {
+          to_remove = mgr->GetInterfaceAddresses(name, AF_INET);
+        } else if (tok.address_family && *tok.address_family == AF_INET6) {
+          to_remove = mgr->GetInterfaceAddresses(name, AF_INET6);
         }
-      }
-      return;
-    }
 
-    // Default: destroy the interface
-    ic.destroy(*mgr);
-    std::cout << "delete interface: removed '" << name << "'\n";
-  } catch (const std::exception &e) {
-    std::cerr << "delete interface: failed to remove '" << name
-              << "': " << e.what() << "\n";
+        for (const auto &a : to_remove) {
+          try {
+            ic.removeAddress(*mgr, a);
+            std::cout << "delete interface: removed address '" << a
+                      << "' from '" << name << "'\n";
+          } catch (const std::exception &e) {
+            std::cerr << "delete interface: failed to remove address '" << a
+                      << "': " << e.what() << "\n";
+          }
+        }
+        return;
+      }
+
+      // Default: destroy the interface
+      ic.destroy(*mgr);
+      std::cout << "delete interface: removed '" << name << "'\n";
+    } catch (const std::exception &e) {
+      std::cerr << "delete interface: failed to remove '" << name
+                << "': " << e.what() << "\n";
+    }
   }
-}
-}
+} // namespace netcli

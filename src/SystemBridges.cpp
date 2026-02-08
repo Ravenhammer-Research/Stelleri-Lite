@@ -26,8 +26,8 @@
  */
 
 #include "BridgeInterfaceConfig.hpp"
-#include "SystemConfigurationManager.hpp"
 #include "Socket.hpp"
+#include "SystemConfigurationManager.hpp"
 
 #include <cstring>
 #include <iostream>
@@ -39,37 +39,35 @@
 
 namespace {
 
-// Issue a bridge driver ioctl with an ifbreq payload.
-bool bridgeMemberIoctl(int sock, const std::string &bridge,
-                       unsigned long cmd, struct ifbreq &req,
-                       const std::string &context) {
-  struct ifdrv ifd{};
-  std::strncpy(ifd.ifd_name, bridge.c_str(), IFNAMSIZ - 1);
-  ifd.ifd_cmd = cmd;
-  ifd.ifd_len = sizeof(req);
-  ifd.ifd_data = &req;
-  if (ioctl(sock, SIOCSDRVSPEC, &ifd) < 0) {
-    std::cerr << "Warning: " << context << ": " << strerror(errno) << "\n";
-    return false;
+  // Issue a bridge driver ioctl with an ifbreq payload.
+  bool bridgeMemberIoctl(int sock, const std::string &bridge, unsigned long cmd,
+                         struct ifbreq &req, const std::string &context) {
+    struct ifdrv ifd{};
+    std::strncpy(ifd.ifd_name, bridge.c_str(), IFNAMSIZ - 1);
+    ifd.ifd_cmd = cmd;
+    ifd.ifd_len = sizeof(req);
+    ifd.ifd_data = &req;
+    if (ioctl(sock, SIOCSDRVSPEC, &ifd) < 0) {
+      std::cerr << "Warning: " << context << ": " << strerror(errno) << "\n";
+      return false;
+    }
+    return true;
   }
-  return true;
-}
 
-// Issue a bridge driver ioctl with an ifbrparam payload.
-bool bridgeParamIoctl(int sock, const std::string &bridge,
-                      unsigned long cmd, struct ifbrparam &param,
-                      const std::string &context) {
-  struct ifdrv ifd{};
-  std::strncpy(ifd.ifd_name, bridge.c_str(), IFNAMSIZ - 1);
-  ifd.ifd_cmd = cmd;
-  ifd.ifd_len = sizeof(param);
-  ifd.ifd_data = &param;
-  if (ioctl(sock, SIOCSDRVSPEC, &ifd) < 0) {
-    std::cerr << "Warning: " << context << ": " << strerror(errno) << "\n";
-    return false;
+  // Issue a bridge driver ioctl with an ifbrparam payload.
+  bool bridgeParamIoctl(int sock, const std::string &bridge, unsigned long cmd,
+                        struct ifbrparam &param, const std::string &context) {
+    struct ifdrv ifd{};
+    std::strncpy(ifd.ifd_name, bridge.c_str(), IFNAMSIZ - 1);
+    ifd.ifd_cmd = cmd;
+    ifd.ifd_len = sizeof(param);
+    ifd.ifd_data = &param;
+    if (ioctl(sock, SIOCSDRVSPEC, &ifd) < 0) {
+      std::cerr << "Warning: " << context << ": " << strerror(errno) << "\n";
+      return false;
+    }
+    return true;
   }
-  return true;
-}
 
 } // namespace
 
@@ -120,16 +118,17 @@ void SystemConfigurationManager::CreateBridge(const std::string &name) const {
   prepare_ifreq(ifr, "bridge");
 
   if (ioctl(sock, SIOCIFCREATE, &ifr) < 0) {
-    throw std::runtime_error("Failed to create bridge '" + name + "': " +
-                             std::string(strerror(errno)));
+    throw std::runtime_error("Failed to create bridge '" + name +
+                             "': " + std::string(strerror(errno)));
   }
-  
+
   // The kernel returns the created name in ifr.ifr_name (e.g., "bridge0")
-  // If the user requested a specific name and it doesn't match, we could rename,
-  // but typically we accept the kernel-assigned name
+  // If the user requested a specific name and it doesn't match, we could
+  // rename, but typically we accept the kernel-assigned name
 }
 
-void SystemConfigurationManager::SaveBridge(const BridgeInterfaceConfig &bic) const {
+void SystemConfigurationManager::SaveBridge(
+    const BridgeInterfaceConfig &bic) const {
   const std::string &name = bic.name;
 
   Socket sock(AF_INET, SOCK_DGRAM);
@@ -139,10 +138,11 @@ void SystemConfigurationManager::SaveBridge(const BridgeInterfaceConfig &bic) co
     struct ifbreq req{};
     std::strncpy(req.ifbr_ifsname, member.c_str(), IFNAMSIZ - 1);
     if (!bridgeMemberIoctl(sock, name, BRDGADD, req,
-                           "Failed to add member '" + member + "' to bridge '" + name + "'")) {
+                           "Failed to add member '" + member + "' to bridge '" +
+                               name + "'")) {
       throw std::runtime_error("Failed to add member '" + member +
-                               "' to bridge '" + name + "': " +
-                               std::string(strerror(errno)));
+                               "' to bridge '" + name +
+                               "': " + std::string(strerror(errno)));
     }
   };
 
@@ -181,7 +181,8 @@ void SystemConfigurationManager::SaveBridge(const BridgeInterfaceConfig &bic) co
       std::strncpy(req.ifbr_ifsname, member.name.c_str(), IFNAMSIZ - 1);
       req.ifbr_priority = *member.priority;
       bridgeMemberIoctl(sock, name, BRDGSIFPRIO, req,
-                        "Failed to set priority on member '" + member.name + "'");
+                        "Failed to set priority on member '" + member.name +
+                            "'");
     }
 
     // Configure path cost
@@ -190,7 +191,8 @@ void SystemConfigurationManager::SaveBridge(const BridgeInterfaceConfig &bic) co
       std::strncpy(req.ifbr_ifsname, member.name.c_str(), IFNAMSIZ - 1);
       req.ifbr_path_cost = *member.path_cost;
       bridgeMemberIoctl(sock, name, BRDGSIFCOST, req,
-                        "Failed to set path cost on member '" + member.name + "'");
+                        "Failed to set path cost on member '" + member.name +
+                            "'");
     }
   }
 
@@ -204,24 +206,30 @@ void SystemConfigurationManager::SaveBridge(const BridgeInterfaceConfig &bic) co
     bridgeParamIoctl(sock, name, cmd, param, "Failed to set " + label);
   };
 
-  setParam(!!bic.priority,
-           [&](struct ifbrparam &p) { p.ifbrp_prio = *bic.priority; },
-           BRDGSPRI, "bridge priority");
-  setParam(!!bic.hello_time,
-           [&](struct ifbrparam &p) { p.ifbrp_hellotime = *bic.hello_time; },
-           BRDGSHT, "hello time");
-  setParam(!!bic.forward_delay,
-           [&](struct ifbrparam &p) { p.ifbrp_fwddelay = *bic.forward_delay; },
-           BRDGSFD, "forward delay");
-  setParam(!!bic.max_age,
-           [&](struct ifbrparam &p) { p.ifbrp_maxage = *bic.max_age; },
-           BRDGSMA, "max age");
-  setParam(!!bic.aging_time,
-           [&](struct ifbrparam &p) { p.ifbrp_ctime = *bic.aging_time; },
-           BRDGSTO, "aging time");
-  setParam(!!bic.max_addresses,
-           [&](struct ifbrparam &p) { p.ifbrp_csize = *bic.max_addresses; },
-           BRDGSCACHE, "max addresses");
+  setParam(
+      !!bic.priority,
+      [&](struct ifbrparam &p) { p.ifbrp_prio = *bic.priority; }, BRDGSPRI,
+      "bridge priority");
+  setParam(
+      !!bic.hello_time,
+      [&](struct ifbrparam &p) { p.ifbrp_hellotime = *bic.hello_time; },
+      BRDGSHT, "hello time");
+  setParam(
+      !!bic.forward_delay,
+      [&](struct ifbrparam &p) { p.ifbrp_fwddelay = *bic.forward_delay; },
+      BRDGSFD, "forward delay");
+  setParam(
+      !!bic.max_age,
+      [&](struct ifbrparam &p) { p.ifbrp_maxage = *bic.max_age; }, BRDGSMA,
+      "max age");
+  setParam(
+      !!bic.aging_time,
+      [&](struct ifbrparam &p) { p.ifbrp_ctime = *bic.aging_time; }, BRDGSTO,
+      "aging time");
+  setParam(
+      !!bic.max_addresses,
+      [&](struct ifbrparam &p) { p.ifbrp_csize = *bic.max_addresses; },
+      BRDGSCACHE, "max addresses");
 
   // Configure STP if requested
   if (bic.stp) {
@@ -235,8 +243,8 @@ void SystemConfigurationManager::SaveBridge(const BridgeInterfaceConfig &bic) co
   }
 }
 
-std::vector<std::string> SystemConfigurationManager::GetBridgeMembers(
-    const std::string &name) const {
+std::vector<std::string>
+SystemConfigurationManager::GetBridgeMembers(const std::string &name) const {
   std::vector<std::string> members;
   try {
     Socket sock(AF_INET, SOCK_DGRAM);
@@ -248,7 +256,8 @@ std::vector<std::string> SystemConfigurationManager::GetBridgeMembers(
       std::vector<struct ifbreq> buf(entries);
 
       struct ifbifconf ifbic{};
-      ifbic.ifbic_len = static_cast<uint32_t>(buf.size() * sizeof(struct ifbreq));
+      ifbic.ifbic_len =
+          static_cast<uint32_t>(buf.size() * sizeof(struct ifbreq));
       ifbic.ifbic_buf = reinterpret_cast<caddr_t>(buf.data());
 
       struct ifdrv ifd{};

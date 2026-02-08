@@ -67,10 +67,12 @@ std::unique_ptr<Token> ArpToken::clone() const {
   return t;
 }
 
-std::shared_ptr<ArpToken> ArpToken::parseFromTokens(const std::vector<std::string> &tokens, size_t start, size_t &next) {
+std::shared_ptr<ArpToken>
+ArpToken::parseFromTokens(const std::vector<std::string> &tokens, size_t start,
+                          size_t &next) {
   auto tok = std::make_shared<ArpToken>(std::string());
-  next = start + 1;  // consume the 'arp' token
-  
+  next = start + 1; // consume the 'arp' token
+
   size_t i = next;
   while (i < tokens.size()) {
     const std::string &kw = tokens[i];
@@ -95,10 +97,10 @@ std::shared_ptr<ArpToken> ArpToken::parseFromTokens(const std::vector<std::strin
       tok->pub = true;
       ++i;
     } else {
-      break;  // unknown keyword, stop parsing
+      break; // unknown keyword, stop parsing
     }
   }
-  
+
   next = i;
   return tok;
 }

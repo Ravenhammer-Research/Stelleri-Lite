@@ -36,7 +36,6 @@
 #include "IPAddress.hpp"
 #include "IPNetwork.hpp"
 
-#include "VRFConfig.hpp"
 #include "BridgeTableFormatter.hpp"
 #include "CarpTableFormatter.hpp"
 #include "GRETableFormatter.hpp"
@@ -46,6 +45,7 @@
 #include "TapTableFormatter.hpp"
 #include "TunnelTableFormatter.hpp"
 #include "VLANTableFormatter.hpp"
+#include "VRFConfig.hpp"
 #include "VXLANTableFormatter.hpp"
 #include "VirtualTableFormatter.hpp"
 #include "WlanTableFormatter.hpp"
@@ -75,7 +75,8 @@ void InterfaceConfig::destroy(ConfigurationManager &mgr) const {
   mgr.DestroyInterface(name);
 }
 
-void InterfaceConfig::removeAddress(ConfigurationManager &mgr, const std::string &addr) const {
+void InterfaceConfig::removeAddress(ConfigurationManager &mgr,
+                                    const std::string &addr) const {
   mgr.RemoveInterfaceAddress(name, addr);
 }
 
@@ -119,7 +120,8 @@ InterfaceConfig::InterfaceConfig(const InterfaceConfig &o) {
 }
 
 // Static helper: check whether a named interface exists.
-bool InterfaceConfig::exists(const ConfigurationManager &mgr, std::string_view name) {
+bool InterfaceConfig::exists(const ConfigurationManager &mgr,
+                             std::string_view name) {
   return mgr.InterfaceExists(name);
 }
 
@@ -168,7 +170,8 @@ bool InterfaceConfig::isIpsec() const {
   return type == InterfaceType::IPsec || name.rfind("ipsec", 0) == 0;
 }
 
-// Check if this interface matches a requested type (handles tunnel special cases)
+// Check if this interface matches a requested type (handles tunnel special
+// cases)
 bool InterfaceConfig::matchesType(InterfaceType requestedType) const {
   // Special handling for tunnel-ish types: they all match each other
   if (requestedType == InterfaceType::Tunnel ||
@@ -180,15 +183,16 @@ bool InterfaceConfig::matchesType(InterfaceType requestedType) const {
 }
 
 // Format a collection of interfaces using the appropriate formatter
-std::string InterfaceConfig::formatInterfaces(const std::vector<InterfaceConfig> &ifaces,
-                                               ConfigurationManager *mgr) {
+std::string
+InterfaceConfig::formatInterfaces(const std::vector<InterfaceConfig> &ifaces,
+                                  ConfigurationManager *mgr) {
   if (ifaces.empty())
     return "No interfaces found.\n";
 
   // Determine which specialized formatter to use based on the collection
   bool allSame = true;
   auto checkType = ifaces[0].type;
-  
+
   for (const auto &iface : ifaces) {
     if (iface.type != checkType) {
       allSame = false;

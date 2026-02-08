@@ -31,19 +31,18 @@
 
 namespace netcli {
 
-void executeDeleteNdp(const NdpToken &tok,
-                              ConfigurationManager *mgr) {
-  if (!mgr) {
-    std::cout << "No ConfigurationManager provided\n";
-    return;
-  }
+  void executeDeleteNdp(const NdpToken &tok, ConfigurationManager *mgr) {
+    if (!mgr) {
+      std::cout << "No ConfigurationManager provided\n";
+      return;
+    }
 
-  bool success = mgr->DeleteNdpEntry(tok.ip(), tok.iface);
+    bool success = mgr->DeleteNdpEntry(tok.ip(), tok.iface);
 
-  if (success) {
-    std::cout << "NDP entry deleted successfully\n";
-  } else {
-    std::cout << "Failed to delete NDP entry\n";
+    if (success) {
+      std::cout << "NDP entry deleted successfully\n";
+    } else {
+      std::cout << "Failed to delete NDP entry\n";
+    }
   }
-}
-}
+} // namespace netcli

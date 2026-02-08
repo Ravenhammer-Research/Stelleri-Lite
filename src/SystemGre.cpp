@@ -2,9 +2,9 @@
  * GRE system helper implementations
  */
 
-#include "SystemConfigurationManager.hpp"
 #include "GREConfig.hpp"
 #include "Socket.hpp"
+#include "SystemConfigurationManager.hpp"
 
 #include <arpa/inet.h>
 #include <cerrno>
@@ -37,8 +37,8 @@ void SystemConfigurationManager::SaveGre(const GREConfig &gre) const {
   if (gre.greKey) {
     struct ifreq ifr;
     prepare_ifreq(ifr, gre.name);
-    ifr.ifr_data = reinterpret_cast<caddr_t>(
-        const_cast<uint32_t *>(&*gre.greKey));
+    ifr.ifr_data =
+        reinterpret_cast<caddr_t>(const_cast<uint32_t *>(&*gre.greKey));
     if (ioctl(sock, GRESKEY, &ifr) < 0) {
       throw std::runtime_error("GRESKEY failed for " + gre.name + ": " +
                                strerror(errno));
@@ -49,8 +49,8 @@ void SystemConfigurationManager::SaveGre(const GREConfig &gre) const {
   if (gre.greOptions) {
     struct ifreq ifr;
     prepare_ifreq(ifr, gre.name);
-    ifr.ifr_data = reinterpret_cast<caddr_t>(
-        const_cast<uint32_t *>(&*gre.greOptions));
+    ifr.ifr_data =
+        reinterpret_cast<caddr_t>(const_cast<uint32_t *>(&*gre.greOptions));
     if (ioctl(sock, GRESOPTS, &ifr) < 0) {
       throw std::runtime_error("GRESOPTS failed for " + gre.name + ": " +
                                strerror(errno));
@@ -66,8 +66,7 @@ void SystemConfigurationManager::SaveGre(const GREConfig &gre) const {
     sin->sin_family = AF_INET;
     sin->sin_len = sizeof(struct sockaddr_in);
     if (inet_pton(AF_INET, gre.greSource->c_str(), &sin->sin_addr) != 1) {
-      throw std::runtime_error("Invalid GRE source address: " +
-                               *gre.greSource);
+      throw std::runtime_error("Invalid GRE source address: " + *gre.greSource);
     }
     if (ioctl(sock, GRESADDRS, &ifr) < 0) {
       throw std::runtime_error("GRESADDRS failed for " + gre.name + ": " +
@@ -94,8 +93,7 @@ void SystemConfigurationManager::SaveGre(const GREConfig &gre) const {
   }
 }
 
-std::vector<GREConfig>
-SystemConfigurationManager::GetGreInterfaces(
+std::vector<GREConfig> SystemConfigurationManager::GetGreInterfaces(
     const std::optional<VRFConfig> &vrf) const {
   auto bases = GetInterfaces(vrf);
   std::vector<GREConfig> out;

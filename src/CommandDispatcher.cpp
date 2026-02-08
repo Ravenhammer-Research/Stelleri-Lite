@@ -37,99 +37,100 @@
 
 namespace netcli {
 
-// Forward declarations for the free-function handlers implemented in
-// the individual Execute*.cpp files.
-void executeShowInterface(const InterfaceToken &, ConfigurationManager *);
-void executeSetInterface(const InterfaceToken &, ConfigurationManager *);
-void executeDeleteInterface(const InterfaceToken &, ConfigurationManager *);
+  // Forward declarations for the free-function handlers implemented in
+  // the individual Execute*.cpp files.
+  void executeShowInterface(const InterfaceToken &, ConfigurationManager *);
+  void executeSetInterface(const InterfaceToken &, ConfigurationManager *);
+  void executeDeleteInterface(const InterfaceToken &, ConfigurationManager *);
 
-void executeShowRoute(const RouteToken &, ConfigurationManager *);
-void executeSetRoute(const RouteToken &, ConfigurationManager *);
-void executeDeleteRoute(const RouteToken &, ConfigurationManager *);
+  void executeShowRoute(const RouteToken &, ConfigurationManager *);
+  void executeSetRoute(const RouteToken &, ConfigurationManager *);
+  void executeDeleteRoute(const RouteToken &, ConfigurationManager *);
 
-void executeShowVRF(const VRFToken &, ConfigurationManager *);
-void executeSetVRF(const VRFToken &, ConfigurationManager *);
-void executeDeleteVRF(const VRFToken &, ConfigurationManager *);
+  void executeShowVRF(const VRFToken &, ConfigurationManager *);
+  void executeSetVRF(const VRFToken &, ConfigurationManager *);
+  void executeDeleteVRF(const VRFToken &, ConfigurationManager *);
 
-void executeShowArp(const ArpToken &, ConfigurationManager *);
-void executeSetArp(const ArpToken &, ConfigurationManager *);
-void executeDeleteArp(const ArpToken &, ConfigurationManager *);
+  void executeShowArp(const ArpToken &, ConfigurationManager *);
+  void executeSetArp(const ArpToken &, ConfigurationManager *);
+  void executeDeleteArp(const ArpToken &, ConfigurationManager *);
 
-void executeShowNdp(const NdpToken &, ConfigurationManager *);
-void executeSetNdp(const NdpToken &, ConfigurationManager *);
-void executeDeleteNdp(const NdpToken &, ConfigurationManager *);
+  void executeShowNdp(const NdpToken &, ConfigurationManager *);
+  void executeSetNdp(const NdpToken &, ConfigurationManager *);
+  void executeDeleteNdp(const NdpToken &, ConfigurationManager *);
 
-// Helper: wrap a typed handler into the type-erased Handler signature.
-template <typename TokenT>
-static Handler wrap(void (*fn)(const TokenT &, ConfigurationManager *)) {
-  return [fn](const Token &tok, ConfigurationManager *mgr) {
-    fn(static_cast<const TokenT &>(tok), mgr);
-  };
-}
-
-CommandDispatcher::CommandDispatcher() { registerDefaults(); }
-
-void CommandDispatcher::registerDefaults() {
-  // Interface handlers
-  registerHandler<InterfaceToken>(Verb::Show, wrap(&executeShowInterface));
-  registerHandler<InterfaceToken>(Verb::Set, wrap(&executeSetInterface));
-  registerHandler<InterfaceToken>(Verb::Delete, wrap(&executeDeleteInterface));
-
-  // Route handlers
-  registerHandler<RouteToken>(Verb::Show, wrap(&executeShowRoute));
-  registerHandler<RouteToken>(Verb::Set, wrap(&executeSetRoute));
-  registerHandler<RouteToken>(Verb::Delete, wrap(&executeDeleteRoute));
-
-  // VRF handlers
-  registerHandler<VRFToken>(Verb::Show, wrap(&executeShowVRF));
-  registerHandler<VRFToken>(Verb::Set, wrap(&executeSetVRF));
-  registerHandler<VRFToken>(Verb::Delete, wrap(&executeDeleteVRF));
-
-  // ARP handlers
-  registerHandler<ArpToken>(Verb::Show, wrap(&executeShowArp));
-  registerHandler<ArpToken>(Verb::Set, wrap(&executeSetArp));
-  registerHandler<ArpToken>(Verb::Delete, wrap(&executeDeleteArp));
-
-  // NDP handlers
-  registerHandler<NdpToken>(Verb::Show, wrap(&executeShowNdp));
-  registerHandler<NdpToken>(Verb::Set, wrap(&executeSetNdp));
-  registerHandler<NdpToken>(Verb::Delete, wrap(&executeDeleteNdp));
-}
-
-void CommandDispatcher::dispatch(const std::shared_ptr<Token> &head,
-                                 ConfigurationManager *mgr) const {
-  if (!head)
-    return;
-
-  // Identify the verb from the head token.
-  Verb verb;
-  if (dynamic_cast<ShowToken *>(head.get()))
-    verb = Verb::Show;
-  else if (dynamic_cast<SetToken *>(head.get()))
-    verb = Verb::Set;
-  else if (dynamic_cast<DeleteToken *>(head.get()))
-    verb = Verb::Delete;
-  else {
-    std::cerr << "execute: unknown or unsupported command\n";
-    return;
+  // Helper: wrap a typed handler into the type-erased Handler signature.
+  template <typename TokenT>
+  static Handler wrap(void (*fn)(const TokenT &, ConfigurationManager *)) {
+    return [fn](const Token &tok, ConfigurationManager *mgr) {
+      fn(static_cast<const TokenT &>(tok), mgr);
+    };
   }
 
-  auto next = head->getNext();
-  if (!next) {
-    std::cerr << head->toString() << ": missing object\n";
-    return;
+  CommandDispatcher::CommandDispatcher() { registerDefaults(); }
+
+  void CommandDispatcher::registerDefaults() {
+    // Interface handlers
+    registerHandler<InterfaceToken>(Verb::Show, wrap(&executeShowInterface));
+    registerHandler<InterfaceToken>(Verb::Set, wrap(&executeSetInterface));
+    registerHandler<InterfaceToken>(Verb::Delete,
+                                    wrap(&executeDeleteInterface));
+
+    // Route handlers
+    registerHandler<RouteToken>(Verb::Show, wrap(&executeShowRoute));
+    registerHandler<RouteToken>(Verb::Set, wrap(&executeSetRoute));
+    registerHandler<RouteToken>(Verb::Delete, wrap(&executeDeleteRoute));
+
+    // VRF handlers
+    registerHandler<VRFToken>(Verb::Show, wrap(&executeShowVRF));
+    registerHandler<VRFToken>(Verb::Set, wrap(&executeSetVRF));
+    registerHandler<VRFToken>(Verb::Delete, wrap(&executeDeleteVRF));
+
+    // ARP handlers
+    registerHandler<ArpToken>(Verb::Show, wrap(&executeShowArp));
+    registerHandler<ArpToken>(Verb::Set, wrap(&executeSetArp));
+    registerHandler<ArpToken>(Verb::Delete, wrap(&executeDeleteArp));
+
+    // NDP handlers
+    registerHandler<NdpToken>(Verb::Show, wrap(&executeShowNdp));
+    registerHandler<NdpToken>(Verb::Set, wrap(&executeSetNdp));
+    registerHandler<NdpToken>(Verb::Delete, wrap(&executeDeleteNdp));
   }
 
-  // Look up the handler by (verb, target token type).
-  const Token &ref = *next;
-  Key key{verb, std::type_index(typeid(ref))};
-  auto it = handlers_.find(key);
-  if (it == handlers_.end()) {
-    std::cerr << head->toString() << ": unknown object type\n";
-    return;
-  }
+  void CommandDispatcher::dispatch(const std::shared_ptr<Token> &head,
+                                   ConfigurationManager *mgr) const {
+    if (!head)
+      return;
 
-  it->second(*next, mgr);
-}
+    // Identify the verb from the head token.
+    Verb verb;
+    if (dynamic_cast<ShowToken *>(head.get()))
+      verb = Verb::Show;
+    else if (dynamic_cast<SetToken *>(head.get()))
+      verb = Verb::Set;
+    else if (dynamic_cast<DeleteToken *>(head.get()))
+      verb = Verb::Delete;
+    else {
+      std::cerr << "execute: unknown or unsupported command\n";
+      return;
+    }
+
+    auto next = head->getNext();
+    if (!next) {
+      std::cerr << head->toString() << ": missing object\n";
+      return;
+    }
+
+    // Look up the handler by (verb, target token type).
+    const Token &ref = *next;
+    Key key{verb, std::type_index(typeid(ref))};
+    auto it = handlers_.find(key);
+    if (it == handlers_.end()) {
+      std::cerr << head->toString() << ": unknown object type\n";
+      return;
+    }
+
+    it->second(*next, mgr);
+  }
 
 } // namespace netcli

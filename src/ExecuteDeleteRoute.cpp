@@ -38,30 +38,29 @@
 
 namespace netcli {
 
-void executeDeleteRoute(const RouteToken &tok,
-                                ConfigurationManager *mgr) {
-  RouteConfig rc;
-  rc.prefix = tok.prefix();
-  if (tok.nexthop)
-    rc.nexthop = tok.nexthop->toString();
-  if (tok.interface)
-    rc.iface = tok.interface->name();
-  if (tok.vrf)
-    rc.vrf = tok.vrf->table();
-  rc.blackhole = tok.blackhole;
-  rc.reject = tok.reject;
+  void executeDeleteRoute(const RouteToken &tok, ConfigurationManager *mgr) {
+    RouteConfig rc;
+    rc.prefix = tok.prefix();
+    if (tok.nexthop)
+      rc.nexthop = tok.nexthop->toString();
+    if (tok.interface)
+      rc.iface = tok.interface->name();
+    if (tok.vrf)
+      rc.vrf = tok.vrf->table();
+    rc.blackhole = tok.blackhole;
+    rc.reject = tok.reject;
 
-  auto net = IPNetwork::fromString(rc.prefix);
-  if (!net) {
-    std::cout << "delete route: invalid prefix: " << rc.prefix << "\n";
-    return;
-  }
+    auto net = IPNetwork::fromString(rc.prefix);
+    if (!net) {
+      std::cout << "delete route: invalid prefix: " << rc.prefix << "\n";
+      return;
+    }
 
-  try {
-    rc.destroy(*mgr);
-    std::cout << "delete route: " << rc.prefix << " removed\n";
-  } catch (const std::exception &e) {
-    std::cout << "delete route: failed: " << e.what() << "\n";
+    try {
+      rc.destroy(*mgr);
+      std::cout << "delete route: " << rc.prefix << " removed\n";
+    } catch (const std::exception &e) {
+      std::cout << "delete route: failed: " << e.what() << "\n";
+    }
   }
-}
-}
+} // namespace netcli

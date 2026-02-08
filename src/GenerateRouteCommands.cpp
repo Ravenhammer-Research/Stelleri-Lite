@@ -60,8 +60,7 @@ namespace netcli {
   }
 
   void CommandGenerator::generateVirtuals(
-      ConfigurationManager &mgr,
-      std::set<std::string> &processedInterfaces) {
+      ConfigurationManager &mgr, std::set<std::string> &processedInterfaces) {
     auto virtuals = mgr.GetVirtualInterfaces();
 
     for (const auto &ifc : virtuals) {

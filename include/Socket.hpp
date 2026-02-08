@@ -32,12 +32,12 @@
 
 #pragma once
 
+#include <cerrno>
+#include <cstring>
 #include <stdexcept>
 #include <string>
 #include <sys/socket.h>
 #include <unistd.h>
-#include <cstring>
-#include <cerrno>
 
 /**
  * @brief RAII socket wrapper that automatically closes the file descriptor.

@@ -30,8 +30,7 @@
 #include <iomanip>
 #include <sstream>
 
-std::string
-NdpTableFormatter::format(const std::vector<NdpConfig> &entries) {
+std::string NdpTableFormatter::format(const std::vector<NdpConfig> &entries) {
   if (entries.empty())
     return "No NDP entries found.\n";
 

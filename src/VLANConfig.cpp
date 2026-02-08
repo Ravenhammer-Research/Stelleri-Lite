@@ -74,9 +74,7 @@ VLANConfig::VLANConfig(const InterfaceConfig &base, uint16_t id_,
   pcp = pcp_;
 }
 
-void VLANConfig::save(ConfigurationManager &mgr) const {
-  mgr.SaveVlan(*this);
-}
+void VLANConfig::save(ConfigurationManager &mgr) const { mgr.SaveVlan(*this); }
 
 void VLANConfig::create(ConfigurationManager &mgr) const {
   mgr.CreateInterface(name);

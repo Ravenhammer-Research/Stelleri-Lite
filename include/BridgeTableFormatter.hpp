@@ -48,8 +48,7 @@ public:
   explicit BridgeTableFormatter(ConfigurationManager *mgr = nullptr)
       : mgr_(mgr) {}
 
-  std::string
-  format(const std::vector<InterfaceConfig> &interfaces) override;
+  std::string format(const std::vector<InterfaceConfig> &interfaces) override;
 
 private:
   ConfigurationManager *mgr_;

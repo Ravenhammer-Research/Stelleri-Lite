@@ -27,8 +27,7 @@ void SystemConfigurationManager::SaveVxlan(const VXLANConfig &vxlan) const {
   SaveInterface(vxlan);
 }
 
-std::vector<VXLANConfig>
-SystemConfigurationManager::GetVxlanInterfaces(
+std::vector<VXLANConfig> SystemConfigurationManager::GetVxlanInterfaces(
     const std::optional<VRFConfig> &vrf) const {
   auto bases = GetInterfaces(vrf);
   std::vector<VXLANConfig> out;

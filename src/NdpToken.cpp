@@ -62,10 +62,12 @@ std::unique_ptr<Token> NdpToken::clone() const {
   return t;
 }
 
-std::shared_ptr<NdpToken> NdpToken::parseFromTokens(const std::vector<std::string> &tokens, size_t start, size_t &next) {
+std::shared_ptr<NdpToken>
+NdpToken::parseFromTokens(const std::vector<std::string> &tokens, size_t start,
+                          size_t &next) {
   auto tok = std::make_shared<NdpToken>(std::string());
-  next = start + 1;  // consume the 'ndp' token
-  
+  next = start + 1; // consume the 'ndp' token
+
   size_t i = next;
   while (i < tokens.size()) {
     const std::string &kw = tokens[i];
@@ -87,10 +89,10 @@ std::shared_ptr<NdpToken> NdpToken::parseFromTokens(const std::vector<std::strin
       tok->permanent = false;
       ++i;
     } else {
-      break;  // unknown keyword, stop parsing
+      break; // unknown keyword, stop parsing
     }
   }
-  
+
   next = i;
   return tok;
 }

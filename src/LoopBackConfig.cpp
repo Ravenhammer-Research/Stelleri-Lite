@@ -51,4 +51,3 @@ void LoopBackConfig::save(ConfigurationManager &mgr) const {
 void LoopBackConfig::destroy(ConfigurationManager &mgr) const {
   mgr.DestroyInterface(name);
 }
-

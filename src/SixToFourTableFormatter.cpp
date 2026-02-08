@@ -30,8 +30,8 @@
 #include "InterfaceFlags.hpp"
 #include <sstream>
 
-std::string SixToFourTableFormatter::format(
-    const std::vector<InterfaceConfig> &items) {
+std::string
+SixToFourTableFormatter::format(const std::vector<InterfaceConfig> &items) {
   addColumn("Interface", "Interface", 10, 4, true);
   addColumn("Address", "Address", 5, 7, true);
   addColumn("Status", "Status", 6, 6, true);

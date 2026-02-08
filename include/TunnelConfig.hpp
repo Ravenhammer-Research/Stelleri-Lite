@@ -58,8 +58,9 @@ public:
       source; ///< Tunnel source network/address (nullable)
   std::unique_ptr<IPAddress>
       destination; ///< Tunnel destination network/address (nullable)
-  std::optional<uint32_t> options; ///< GIF options bitmask (GIF_NOCLAMP, GIF_IGNORE_SOURCE)
-  std::optional<int> tunnel_vrf;   ///< Tunnel-specific VRF/FIB (TunFIB)
+  std::optional<uint32_t>
+      options; ///< GIF options bitmask (GIF_NOCLAMP, GIF_IGNORE_SOURCE)
+  std::optional<int> tunnel_vrf; ///< Tunnel-specific VRF/FIB (TunFIB)
 
   // Copy semantics: clone underlying IPNetwork objects
   TunnelConfig(const TunnelConfig &o)

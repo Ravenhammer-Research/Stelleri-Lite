@@ -40,13 +40,13 @@
 #include "LaggConfig.hpp"
 #include "NdpConfig.hpp"
 #include "RouteConfig.hpp"
+#include "TapConfig.hpp"
 #include "TunnelConfig.hpp"
 #include "VLANConfig.hpp"
 #include "VRFConfig.hpp"
 #include "VXLANConfig.hpp"
 #include "VirtualInterfaceConfig.hpp"
 #include "WlanConfig.hpp"
-#include "TapConfig.hpp"
 #include <optional>
 #include <string_view>
 #include <vector>
@@ -131,14 +131,16 @@ public:
   bool interfaceIsLagg(const std::string &ifname) const;
   bool interfaceIsBridge(const std::string &ifname) const;
 
-  // Return list of addresses configured on an interface (string format "addr/prefix")
+  // Return list of addresses configured on an interface (string format
+  // "addr/prefix")
   std::vector<std::string> GetInterfaceAddresses(const std::string &ifname,
                                                  int family) const override;
 
   // Bridge-specific system operations
   void CreateBridge(const std::string &name) const override;
   void SaveBridge(const BridgeInterfaceConfig &bic) const override;
-  std::vector<std::string> GetBridgeMembers(const std::string &name) const override;
+  std::vector<std::string>
+  GetBridgeMembers(const std::string &name) const override;
 
   // Virtual interface (epair/clone) operations
   void CreateVirtual(const std::string &name) const override;

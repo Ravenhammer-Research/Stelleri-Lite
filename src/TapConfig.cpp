@@ -28,13 +28,9 @@
 #include "TapConfig.hpp"
 #include "ConfigurationManager.hpp"
 
-void TapConfig::create(ConfigurationManager &mgr) const {
-  mgr.CreateTap(name);
-}
+void TapConfig::create(ConfigurationManager &mgr) const { mgr.CreateTap(name); }
 
-void TapConfig::save(ConfigurationManager &mgr) const {
-  mgr.SaveTap(*this);
-}
+void TapConfig::save(ConfigurationManager &mgr) const { mgr.SaveTap(*this); }
 
 void TapConfig::destroy(ConfigurationManager &mgr) const {
   mgr.DestroyInterface(name);

@@ -46,35 +46,35 @@
 
 namespace netcli {
 
-/// Verb categories parsed from the command head token.
-enum class Verb { Show, Set, Delete };
+  /// Verb categories parsed from the command head token.
+  enum class Verb { Show, Set, Delete };
 
-/// A handler receives the raw target Token* and the ConfigurationManager.
-/// Implementations static_cast to the concrete token type (safe because
-/// dispatch guarantees the type matches what was registered).
-using Handler = std::function<void(const Token &, ConfigurationManager *)>;
+  /// A handler receives the raw target Token* and the ConfigurationManager.
+  /// Implementations static_cast to the concrete token type (safe because
+  /// dispatch guarantees the type matches what was registered).
+  using Handler = std::function<void(const Token &, ConfigurationManager *)>;
 
-class CommandDispatcher {
-public:
-  CommandDispatcher();
+  class CommandDispatcher {
+  public:
+    CommandDispatcher();
 
-  /// Register a handler for a specific verb + target token type.
-  template <typename TokenT>
-  void registerHandler(Verb verb, Handler handler) {
-    handlers_[{verb, std::type_index(typeid(TokenT))}] = std::move(handler);
-  }
+    /// Register a handler for a specific verb + target token type.
+    template <typename TokenT>
+    void registerHandler(Verb verb, Handler handler) {
+      handlers_[{verb, std::type_index(typeid(TokenT))}] = std::move(handler);
+    }
 
-  /// Dispatch a parsed command chain. The head token must be a verb token
-  /// (ShowToken, SetToken, DeleteToken) whose next() is the target token.
-  void dispatch(const std::shared_ptr<Token> &head,
-                ConfigurationManager *mgr) const;
+    /// Dispatch a parsed command chain. The head token must be a verb token
+    /// (ShowToken, SetToken, DeleteToken) whose next() is the target token.
+    void dispatch(const std::shared_ptr<Token> &head,
+                  ConfigurationManager *mgr) const;
 
-private:
-  /// Register all built-in handlers.
-  void registerDefaults();
+  private:
+    /// Register all built-in handlers.
+    void registerDefaults();
 
-  using Key = std::pair<Verb, std::type_index>;
-  std::map<Key, Handler> handlers_;
-};
+    using Key = std::pair<Verb, std::type_index>;
+    std::map<Key, Handler> handlers_;
+  };
 
 } // namespace netcli

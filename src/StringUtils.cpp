@@ -30,69 +30,69 @@
 
 namespace strutil {
 
-std::vector<std::string> splitLines(const std::string &s) {
-  std::vector<std::string> out;
-  std::string line;
-  std::istringstream iss(s);
-  while (std::getline(iss, line))
-    out.push_back(line);
-  if (out.empty())
-    out.push_back("");
-  return out;
-}
-
-int visibleLength(const std::string &s) {
-  int len = 0;
-  for (size_t i = 0; i < s.size();) {
-    if (s[i] == '\x1b' && i + 1 < s.size() && s[i + 1] == '[') {
-      i += 2;
-      while (i < s.size() && s[i] != 'm')
-        ++i;
-      if (i < s.size() && s[i] == 'm')
-        ++i;
-    } else {
-      ++len;
-      ++i;
-    }
+  std::vector<std::string> splitLines(const std::string &s) {
+    std::vector<std::string> out;
+    std::string line;
+    std::istringstream iss(s);
+    while (std::getline(iss, line))
+      out.push_back(line);
+    if (out.empty())
+      out.push_back("");
+    return out;
   }
-  return len;
-}
 
-std::string truncateVisible(const std::string &s, int w) {
-  std::string out;
-  int vis = 0;
-  for (size_t i = 0; i < s.size() && vis < w;) {
-    if (s[i] == '\x1b' && i + 1 < s.size() && s[i + 1] == '[') {
-      size_t start = i;
-      i += 2;
-      while (i < s.size() && s[i] != 'm')
+  int visibleLength(const std::string &s) {
+    int len = 0;
+    for (size_t i = 0; i < s.size();) {
+      if (s[i] == '\x1b' && i + 1 < s.size() && s[i + 1] == '[') {
+        i += 2;
+        while (i < s.size() && s[i] != 'm')
+          ++i;
+        if (i < s.size() && s[i] == 'm')
+          ++i;
+      } else {
+        ++len;
         ++i;
-      if (i < s.size() && s[i] == 'm')
-        ++i;
-      out.append(s.data() + start, i - start);
-    } else {
-      out.push_back(s[i]);
-      ++vis;
-      ++i;
+      }
     }
+    return len;
   }
-  return out;
-}
 
-std::string stripAnsi(const std::string &s) {
-  std::string clean;
-  bool inEscape = false;
-  for (char c : s) {
-    if (c == '\x1b') {
-      inEscape = true;
-    } else if (inEscape) {
-      if (c == 'm' || c == 'K' || c == 'J' || c == 'H')
-        inEscape = false;
-    } else {
-      clean += c;
+  std::string truncateVisible(const std::string &s, int w) {
+    std::string out;
+    int vis = 0;
+    for (size_t i = 0; i < s.size() && vis < w;) {
+      if (s[i] == '\x1b' && i + 1 < s.size() && s[i + 1] == '[') {
+        size_t start = i;
+        i += 2;
+        while (i < s.size() && s[i] != 'm')
+          ++i;
+        if (i < s.size() && s[i] == 'm')
+          ++i;
+        out.append(s.data() + start, i - start);
+      } else {
+        out.push_back(s[i]);
+        ++vis;
+        ++i;
+      }
     }
+    return out;
   }
-  return clean;
-}
+
+  std::string stripAnsi(const std::string &s) {
+    std::string clean;
+    bool inEscape = false;
+    for (char c : s) {
+      if (c == '\x1b') {
+        inEscape = true;
+      } else if (inEscape) {
+        if (c == 'm' || c == 'K' || c == 'J' || c == 'H')
+          inEscape = false;
+      } else {
+        clean += c;
+      }
+    }
+    return clean;
+  }
 
 } // namespace strutil

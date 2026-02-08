@@ -63,7 +63,9 @@ public:
   void debugOutput(std::ostream &os) const;
 
   // Parse route tokens starting at `start` and return a RouteToken
-  static std::shared_ptr<RouteToken> parseFromTokens(const std::vector<std::string> &tokens, size_t start, size_t &next);
+  static std::shared_ptr<RouteToken>
+  parseFromTokens(const std::vector<std::string> &tokens, size_t start,
+                  size_t &next);
 
   // (Rendering moved to execute handlers; token is parse-only.)
 

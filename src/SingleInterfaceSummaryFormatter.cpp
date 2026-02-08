@@ -82,8 +82,12 @@ SingleInterfaceSummaryFormatter::format(const InterfaceConfig &ic) const {
   if (ic.link_state) {
     const char *ls = "unknown";
     switch (*ic.link_state) {
-    case 1: ls = "down"; break;
-    case 2: ls = "up"; break;
+    case 1:
+      ls = "down";
+      break;
+    case 2:
+      ls = "up";
+      break;
     }
     oss << "Link:      " << ls << "\n";
   }
@@ -93,7 +97,8 @@ SingleInterfaceSummaryFormatter::format(const InterfaceConfig &ic) const {
   }
 
   if (ic.status_str)
-    oss << "Driver:    " << *ic.status_str;  // status_str typically includes a trailing newline
+    oss << "Driver:    "
+        << *ic.status_str; // status_str typically includes a trailing newline
 
   if (ic.address) {
     oss << "Address:   " << ic.address->toString() << "\n";

@@ -75,20 +75,26 @@ public:
   // --- Extended base-interface properties (from struct ifreq / ioctls) ---
 
   std::optional<std::string> description; ///< User description (SIOCGIFDESCR)
-  std::optional<std::string> hwaddr;      ///< Hardware / MAC address (SIOCGHWADDR)
+  std::optional<std::string> hwaddr; ///< Hardware / MAC address (SIOCGHWADDR)
 
-  std::optional<uint32_t> capabilities;     ///< Active HW caps – IFCAP_* (SIOCGIFCAP curcap)
-  std::optional<uint32_t> req_capabilities; ///< Requested HW caps (SIOCGIFCAP reqcap)
+  std::optional<uint32_t>
+      capabilities; ///< Active HW caps – IFCAP_* (SIOCGIFCAP curcap)
+  std::optional<uint32_t>
+      req_capabilities; ///< Requested HW caps (SIOCGIFCAP reqcap)
 
-  std::optional<std::string> media;        ///< Current media type string (SIOCGIFMEDIA)
-  std::optional<std::string> media_active; ///< Active media string (SIOCGIFMEDIA ifm_active)
-  std::optional<int> media_status;         ///< IFM_AVALID/IFM_ACTIVE (SIOCGIFMEDIA ifm_status)
+  std::optional<std::string>
+      media; ///< Current media type string (SIOCGIFMEDIA)
+  std::optional<std::string>
+      media_active; ///< Active media string (SIOCGIFMEDIA ifm_active)
+  std::optional<int>
+      media_status; ///< IFM_AVALID/IFM_ACTIVE (SIOCGIFMEDIA ifm_status)
 
-  std::optional<std::string> status_str;   ///< Driver status text (SIOCGIFSTATUS)
-  std::optional<int> phys;                 ///< Physical wire type (SIOCGIFPHYS)
+  std::optional<std::string> status_str; ///< Driver status text (SIOCGIFSTATUS)
+  std::optional<int> phys;               ///< Physical wire type (SIOCGIFPHYS)
 
-  std::optional<uint64_t> baudrate;   ///< Link speed in bits/sec (if_data.ifi_baudrate)
-  std::optional<uint8_t> link_state;  ///< Link state (if_data.ifi_link_state)
+  std::optional<uint64_t>
+      baudrate; ///< Link speed in bits/sec (if_data.ifi_baudrate)
+  std::optional<uint8_t> link_state; ///< Link state (if_data.ifi_link_state)
 
   // Persist this interface configuration via the supplied manager.
   void save(ConfigurationManager &mgr) const override;
@@ -116,12 +122,14 @@ public:
   bool isVxlan() const;
   bool isIpsec() const;
 
-  // Check if this interface matches a requested type (handles tunnel special cases)
+  // Check if this interface matches a requested type (handles tunnel special
+  // cases)
   bool matchesType(InterfaceType requestedType) const;
 
   // Format a collection of interfaces using the appropriate formatter
-  static std::string formatInterfaces(const std::vector<InterfaceConfig> &ifaces,
-                                      ConfigurationManager *mgr = nullptr);
+  static std::string
+  formatInterfaces(const std::vector<InterfaceConfig> &ifaces,
+                   ConfigurationManager *mgr = nullptr);
 
 protected:
   // (Interface existence check moved to `ConfigData::exists`)

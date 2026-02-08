@@ -31,25 +31,24 @@
 
 namespace netcli {
 
-void executeSetArp(const ArpToken &tok,
-                           ConfigurationManager *mgr) {
-  if (!mgr) {
-    std::cout << "No ConfigurationManager provided\n";
-    return;
-  }
+  void executeSetArp(const ArpToken &tok, ConfigurationManager *mgr) {
+    if (!mgr) {
+      std::cout << "No ConfigurationManager provided\n";
+      return;
+    }
 
-  if (!tok.mac) {
-    std::cout << "Error: MAC address is required for setting ARP entry\n";
-    return;
-  }
+    if (!tok.mac) {
+      std::cout << "Error: MAC address is required for setting ARP entry\n";
+      return;
+    }
 
-  bool success =
-      mgr->SetArpEntry(tok.ip(), *tok.mac, tok.iface, tok.temp, tok.pub);
+    bool success =
+        mgr->SetArpEntry(tok.ip(), *tok.mac, tok.iface, tok.temp, tok.pub);
 
-  if (success) {
-    std::cout << "ARP entry set successfully\n";
-  } else {
-    std::cout << "Failed to set ARP entry\n";
+    if (success) {
+      std::cout << "ARP entry set successfully\n";
+    } else {
+      std::cout << "Failed to set ARP entry\n";
+    }
   }
-}
-}
+} // namespace netcli

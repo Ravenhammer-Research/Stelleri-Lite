@@ -31,24 +31,23 @@
 
 namespace netcli {
 
-void executeSetNdp(const NdpToken &tok,
-                           ConfigurationManager *mgr) {
-  if (!mgr) {
-    std::cout << "No ConfigurationManager provided\n";
-    return;
-  }
+  void executeSetNdp(const NdpToken &tok, ConfigurationManager *mgr) {
+    if (!mgr) {
+      std::cout << "No ConfigurationManager provided\n";
+      return;
+    }
 
-  if (!tok.mac) {
-    std::cout << "Error: MAC address is required for setting NDP entry\n";
-    return;
-  }
+    if (!tok.mac) {
+      std::cout << "Error: MAC address is required for setting NDP entry\n";
+      return;
+    }
 
-  bool success = mgr->SetNdpEntry(tok.ip(), *tok.mac, tok.iface, tok.temp);
+    bool success = mgr->SetNdpEntry(tok.ip(), *tok.mac, tok.iface, tok.temp);
 
-  if (success) {
-    std::cout << "NDP entry set successfully\n";
-  } else {
-    std::cout << "Failed to set NDP entry\n";
+    if (success) {
+      std::cout << "NDP entry set successfully\n";
+    } else {
+      std::cout << "Failed to set NDP entry\n";
+    }
   }
-}
-}
+} // namespace netcli

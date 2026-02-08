@@ -83,9 +83,7 @@ LaggConfig::LaggConfig(const InterfaceConfig &base, LaggProtocol protocol_,
   min_links = min_links_;
 }
 
-void LaggConfig::save(ConfigurationManager &mgr) const {
-  mgr.SaveLagg(*this);
-}
+void LaggConfig::save(ConfigurationManager &mgr) const { mgr.SaveLagg(*this); }
 
 void LaggConfig::create(ConfigurationManager &mgr) const {
   mgr.CreateLagg(name);

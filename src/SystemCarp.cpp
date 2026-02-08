@@ -2,9 +2,9 @@
  * CARP system helper implementations
  */
 
-#include "SystemConfigurationManager.hpp"
 #include "CarpConfig.hpp"
 #include "Socket.hpp"
+#include "SystemConfigurationManager.hpp"
 
 #include <cerrno>
 #include <cstring>

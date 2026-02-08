@@ -25,9 +25,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "Socket.hpp"
 #include "SystemConfigurationManager.hpp"
 #include "VirtualInterfaceConfig.hpp"
-#include "Socket.hpp"
 
 #include <cerrno>
 #include <cstring>
@@ -36,10 +36,10 @@
 #include <stdexcept>
 #include <string>
 #include <sys/ioctl.h>
+#include <sys/linker.h>
 #include <sys/socket.h>
 #include <sys/sockio.h>
 #include <sys/types.h>
-#include <sys/linker.h>
 std::vector<VirtualInterfaceConfig>
 SystemConfigurationManager::GetVirtualInterfaces(
     const std::optional<VRFConfig> &vrf) const {
@@ -56,9 +56,7 @@ SystemConfigurationManager::GetVirtualInterfaces(
 void SystemConfigurationManager::CreateVirtual(const std::string &nm) const {
   // For epair interfaces, check if the pair already exists
   std::string check_name = nm;
-  if (nm.rfind("epair", 0) == 0 && 
-      !nm.empty() && 
-      nm.back() != 'a' && 
+  if (nm.rfind("epair", 0) == 0 && !nm.empty() && nm.back() != 'a' &&
       nm.back() != 'b') {
     check_name = nm + "a";
   }
@@ -99,8 +97,8 @@ void SystemConfigurationManager::CreateVirtual(const std::string &nm) const {
       }
 
       std::string targetBase = nm;
-      if (!targetBase.empty() && (targetBase.back() == 'a' ||
-                                  targetBase.back() == 'b'))
+      if (!targetBase.empty() &&
+          (targetBase.back() == 'a' || targetBase.back() == 'b'))
         targetBase.pop_back();
 
       std::string srcPeerA = created;
@@ -135,27 +133,27 @@ void SystemConfigurationManager::CreateVirtual(const std::string &nm) const {
       return;
     }
 
-    throw std::runtime_error("Failed to create interface '" + nm + "': " +
-                             std::string(strerror(err)));
+    throw std::runtime_error("Failed to create interface '" + nm +
+                             "': " + std::string(strerror(err)));
   }
 }
 
-void SystemConfigurationManager::SaveVirtual(const VirtualInterfaceConfig &vic) const {
+void SystemConfigurationManager::SaveVirtual(
+    const VirtualInterfaceConfig &vic) const {
   // Create virtual interface if it doesn't exist, then apply all settings
-  // For epair interfaces, check if the 'a' side exists since epairs come in pairs
+  // For epair interfaces, check if the 'a' side exists since epairs come in
+  // pairs
   std::string actual_name = vic.name;
   std::string check_name = vic.name;
-  if (vic.name.rfind("epair", 0) == 0 && 
-      !vic.name.empty() && 
-      vic.name.back() != 'a' && 
-      vic.name.back() != 'b') {
+  if (vic.name.rfind("epair", 0) == 0 && !vic.name.empty() &&
+      vic.name.back() != 'a' && vic.name.back() != 'b') {
     check_name = vic.name + "a";
     actual_name = vic.name + "a"; // Operate on the 'a' side
   }
-  
+
   if (!InterfaceConfig::exists(*this, check_name))
     CreateVirtual(vic.name);
-  
+
   // Always call SaveInterface to apply VRF, groups, MTU, etc.
   // Use actual_name which includes 'a' suffix for epairs
   VirtualInterfaceConfig actual_vic = vic;

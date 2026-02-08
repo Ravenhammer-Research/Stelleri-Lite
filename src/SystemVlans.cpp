@@ -25,9 +25,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "Socket.hpp"
 #include "SystemConfigurationManager.hpp"
 #include "VLANConfig.hpp"
-#include "Socket.hpp"
 
 #include <cstring>
 #include <net/if.h>
