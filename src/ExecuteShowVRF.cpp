@@ -26,12 +26,14 @@
  */
 
 #include "ConfigurationManager.hpp"
-#include "Parser.hpp"
 #include "VRFToken.hpp"
 #include <iostream>
 
-void netcli::Parser::executeShowVRF(const VRFToken &tok,
-                                    ConfigurationManager *mgr) const {
+namespace netcli {
+
+void executeShowVRF(const VRFToken &tok,
+                            ConfigurationManager *mgr) {
   (void)mgr;
   std::cout << "VRF table: " << tok.table() << "\n";
+}
 }

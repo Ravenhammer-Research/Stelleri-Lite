@@ -80,7 +80,7 @@ static std::string vlanCapsToString(uint32_t mask) {
 }
 
 std::string VLANTableFormatter::format(
-    const std::vector<InterfaceConfig> &interfaces) const {
+    const std::vector<InterfaceConfig> &interfaces) {
   if (interfaces.empty()) {
     return "No VLAN interfaces found.\n";
   }

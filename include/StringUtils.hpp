@@ -25,25 +25,28 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "ConfigurationManager.hpp"
-#include "NdpToken.hpp"
-#include <iostream>
+/**
+ * @file StringUtils.hpp
+ * @brief ANSI-aware string utility functions for table formatting
+ */
 
-namespace netcli {
+#pragma once
 
-void executeDeleteNdp(const NdpToken &tok,
-                              ConfigurationManager *mgr) {
-  if (!mgr) {
-    std::cout << "No ConfigurationManager provided\n";
-    return;
-  }
+#include <string>
+#include <vector>
 
-  bool success = mgr->DeleteNdpEntry(tok.ip(), tok.iface);
+namespace strutil {
 
-  if (success) {
-    std::cout << "NDP entry deleted successfully\n";
-  } else {
-    std::cout << "Failed to delete NDP entry\n";
-  }
-}
-}
+/// Split a string into lines (at '\n' boundaries).
+std::vector<std::string> splitLines(const std::string &s);
+
+/// Return the visible length of a string, ignoring ANSI escape sequences.
+int visibleLength(const std::string &s);
+
+/// Truncate a string to at most `w` visible characters, preserving ANSI codes.
+std::string truncateVisible(const std::string &s, int w);
+
+/// Strip all ANSI escape sequences from a string, returning plain text.
+std::string stripAnsi(const std::string &s);
+
+} // namespace strutil

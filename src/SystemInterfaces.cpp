@@ -26,6 +26,7 @@
  */
 
 #include "InterfaceConfig.hpp"
+#include "Socket.hpp"
 #include "SystemConfigurationManager.hpp"
 #include "WlanAuthMode.hpp"
 #include "WlanConfig.hpp"
@@ -54,87 +55,79 @@ void SystemConfigurationManager::prepare_ifreq(struct ifreq &ifr,
 
 std::optional<int> SystemConfigurationManager::query_ifreq_int(
     const std::string &ifname, unsigned long req, IfreqIntField which) const {
-  int s = socket(AF_INET, SOCK_DGRAM, 0);
-  if (s < 0)
-    return std::nullopt;
-  struct ifreq ifr;
-  prepare_ifreq(ifr, ifname);
-  if (ioctl(s, req, &ifr) == 0) {
-    int v = 0;
-    switch (which) {
-    case IfreqIntField::Metric:
-      v = ifr.ifr_metric;
-      break;
-    case IfreqIntField::Fib:
-      v = ifr.ifr_fib;
-      break;
-    case IfreqIntField::Mtu:
-      v = ifr.ifr_mtu;
-      break;
+  try {
+    Socket s(AF_INET, SOCK_DGRAM);
+    struct ifreq ifr;
+    prepare_ifreq(ifr, ifname);
+    if (ioctl(s, req, &ifr) == 0) {
+      int v = 0;
+      switch (which) {
+      case IfreqIntField::Metric:
+        v = ifr.ifr_metric;
+        break;
+      case IfreqIntField::Fib:
+        v = ifr.ifr_fib;
+        break;
+      case IfreqIntField::Mtu:
+        v = ifr.ifr_mtu;
+        break;
+      }
+      return v;
     }
-    close(s);
-    return v;
-  }
-  close(s);
+  } catch (...) {}
   return std::nullopt;
 }
 
 std::optional<std::pair<std::string, int>>
 SystemConfigurationManager::query_ifreq_sockaddr(const std::string &ifname,
                                                  unsigned long req) const {
-  int s = socket(AF_INET, SOCK_DGRAM, 0);
-  if (s < 0)
-    return std::nullopt;
-  struct ifreq ifr;
-  prepare_ifreq(ifr, ifname);
-  if (ioctl(s, req, &ifr) == 0) {
-    if (ifr.ifr_addr.sa_family == AF_INET) {
-      struct sockaddr_in *sin =
-          reinterpret_cast<struct sockaddr_in *>(&ifr.ifr_addr);
-      char buf[INET_ADDRSTRLEN] = {0};
-      if (inet_ntop(AF_INET, &sin->sin_addr, buf, sizeof(buf))) {
-        close(s);
-        return std::make_pair(std::string(buf), AF_INET);
-      }
-    } else if (ifr.ifr_addr.sa_family == AF_INET6) {
-      struct sockaddr_in6 *sin6 =
-          reinterpret_cast<struct sockaddr_in6 *>(&ifr.ifr_addr);
-      char buf[INET6_ADDRSTRLEN] = {0};
-      if (inet_ntop(AF_INET6, &sin6->sin6_addr, buf, sizeof(buf))) {
-        close(s);
-        return std::make_pair(std::string(buf), AF_INET6);
+  try {
+    Socket s(AF_INET, SOCK_DGRAM);
+    struct ifreq ifr;
+    prepare_ifreq(ifr, ifname);
+    if (ioctl(s, req, &ifr) == 0) {
+      if (ifr.ifr_addr.sa_family == AF_INET) {
+        struct sockaddr_in *sin =
+            reinterpret_cast<struct sockaddr_in *>(&ifr.ifr_addr);
+        char buf[INET_ADDRSTRLEN] = {0};
+        if (inet_ntop(AF_INET, &sin->sin_addr, buf, sizeof(buf)))
+          return std::make_pair(std::string(buf), AF_INET);
+      } else if (ifr.ifr_addr.sa_family == AF_INET6) {
+        struct sockaddr_in6 *sin6 =
+            reinterpret_cast<struct sockaddr_in6 *>(&ifr.ifr_addr);
+        char buf[INET6_ADDRSTRLEN] = {0};
+        if (inet_ntop(AF_INET6, &sin6->sin6_addr, buf, sizeof(buf)))
+          return std::make_pair(std::string(buf), AF_INET6);
       }
     }
-  }
-  close(s);
+  } catch (...) {}
   return std::nullopt;
 }
 
 std::vector<std::string> SystemConfigurationManager::query_interface_groups(
     const std::string &ifname) const {
   std::vector<std::string> out;
-  int s = socket(AF_LOCAL, SOCK_DGRAM, 0);
-  if (s < 0)
-    return out;
-  struct ifgroupreq ifgr;
-  std::memset(&ifgr, 0, sizeof(ifgr));
-  std::strncpy(ifgr.ifgr_name, ifname.c_str(), IFNAMSIZ - 1);
-  if (ioctl(s, SIOCGIFGROUP, &ifgr) == 0) {
-    size_t len = ifgr.ifgr_len;
-    if (len > 0) {
-      size_t count = len / sizeof(struct ifg_req);
-      std::vector<struct ifg_req> groups(count);
-      ifgr.ifgr_groups = groups.data();
-      if (ioctl(s, SIOCGIFGROUP, &ifgr) == 0) {
-        for (size_t i = 0; i < count; ++i) {
-          std::string gname(groups[i].ifgrq_group);
-          if (!gname.empty())
-            out.emplace_back(gname);
+  try {
+    Socket s(AF_LOCAL, SOCK_DGRAM);
+    struct ifgroupreq ifgr;
+    std::memset(&ifgr, 0, sizeof(ifgr));
+    std::strncpy(ifgr.ifgr_name, ifname.c_str(), IFNAMSIZ - 1);
+    if (ioctl(s, SIOCGIFGROUP, &ifgr) == 0) {
+      size_t len = ifgr.ifgr_len;
+      if (len > 0) {
+        size_t count = len / sizeof(struct ifg_req);
+        std::vector<struct ifg_req> groups(count);
+        ifgr.ifgr_groups = groups.data();
+        if (ioctl(s, SIOCGIFGROUP, &ifgr) == 0) {
+          for (size_t i = 0; i < count; ++i) {
+            std::string gname(groups[i].ifgrq_group);
+            if (!gname.empty())
+              out.emplace_back(gname);
+          }
         }
       }
     }
-  }
-  close(s);
+  } catch (...) {}
   return out;
 }
 
@@ -142,60 +135,6 @@ std::optional<std::string> SystemConfigurationManager::query_ifstatus_nd6(
     const std::string &ifname) const {
   (void)ifname;
   return std::nullopt;
-}
-
-// Helper: detect interface type from a struct ifaddrs (platform-specific)
-static InterfaceType detectInterfaceTypeFromIfa(const struct ifaddrs *ifa) {
-  if (!ifa)
-    return InterfaceType::Unknown;
-  unsigned int flags = ifa->ifa_flags;
-  if (ifa->ifa_addr && ifa->ifa_addr->sa_family == AF_LINK) {
-    struct sockaddr_dl *sdl =
-        reinterpret_cast<struct sockaddr_dl *>(ifa->ifa_addr);
-    switch (sdl->sdl_type) {
-    case IFT_ETHER:
-    case IFT_FASTETHER:
-    case IFT_GIGABITETHERNET:
-    case IFT_FIBRECHANNEL:
-    case IFT_AFLANE8023:
-      return InterfaceType::Ethernet;
-    case IFT_IEEE8023ADLAG:
-      return InterfaceType::Lagg;
-    case IFT_LOOP:
-      return InterfaceType::Loopback;
-    case IFT_PPP:
-      return InterfaceType::PPP;
-    case IFT_TUNNEL:
-      return InterfaceType::Tunnel;
-    case IFT_GIF:
-      return InterfaceType::Gif;
-    case IFT_FDDI:
-      return InterfaceType::FDDI;
-    case IFT_ISO88025:
-    case IFT_ISO88023:
-    case IFT_ISO88024:
-    case IFT_ISO88026:
-      return InterfaceType::TokenRing;
-    case IFT_IEEE80211:
-      return InterfaceType::Wireless;
-    case IFT_BRIDGE:
-      return InterfaceType::Bridge;
-    case IFT_L2VLAN:
-      return InterfaceType::VLAN;
-    case IFT_ATM:
-      return InterfaceType::ATM;
-    case IFT_PROPVIRTUAL:
-    case IFT_VIRTUALIPADDRESS:
-      return InterfaceType::Virtual;
-    default:
-      return InterfaceType::Other;
-    }
-  }
-  if (flags & IFF_LOOPBACK)
-    return InterfaceType::Loopback;
-  if (flags & IFF_POINTOPOINT)
-    return InterfaceType::PointToPoint;
-  return InterfaceType::Unknown;
 }
 
 // Helper: build an IPNetwork from ifaddrs address/netmask (returns nullptr if not IPv4/6)
@@ -251,8 +190,8 @@ void SystemConfigurationManager::populateInterfaceMetadata(
 
   if (ic.type == InterfaceType::Wireless) {
     if (auto w = dynamic_cast<WlanConfig *>(&ic)) {
-      int s = socket(AF_INET, SOCK_DGRAM, 0);
-      if (s >= 0) {
+      try {
+        Socket s(AF_INET, SOCK_DGRAM);
         struct ieee80211req req;
         std::memset(&req, 0, sizeof(req));
         std::strncpy(req.i_name, ic.name.c_str(), IFNAMSIZ - 1);
@@ -351,9 +290,7 @@ void SystemConfigurationManager::populateInterfaceMetadata(
           w->media =
               std::string("IEEE 802.11 channel ") + std::to_string(*w->channel);
         }
-
-        close(s);
-      }
+      } catch (...) {}
     }
   }
 }
@@ -365,11 +302,7 @@ void SystemConfigurationManager::SaveInterface(const InterfaceConfig &ic) const 
   if (!InterfaceConfig::exists(ic.name))
     CreateInterface(ic.name);
 
-  int sock = socket(AF_INET, SOCK_DGRAM, 0);
-  if (sock < 0) {
-    throw std::runtime_error("Failed to create socket: " +
-                             std::string(strerror(errno)));
-  }
+  Socket sock(AF_INET, SOCK_DGRAM);
 
   // Configure addresses (primary + aliases) if provided
   if (ic.address || !ic.aliases.empty()) {
@@ -463,62 +396,60 @@ void SystemConfigurationManager::SaveInterface(const InterfaceConfig &ic) const 
     if (ic.address && ic.address->family() == AddressFamily::IPv6) {
       auto v6 = dynamic_cast<IPv6Network *>(ic.address.get());
       if (v6) {
-        // Use AF_INET6 socket for IPv6 operations
-        int sock6 = socket(AF_INET6, SOCK_DGRAM, 0);
-        if (sock6 < 0) {
-          std::cerr << "Warning: Failed to create AF_INET6 socket: " << strerror(errno) << "\n";
-        } else {
+        try {
+          Socket sock6(AF_INET6, SOCK_DGRAM);
           struct in6_aliasreq iar6;
           std::memset(&iar6, 0, sizeof(iar6));
           std::strncpy(iar6.ifra_name, ic.name.c_str(), IFNAMSIZ - 1);
         
-        auto netAddr = v6->address();
-        auto v6addr = dynamic_cast<IPv6Address *>(netAddr.get());
-        if (v6addr) {
-          struct sockaddr_in6 sa6;
-          std::memset(&sa6, 0, sizeof(sa6));
-          sa6.sin6_len = sizeof(sa6);
-          sa6.sin6_family = AF_INET6;
-          unsigned __int128 v = v6addr->value();
-          for (int i = 15; i >= 0; --i) {
-            sa6.sin6_addr.s6_addr[i] = static_cast<uint8_t>(v & 0xFF);
-            v >>= 8;
-          }
-          std::memcpy(&iar6.ifra_addr, &sa6, sizeof(sa6));
+          auto netAddr = v6->address();
+          auto v6addr = dynamic_cast<IPv6Address *>(netAddr.get());
+          if (v6addr) {
+            struct sockaddr_in6 sa6;
+            std::memset(&sa6, 0, sizeof(sa6));
+            sa6.sin6_len = sizeof(sa6);
+            sa6.sin6_family = AF_INET6;
+            unsigned __int128 v = v6addr->value();
+            for (int i = 15; i >= 0; --i) {
+              sa6.sin6_addr.s6_addr[i] = static_cast<uint8_t>(v & 0xFF);
+              v >>= 8;
+            }
+            std::memcpy(&iar6.ifra_addr, &sa6, sizeof(sa6));
           
-          // Set prefix length
-          struct sockaddr_in6 mask6;
-          std::memset(&mask6, 0, sizeof(mask6));
-          mask6.sin6_len = sizeof(mask6);
-          mask6.sin6_family = AF_INET6;
-          int prefixlen = v6->mask();
-          for (int i = 0; i < 16; i++) {
-            if (prefixlen >= 8) {
-              mask6.sin6_addr.s6_addr[i] = 0xff;
-              prefixlen -= 8;
-            } else if (prefixlen > 0) {
-              mask6.sin6_addr.s6_addr[i] = (0xff << (8 - prefixlen)) & 0xff;
-              prefixlen = 0;
-            } else {
-              mask6.sin6_addr.s6_addr[i] = 0;
+            // Set prefix length
+            struct sockaddr_in6 mask6;
+            std::memset(&mask6, 0, sizeof(mask6));
+            mask6.sin6_len = sizeof(mask6);
+            mask6.sin6_family = AF_INET6;
+            int prefixlen = v6->mask();
+            for (int i = 0; i < 16; i++) {
+              if (prefixlen >= 8) {
+                mask6.sin6_addr.s6_addr[i] = 0xff;
+                prefixlen -= 8;
+              } else if (prefixlen > 0) {
+                mask6.sin6_addr.s6_addr[i] = (0xff << (8 - prefixlen)) & 0xff;
+                prefixlen = 0;
+              } else {
+                mask6.sin6_addr.s6_addr[i] = 0;
+              }
+            }
+            std::memcpy(&iar6.ifra_prefixmask, &mask6, sizeof(mask6));
+          
+            iar6.ifra_flags = 0; // Let kernel handle DAD
+            iar6.ifra_lifetime.ia6t_expire = 0;
+            iar6.ifra_lifetime.ia6t_preferred = 0;
+            iar6.ifra_lifetime.ia6t_vltime = 0xffffffff; // ND6_INFINITE_LIFETIME
+            iar6.ifra_lifetime.ia6t_pltime = 0xffffffff; // ND6_INFINITE_LIFETIME
+          
+            if (ioctl(sock6, SIOCAIFADDR_IN6, &iar6) < 0) {
+              std::cerr << "Warning: SIOCAIFADDR_IN6 failed for " << ic.name << ": "
+                        << strerror(errno) << "\n";
             }
           }
-          std::memcpy(&iar6.ifra_prefixmask, &mask6, sizeof(mask6));
-          
-          iar6.ifra_flags = 0; // Let kernel handle DAD
-          iar6.ifra_lifetime.ia6t_expire = 0;
-          iar6.ifra_lifetime.ia6t_preferred = 0;
-          iar6.ifra_lifetime.ia6t_vltime = 0xffffffff; // ND6_INFINITE_LIFETIME
-          iar6.ifra_lifetime.ia6t_pltime = 0xffffffff; // ND6_INFINITE_LIFETIME
-          
-          if (ioctl(sock6, SIOCAIFADDR_IN6, &iar6) < 0) {
-            std::cerr << "Warning: SIOCAIFADDR_IN6 failed for " << ic.name << ": "
-                      << strerror(errno) << "\n";
-          }
+        } catch (const std::exception &e) {
+          std::cerr << "Warning: " << e.what() << "\n";
         }
-        close(sock6);
       }
-    }
     }
     
     // Configure IPv6 aliases
@@ -586,10 +517,8 @@ void SystemConfigurationManager::SaveInterface(const InterfaceConfig &ic) const 
     std::strncpy(ifr_mtu_req.ifr_name, ic.name.c_str(), IFNAMSIZ - 1);
     ifr_mtu_req.ifr_mtu = *ic.mtu;
     if (ioctl(sock, SIOCSIFMTU, &ifr_mtu_req) < 0) {
-      int err = errno;
-      close(sock);
       throw std::runtime_error("Failed to set MTU on " + ic.name + ": " +
-                               std::string(strerror(err)));
+                               std::string(strerror(errno)));
     }
   }
 
@@ -600,10 +529,8 @@ void SystemConfigurationManager::SaveInterface(const InterfaceConfig &ic) const 
   if (ioctl(sock, SIOCGIFFLAGS, &ifr_flags_req) >= 0) {
     ifr_flags_req.ifr_flags |= IFF_UP;
     if (ioctl(sock, SIOCSIFFLAGS, &ifr_flags_req) < 0) {
-      int err = errno;
-      close(sock);
       throw std::runtime_error("Failed to bring interface up: " +
-                               std::string(strerror(err)));
+                               std::string(strerror(errno)));
     }
   }
 
@@ -614,10 +541,8 @@ void SystemConfigurationManager::SaveInterface(const InterfaceConfig &ic) const 
     std::strncpy(fib_ifr.ifr_name, ic.name.c_str(), IFNAMSIZ - 1);
     fib_ifr.ifr_fib = ic.vrf->table;
     if (ioctl(sock, SIOCSIFFIB, &fib_ifr) < 0) {
-      int err = errno;
-      close(sock);
       throw std::runtime_error("Failed to set interface FIB: " +
-                               std::string(strerror(err)));
+                               std::string(strerror(errno)));
     }
   }
 
@@ -640,14 +565,10 @@ void SystemConfigurationManager::SaveInterface(const InterfaceConfig &ic) const 
     std::strncpy(ifgr.ifgr_name, ic.name.c_str(), IFNAMSIZ - 1);
     std::strncpy(ifgr.ifgr_group, group.c_str(), IFNAMSIZ - 1);
     if (ioctl(sock, SIOCAIFGROUP, &ifgr) < 0) {
-      int err = errno;
-      close(sock);
       throw std::runtime_error("Failed to add interface group '" + group +
-                               "': " + std::string(strerror(err)));
+                               "': " + std::string(strerror(errno)));
     }
   }
-
-  close(sock);
 }
 
 bool SystemConfigurationManager::InterfaceExists(std::string_view name) const {
@@ -700,27 +621,18 @@ void SystemConfigurationManager::DestroyInterface(const std::string &name) const
   if (name.empty())
     throw std::runtime_error("InterfaceConfig::destroy(): empty interface name");
 
-  int sock = socket(AF_INET, SOCK_DGRAM, 0);
-  if (sock < 0) {
-    throw std::runtime_error("Failed to create socket: " +
-                             std::string(strerror(errno)));
-  }
+  Socket sock(AF_INET, SOCK_DGRAM);
 
   struct ifreq ifr;
   std::memset(&ifr, 0, sizeof(ifr));
   std::strncpy(ifr.ifr_name, name.c_str(), IFNAMSIZ - 1);
 
   if (ioctl(sock, SIOCIFDESTROY, &ifr) < 0) {
-    int err = errno;
-    close(sock);
-    throw std::runtime_error("Failed to destroy interface '" + name + "': " + std::string(strerror(err)));
+    throw std::runtime_error("Failed to destroy interface '" + name + "': " + std::string(strerror(errno)));
   }
-
-  close(sock);
 }
 
 void SystemConfigurationManager::RemoveInterfaceAddress(const std::string &ifname, const std::string &addr) const {
-  // Parse addr CIDR and remove single address via SIOCDIFADDR for IPv4
   auto net = IPNetwork::fromString(addr);
   if (!net)
     throw std::runtime_error("Invalid address: " + addr);
@@ -730,9 +642,7 @@ void SystemConfigurationManager::RemoveInterfaceAddress(const std::string &ifnam
     if (!v4)
       throw std::runtime_error("Invalid IPv4 address object");
 
-    int sock = socket(AF_INET, SOCK_DGRAM, 0);
-    if (sock < 0)
-      throw std::runtime_error(std::string("failed to create socket: ") + strerror(errno));
+    Socket sock(AF_INET, SOCK_DGRAM);
 
     struct ifreq ifr;
     std::memset(&ifr, 0, sizeof(ifr));
@@ -742,18 +652,13 @@ void SystemConfigurationManager::RemoveInterfaceAddress(const std::string &ifnam
     struct in_addr a4;
     auto ipaddr = v4->address();
     auto ipv4addr = dynamic_cast<IPv4Address *>(ipaddr.get());
-    if (!ipv4addr) {
-      close(sock);
+    if (!ipv4addr)
       throw std::runtime_error("Invalid IPv4 address object");
-    }
     a4.s_addr = htonl(ipv4addr->value());
     sin->sin_addr = a4;
     if (ioctl(sock, SIOCDIFADDR, &ifr) < 0) {
-      int err = errno;
-      close(sock);
-      throw std::runtime_error(std::string("failed to remove address: ") + strerror(err));
+      throw std::runtime_error(std::string("failed to remove address: ") + strerror(errno));
     }
-    close(sock);
     return;
   }
 
@@ -762,11 +667,7 @@ void SystemConfigurationManager::RemoveInterfaceAddress(const std::string &ifnam
 }
 
 void SystemConfigurationManager::RemoveInterfaceGroup(const std::string &ifname, const std::string &group) const {
-  int sock = socket(AF_LOCAL, SOCK_DGRAM, 0);
-  if (sock < 0) {
-    throw std::runtime_error("Failed to create socket: " +
-                             std::string(strerror(errno)));
-  }
+  Socket sock(AF_LOCAL, SOCK_DGRAM);
 
   struct ifgroupreq ifgr;
   std::memset(&ifgr, 0, sizeof(ifgr));
@@ -774,32 +675,21 @@ void SystemConfigurationManager::RemoveInterfaceGroup(const std::string &ifname,
   std::strncpy(ifgr.ifgr_group, group.c_str(), IFNAMSIZ - 1);
 
   if (ioctl(sock, SIOCDIFGROUP, &ifgr) < 0) {
-    int err = errno;
-    close(sock);
     throw std::runtime_error("Failed to remove group '" + group + "': " +
-                             std::string(strerror(err)));
+                             std::string(strerror(errno)));
   }
-
-  close(sock);
 }
 
 void SystemConfigurationManager::CreateInterface(const std::string &name) const {
-  int sock = socket(AF_INET, SOCK_DGRAM, 0);
-  if (sock < 0) {
-    throw std::runtime_error("Failed to create socket: " +
-                             std::string(strerror(errno)));
-  }
+  Socket sock(AF_INET, SOCK_DGRAM);
 
   struct ifreq ifr;
   std::memset(&ifr, 0, sizeof(ifr));
   std::strncpy(ifr.ifr_name, name.c_str(), IFNAMSIZ - 1);
 
   if (ioctl(sock, SIOCIFCREATE, &ifr) < 0) {
-    close(sock);
     throw std::runtime_error("Failed to create interface '" + name + "': " + std::string(strerror(errno)));
   }
-
-  close(sock);
 }
 
 std::vector<InterfaceConfig> SystemConfigurationManager::GetInterfaces(
@@ -817,7 +707,7 @@ std::vector<InterfaceConfig> SystemConfigurationManager::GetInterfaces(
     auto it = map.find(name);
     if (it == map.end()) {
       // Build primary InterfaceConfig from ifa fields (system-level parsing)
-      InterfaceType t = detectInterfaceTypeFromIfa(ifa);
+      InterfaceType t = ifAddrToInterfaceType(ifa);
       std::unique_ptr<IPNetwork> addr = ipNetworkFromIfa(ifa);
       std::vector<std::unique_ptr<IPNetwork>> aliases;
       std::optional<uint32_t> flags = std::nullopt;

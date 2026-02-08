@@ -27,11 +27,12 @@
 
 #include "ArpToken.hpp"
 #include "ConfigurationManager.hpp"
-#include "Parser.hpp"
 #include <iostream>
 
-void netcli::Parser::executeSetArp(const ArpToken &tok,
-                                   ConfigurationManager *mgr) const {
+namespace netcli {
+
+void executeSetArp(const ArpToken &tok,
+                           ConfigurationManager *mgr) {
   if (!mgr) {
     std::cout << "No ConfigurationManager provided\n";
     return;
@@ -50,4 +51,5 @@ void netcli::Parser::executeSetArp(const ArpToken &tok,
   } else {
     std::cout << "Failed to set ARP entry\n";
   }
+}
 }

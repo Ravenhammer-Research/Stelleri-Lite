@@ -29,6 +29,7 @@
 #include "BridgeTableFormatter.hpp"
 #include "InterfaceFlags.hpp"
 #include "InterfaceTableFormatter.hpp"
+#include "InterfaceType.hpp"
 #include "LaggTableFormatter.hpp"
 #include "SingleInterfaceSummaryFormatter.hpp"
 #include "TunnelTableFormatter.hpp"
@@ -123,6 +124,109 @@ std::unique_ptr<Token> InterfaceToken::clone() const {
   return std::make_unique<InterfaceToken>(*this);
 }
 
+void InterfaceToken::parseKeywords(std::shared_ptr<InterfaceToken> &tok,
+                                   const std::vector<std::string> &tokens,
+                                   size_t &cur) {
+  while (cur < tokens.size()) {
+    const std::string &kw = tokens[cur];
+    if (kw == "inet" || kw == "inet6") {
+      tok->address_family = (kw == "inet") ? AF_INET : AF_INET6;
+      if (cur + 1 < tokens.size() && tokens[cur + 1] == "address" &&
+          cur + 2 < tokens.size()) {
+        tok->address = tokens[cur + 2];
+        cur += 3;
+        continue;
+      }
+      ++cur;
+      continue;
+    }
+    if (kw == "group" && cur + 1 < tokens.size()) {
+      tok->group = tokens[cur + 1];
+      cur += 2;
+      continue;
+    }
+    if (kw == "mtu" && cur + 1 < tokens.size()) {
+      tok->mtu = std::stoi(tokens[cur + 1]);
+      cur += 2;
+      continue;
+    }
+    if ((kw == "fib" || kw == "vrf") && cur + 1 < tokens.size()) {
+      tok->vrf = std::stoi(tokens[cur + 1]);
+      cur += 2;
+      continue;
+    }
+    if (kw == "vlan") {
+      ++cur;
+      std::optional<uint16_t> vid;
+      std::optional<std::string> parent;
+      while (cur < tokens.size()) {
+        const std::string &k2 = tokens[cur];
+        if (k2 == "id" && cur + 1 < tokens.size()) {
+          vid = static_cast<uint16_t>(std::stoi(tokens[cur + 1]));
+          cur += 2;
+          continue;
+        }
+        if (k2 == "parent" && cur + 1 < tokens.size()) {
+          parent = tokens[cur + 1];
+          cur += 2;
+          continue;
+        }
+        break;
+      }
+      if (vid && parent) {
+        tok->vlan.emplace();
+        tok->vlan->name = tok->name();
+        tok->vlan->id = *vid;
+        tok->vlan->parent = *parent;
+      }
+      continue;
+    }
+    if (kw == "lagg" || kw == "lag") {
+      ++cur;
+      LaggConfig lc;
+      while (cur < tokens.size()) {
+        const std::string &k2 = tokens[cur];
+        if (k2 == "members" && cur + 1 < tokens.size()) {
+          const std::string &m = tokens[cur + 1];
+          size_t p = 0, len = m.size();
+          while (p < len) {
+            size_t q = m.find(',', p);
+            if (q == std::string::npos)
+              q = len;
+            lc.members.emplace_back(m.substr(p, q - p));
+            p = q + 1;
+          }
+          cur += 2;
+          continue;
+        }
+        if (k2 == "protocol" && cur + 1 < tokens.size()) {
+          const std::string &proto = tokens[cur + 1];
+          if (proto == "lacp")
+            lc.protocol = LaggProtocol::LACP;
+          else if (proto == "failover")
+            lc.protocol = LaggProtocol::FAILOVER;
+          else if (proto == "loadbalance")
+            lc.protocol = LaggProtocol::LOADBALANCE;
+          cur += 2;
+          continue;
+        }
+        break;
+      }
+      if (!lc.members.empty()) {
+        tok->lagg.emplace();
+        tok->lagg->members = std::move(lc.members);
+        tok->lagg->protocol = lc.protocol;
+        tok->lagg->hash_policy = lc.hash_policy;
+        tok->lagg->lacp_rate = lc.lacp_rate;
+        tok->lagg->min_links = lc.min_links;
+      }
+      continue;
+    }
+    // Unknown keyword; stop parsing
+    break;
+  }
+}
+
 std::shared_ptr<InterfaceToken>
 InterfaceToken::parseFromTokens(const std::vector<std::string> &tokens,
                                 size_t start, size_t &next) {
@@ -149,141 +253,19 @@ InterfaceToken::parseFromTokens(const std::vector<std::string> &tokens,
     // support `interfaces name <name>`
     if (a == "name") {
       std::string name = b;
-      size_t nnext = start + 3;
-
       auto tok = std::make_shared<InterfaceToken>(InterfaceType::Unknown, name);
-      // parse trailing options (vlan/lagg/etc.)
-      size_t cur = nnext;
-      while (cur < tokens.size()) {
-        const std::string &kw = tokens[cur];
-        if ((kw == "inet") || (kw == "inet6")) {
-          if (kw == "inet")
-            tok->address_family = AF_INET;
-          else
-            tok->address_family = AF_INET6;
-          // optional: address <addr>
-          if (cur + 1 < tokens.size() && tokens[cur + 1] == "address" &&
-              cur + 2 < tokens.size()) {
-            tok->address = tokens[cur + 2];
-            cur += 3;
-            continue;
-          }
-          ++cur;
-          continue;
-        }
-        if (kw == "group" && cur + 1 < tokens.size()) {
-          tok->group = tokens[cur + 1];
-          cur += 2;
-          continue;
-        }
-        if (kw == "mtu" && cur + 1 < tokens.size()) {
-          tok->mtu = std::stoi(tokens[cur + 1]);
-          cur += 2;
-          continue;
-        }
-        if ((kw == "fib" || kw == "vrf") && cur + 1 < tokens.size()) {
-          tok->vrf = std::stoi(tokens[cur + 1]);
-          cur += 2;
-          continue;
-        }
-        if (kw == "vlan") {
-          ++cur;
-          std::optional<uint16_t> vid;
-          std::optional<std::string> parent;
-          while (cur < tokens.size()) {
-            const std::string &k2 = tokens[cur];
-            if (k2 == "id" && cur + 1 < tokens.size()) {
-              vid = static_cast<uint16_t>(std::stoi(tokens[cur + 1]));
-              cur += 2;
-              continue;
-            }
-            if (k2 == "parent" && cur + 1 < tokens.size()) {
-              parent = tokens[cur + 1];
-              cur += 2;
-              continue;
-            }
-            break;
-          }
-          if (vid && parent) {
-            tok->vlan.emplace();
-            tok->vlan->name = tok->name();
-            tok->vlan->id = *vid;
-            tok->vlan->parent = *parent;
-          }
-          continue;
-        }
-        if (kw == "lagg" || kw == "lag") {
-          ++cur;
-          LaggConfig lc;
-          while (cur < tokens.size()) {
-            const std::string &k2 = tokens[cur];
-            if (k2 == "members" && cur + 1 < tokens.size()) {
-              const std::string &m = tokens[cur + 1];
-              size_t p = 0, len = m.size();
-              while (p < len) {
-                size_t q = m.find(',', p);
-                if (q == std::string::npos)
-                  q = len;
-                lc.members.emplace_back(m.substr(p, q - p));
-                p = q + 1;
-              }
-              cur += 2;
-              continue;
-            }
-            if (k2 == "protocol" && cur + 1 < tokens.size()) {
-              const std::string &proto = tokens[cur + 1];
-              if (proto == "lacp")
-                lc.protocol = LaggProtocol::LACP;
-              else if (proto == "failover")
-                lc.protocol = LaggProtocol::FAILOVER;
-              else if (proto == "loadbalance")
-                lc.protocol = LaggProtocol::LOADBALANCE;
-              cur += 2;
-              continue;
-            }
-            break;
-          }
-          if (!lc.members.empty()) {
-            tok->lagg.emplace();
-            tok->lagg->members = std::move(lc.members);
-            tok->lagg->protocol = lc.protocol;
-            tok->lagg->hash_policy = lc.hash_policy;
-            tok->lagg->lacp_rate = lc.lacp_rate;
-            tok->lagg->min_links = lc.min_links;
-          }
-          continue;
-        }
-        break;
-      }
+      size_t cur = start + 3;
+      parseKeywords(tok, tokens, cur);
       next = cur;
       return tok;
     }
+
     InterfaceType itype = InterfaceType::Unknown;
     std::string name;
 
     if (a == "type") {
       // form: interfaces type <type> [name]
-      const std::string &type = b;
-      if (type == "ethernet")
-        itype = InterfaceType::Ethernet;
-      else if (type == "loopback")
-        itype = InterfaceType::Loopback;
-      else if (type == "ppp")
-        itype = InterfaceType::PPP;
-      else if (type == "bridge")
-        itype = InterfaceType::Bridge;
-      else if (type == "vlan")
-        itype = InterfaceType::VLAN;
-      else if (type == "lagg" || type == "lag")
-        itype = InterfaceType::Lagg;
-      else if (type == "tunnel")
-        itype = InterfaceType::Tunnel;
-      else if (type == "gif")
-        itype = InterfaceType::Gif;
-      else if (type == "tun")
-        itype = InterfaceType::Tun;
-      else if (type == "epair" || type == "virtual" || type == "tap")
-        itype = InterfaceType::Virtual;
+      itype = interfaceTypeFromString(b);
 
       if (itype != InterfaceType::Unknown) {
         // optional name follows; allow `name <name>` form as well
@@ -293,234 +275,21 @@ InterfaceToken::parseFromTokens(const std::vector<std::string> &tokens,
           else
             name = tokens[start + 3];
         }
-        next =
+        size_t cur =
             start + (name.empty() ? 3 : (tokens[start + 3] == "name" ? 5 : 4));
 
         auto tok = std::make_shared<InterfaceToken>(itype, name);
-        // Parse optional args after the name
-        size_t cur = next;
-        while (cur < tokens.size()) {
-          const std::string &kw = tokens[cur];
-          if ((kw == "inet") || (kw == "inet6")) {
-            if (kw == "inet")
-              tok->address_family = AF_INET;
-            else
-              tok->address_family = AF_INET6;
-            if (cur + 1 < tokens.size() && tokens[cur + 1] == "address" &&
-                cur + 2 < tokens.size()) {
-              tok->address = tokens[cur + 2];
-              cur += 3;
-              continue;
-            }
-            ++cur;
-            continue;
-          }
-          if (kw == "group" && cur + 1 < tokens.size()) {
-            tok->group = tokens[cur + 1];
-            cur += 2;
-            continue;
-          }
-          if ((kw == "fib" || kw == "vrf") && cur + 1 < tokens.size()) {
-            tok->vrf = std::stoi(tokens[cur + 1]);
-            cur += 2;
-            continue;
-          }
-          if (kw == "vlan") {
-            // expect: vlan id <num> parent <ifname>
-            ++cur;
-            std::optional<uint16_t> vid;
-            std::optional<std::string> parent;
-            while (cur < tokens.size()) {
-              const std::string &k2 = tokens[cur];
-              if (k2 == "id" && cur + 1 < tokens.size()) {
-                vid = static_cast<uint16_t>(std::stoi(tokens[cur + 1]));
-                cur += 2;
-                continue;
-              }
-              if (k2 == "parent" && cur + 1 < tokens.size()) {
-                parent = tokens[cur + 1];
-                cur += 2;
-                continue;
-              }
-              break;
-            }
-            if (vid && parent) {
-              tok->vlan.emplace();
-              tok->vlan->name = tok->name();
-              tok->vlan->id = *vid;
-              tok->vlan->parent = *parent;
-            }
-            continue;
-          }
-          if (kw == "lagg" || kw == "lag") {
-            ++cur;
-            // expect: lagg members <if1,if2,...> [protocol <proto>]
-            LaggConfig lc;
-            while (cur < tokens.size()) {
-              const std::string &k2 = tokens[cur];
-              if (k2 == "members" && cur + 1 < tokens.size()) {
-                // parse members token, allow comma-separated or multiple tokens
-                const std::string &m = tokens[cur + 1];
-                // split on commas
-                size_t p = 0, len = m.size();
-                while (p < len) {
-                  size_t q = m.find(',', p);
-                  if (q == std::string::npos)
-                    q = len;
-                  lc.members.emplace_back(m.substr(p, q - p));
-                  p = q + 1;
-                }
-                cur += 2;
-                continue;
-              }
-              if (k2 == "protocol" && cur + 1 < tokens.size()) {
-                const std::string &proto = tokens[cur + 1];
-                if (proto == "lacp")
-                  lc.protocol = LaggProtocol::LACP;
-                else if (proto == "failover")
-                  lc.protocol = LaggProtocol::FAILOVER;
-                else if (proto == "loadbalance")
-                  lc.protocol = LaggProtocol::LOADBALANCE;
-                cur += 2;
-                continue;
-              }
-              break;
-            }
-            if (!lc.members.empty()) {
-              tok->lagg.emplace();
-              tok->lagg->members = std::move(lc.members);
-              tok->lagg->protocol = lc.protocol;
-              tok->lagg->hash_policy = lc.hash_policy;
-              tok->lagg->lacp_rate = lc.lacp_rate;
-              tok->lagg->min_links = lc.min_links;
-            }
-            continue;
-          }
-
-          // Unknown keyword; stop parsing here
-          break;
-        }
-
+        parseKeywords(tok, tokens, cur);
         next = cur;
         return tok;
       }
     } else {
       // original form: interfaces <type> <name>
-      const std::string &type = a;
-      const std::string &nameTok = b;
-      if (type == "ethernet")
-        itype = InterfaceType::Ethernet;
-      else if (type == "loopback")
-        itype = InterfaceType::Loopback;
-      else if (type == "ppp")
-        itype = InterfaceType::PPP;
-      else if (type == "bridge")
-        itype = InterfaceType::Bridge;
-      else if (type == "vlan")
-        itype = InterfaceType::VLAN;
-      else if (type == "lagg")
-        itype = InterfaceType::Lagg;
-      else if (type == "tunnel" || type == "gif")
-        itype = InterfaceType::Tunnel;
-      else if (type == "epair")
-        itype = InterfaceType::Virtual;
+      itype = interfaceTypeFromString(a);
       if (itype != InterfaceType::Unknown) {
-        next = start + 3;
-
-        auto tok = std::make_shared<InterfaceToken>(itype, nameTok);
-        // parse additional args after nameTok
-        size_t cur = next;
-        while (cur < tokens.size()) {
-          const std::string &kw = tokens[cur];
-          if ((kw == "inet") || (kw == "inet6")) {
-            if (kw == "inet")
-              tok->address_family = AF_INET;
-            else
-              tok->address_family = AF_INET6;
-            if (cur + 1 < tokens.size() && tokens[cur + 1] == "address" &&
-                cur + 2 < tokens.size()) {
-              tok->address = tokens[cur + 2];
-              cur += 3;
-              continue;
-            }
-            ++cur;
-            continue;
-          }
-          if (kw == "group" && cur + 1 < tokens.size()) {
-            tok->group = tokens[cur + 1];
-            cur += 2;
-            continue;
-          }
-          if (kw == "vlan") {
-            ++cur;
-            std::optional<uint16_t> vid;
-            std::optional<std::string> parent;
-            while (cur < tokens.size()) {
-              const std::string &k2 = tokens[cur];
-              if (k2 == "id" && cur + 1 < tokens.size()) {
-                vid = static_cast<uint16_t>(std::stoi(tokens[cur + 1]));
-                cur += 2;
-                continue;
-              }
-              if (k2 == "parent" && cur + 1 < tokens.size()) {
-                parent = tokens[cur + 1];
-                cur += 2;
-                continue;
-              }
-              break;
-            }
-            if (vid && parent) {
-              tok->vlan.emplace();
-              tok->vlan->name = tok->name();
-              tok->vlan->id = *vid;
-              tok->vlan->parent = *parent;
-            }
-            continue;
-          }
-          if (kw == "lagg" || kw == "lag") {
-            ++cur;
-            LaggConfig lc;
-            while (cur < tokens.size()) {
-              const std::string &k2 = tokens[cur];
-              if (k2 == "members" && cur + 1 < tokens.size()) {
-                const std::string &m = tokens[cur + 1];
-                size_t p = 0, len = m.size();
-                while (p < len) {
-                  size_t q = m.find(',', p);
-                  if (q == std::string::npos)
-                    q = len;
-                  lc.members.emplace_back(m.substr(p, q - p));
-                  p = q + 1;
-                }
-                cur += 2;
-                continue;
-              }
-              if (k2 == "protocol" && cur + 1 < tokens.size()) {
-                const std::string &proto = tokens[cur + 1];
-                if (proto == "lacp")
-                  lc.protocol = LaggProtocol::LACP;
-                else if (proto == "failover")
-                  lc.protocol = LaggProtocol::FAILOVER;
-                else if (proto == "loadbalance")
-                  lc.protocol = LaggProtocol::LOADBALANCE;
-                cur += 2;
-                continue;
-              }
-              break;
-            }
-            if (!lc.members.empty()) {
-              tok->lagg.emplace();
-              tok->lagg->members = std::move(lc.members);
-              tok->lagg->protocol = lc.protocol;
-              tok->lagg->hash_policy = lc.hash_policy;
-              tok->lagg->lacp_rate = lc.lacp_rate;
-              tok->lagg->min_links = lc.min_links;
-            }
-            continue;
-          }
-          break;
-        }
-
+        auto tok = std::make_shared<InterfaceToken>(itype, b);
+        size_t cur = start + 3;
+        parseKeywords(tok, tokens, cur);
         next = cur;
         return tok;
       }

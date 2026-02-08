@@ -4,6 +4,7 @@
 
 #include "SystemConfigurationManager.hpp"
 #include "TunnelConfig.hpp"
+#include "Socket.hpp"
 
 #include "IPAddress.hpp"
 
@@ -16,7 +17,6 @@
 #include <stdexcept>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
-#include <unistd.h>
 
 void SystemConfigurationManager::SaveTunnel(const TunnelConfig &t) const {
   if (t.name.empty())
@@ -41,11 +41,7 @@ void SystemConfigurationManager::SaveTunnel(const TunnelConfig &t) const {
         "Tunnel endpoints must be same address family (both IPv4 or IPv6)");
   }
 
-  int tsock = socket(AF_INET, SOCK_DGRAM, 0);
-  if (tsock < 0) {
-    throw std::runtime_error("Failed to create socket: " +
-                             std::string(strerror(errno)));
-  }
+  Socket tsock(AF_INET, SOCK_DGRAM);
 
   struct ifaliasreq ifra;
   std::memset(&ifra, 0, sizeof(ifra));
@@ -68,7 +64,6 @@ void SystemConfigurationManager::SaveTunnel(const TunnelConfig &t) const {
     sin_dst->sin_addr.s_addr = htonl(v4dst->value());
 
     if (ioctl(tsock, SIOCSIFPHYADDR, &ifra) < 0) {
-      close(tsock);
       throw std::runtime_error("Failed to configure GIF tunnel endpoints: " +
                                std::string(strerror(errno)));
     }
@@ -76,28 +71,19 @@ void SystemConfigurationManager::SaveTunnel(const TunnelConfig &t) const {
     std::cerr << "Warning: IPv6 tunnel configuration requires routing socket - "
                  "not fully implemented\n";
   }
-
-  close(tsock);
 }
 
 void SystemConfigurationManager::CreateTunnel(const std::string &nm) const {
-  int sock = socket(AF_INET, SOCK_DGRAM, 0);
-  if (sock < 0) {
-    throw std::runtime_error("Failed to create socket: " +
-                             std::string(strerror(errno)));
-  }
+  Socket sock(AF_INET, SOCK_DGRAM);
 
   struct ifreq ifr;
   std::memset(&ifr, 0, sizeof(ifr));
   std::strncpy(ifr.ifr_name, nm.c_str(), IFNAMSIZ - 1);
 
   if (ioctl(sock, SIOCIFCREATE, &ifr) < 0) {
-    close(sock);
     throw std::runtime_error("Failed to create interface '" + nm + "': " +
                              std::string(strerror(errno)));
   }
-
-  close(sock);
 }
 
 std::vector<TunnelConfig>

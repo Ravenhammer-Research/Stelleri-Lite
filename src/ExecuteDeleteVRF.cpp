@@ -26,14 +26,16 @@
  */
 
 #include "ConfigurationManager.hpp"
-#include "Parser.hpp"
 #include "VRFToken.hpp"
 #include <iostream>
 
-void netcli::Parser::executeDeleteVRF(const VRFToken &tok,
-                                      ConfigurationManager *mgr) const {
+namespace netcli {
+
+void executeDeleteVRF(const VRFToken &tok,
+                              ConfigurationManager *mgr) {
   (void)tok;
   (void)mgr;
   // Stub: VRF deletion will be implemented never
   std::cout << "delete vrf: (stub)\n";
+}
 }

@@ -26,21 +26,67 @@
  */
 
 /**
- * @file NdpTableFormatter.hpp
- * @brief Formatter for NDP table output
+ * @file Socket.hpp
+ * @brief RAII wrapper for BSD socket file descriptors
  */
 
 #pragma once
 
-#include "NdpConfig.hpp"
-#include "TableFormatter.hpp"
+#include <stdexcept>
 #include <string>
-#include <vector>
+#include <sys/socket.h>
+#include <unistd.h>
+#include <cstring>
+#include <cerrno>
 
-class NdpTableFormatter : public TableFormatter<NdpConfig> {
+/**
+ * @brief RAII socket wrapper that automatically closes the file descriptor.
+ *
+ * Usage:
+ *   Socket sock(AF_INET, SOCK_DGRAM, 0);
+ *   ioctl(sock.fd(), ...);
+ *   // fd closed automatically on scope exit
+ */
+class Socket {
 public:
-  NdpTableFormatter() = default;
+  /// Create a socket, throwing on failure.
+  Socket(int domain, int type, int protocol = 0)
+      : fd_(::socket(domain, type, protocol)) {
+    if (fd_ < 0)
+      throw std::runtime_error(std::string("Failed to create socket: ") +
+                               std::strerror(errno));
+  }
 
-  // Format NDP entries as ASCII table
-  std::string format(const std::vector<NdpConfig> &entries) override;
+  /// Non-copyable.
+  Socket(const Socket &) = delete;
+  Socket &operator=(const Socket &) = delete;
+
+  /// Movable.
+  Socket(Socket &&other) noexcept : fd_(other.fd_) { other.fd_ = -1; }
+  Socket &operator=(Socket &&other) noexcept {
+    if (this != &other) {
+      close();
+      fd_ = other.fd_;
+      other.fd_ = -1;
+    }
+    return *this;
+  }
+
+  ~Socket() { close(); }
+
+  /// Return the raw file descriptor.
+  int fd() const noexcept { return fd_; }
+
+  /// Implicit conversion to int for use with ioctl(), etc.
+  operator int() const noexcept { return fd_; }
+
+private:
+  void close() noexcept {
+    if (fd_ >= 0) {
+      ::close(fd_);
+      fd_ = -1;
+    }
+  }
+
+  int fd_;
 };

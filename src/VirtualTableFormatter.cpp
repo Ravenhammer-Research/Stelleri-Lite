@@ -39,7 +39,7 @@
 #include <string>
 
 std::string VirtualTableFormatter::format(
-    const std::vector<InterfaceConfig> &interfaces) const {
+    const std::vector<InterfaceConfig> &interfaces) {
   if (interfaces.empty())
     return "No virtual interfaces found.\n";
 

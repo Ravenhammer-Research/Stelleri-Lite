@@ -63,6 +63,75 @@ enum class InterfaceType {
   Other,
 };
 
+/// Convert an InterfaceType enum value to a human-readable string.
+inline std::string interfaceTypeToString(InterfaceType t) {
+  switch (t) {
+  case InterfaceType::Unknown:
+    return "Unknown";
+  case InterfaceType::Loopback:
+    return "Loopback";
+  case InterfaceType::Ethernet:
+    return "Ethernet";
+  case InterfaceType::PointToPoint:
+    return "PointToPoint";
+  case InterfaceType::Wireless:
+    return "Wireless";
+  case InterfaceType::Bridge:
+    return "Bridge";
+  case InterfaceType::Lagg:
+    return "LinkAggregate";
+  case InterfaceType::VLAN:
+    return "VLAN";
+  case InterfaceType::PPP:
+    return "PPP";
+  case InterfaceType::Tunnel:
+    return "Tunnel";
+  case InterfaceType::Gif:
+    return "GenericTunnel";
+  case InterfaceType::Tun:
+    return "Tun";
+  case InterfaceType::FDDI:
+    return "FDDI";
+  case InterfaceType::TokenRing:
+    return "TokenRing";
+  case InterfaceType::ATM:
+    return "ATM";
+  case InterfaceType::Virtual:
+    return "Virtual";
+  case InterfaceType::Other:
+    return "Other";
+  default:
+    return "Unknown";
+  }
+}
+
+/// Parse a CLI type keyword (e.g. "ethernet", "bridge") into InterfaceType.
+inline InterfaceType interfaceTypeFromString(const std::string &s) {
+  if (s == "ethernet")
+    return InterfaceType::Ethernet;
+  if (s == "loopback")
+    return InterfaceType::Loopback;
+  if (s == "ppp")
+    return InterfaceType::PPP;
+  if (s == "bridge")
+    return InterfaceType::Bridge;
+  if (s == "vlan")
+    return InterfaceType::VLAN;
+  if (s == "lagg" || s == "lag")
+    return InterfaceType::Lagg;
+  if (s == "tunnel")
+    return InterfaceType::Tunnel;
+  if (s == "gif")
+    return InterfaceType::Gif;
+  if (s == "tun")
+    return InterfaceType::Tun;
+  if (s == "epair" || s == "virtual" || s == "tap")
+    return InterfaceType::Virtual;
+  if (s == "wireless" || s == "wlan")
+    return InterfaceType::Wireless;
+  return InterfaceType::Unknown;
+}
+
 // `detectInterfaceType` moved to the system implementation where `struct
 // ifaddrs` is available so link-layer address families can be examined
 // per-platform.

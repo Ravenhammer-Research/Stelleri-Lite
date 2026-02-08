@@ -73,6 +73,12 @@ public:
                   size_t &next);
 
 private:
+  /// Parse keyword arguments (inet, group, mtu, vrf, vlan, lagg) from tokens
+  /// starting at cur, advancing cur past consumed tokens.
+  static void parseKeywords(std::shared_ptr<InterfaceToken> &tok,
+                            const std::vector<std::string> &tokens,
+                            size_t &cur);
+
   InterfaceType type_ = InterfaceType::Unknown;
   std::string name_;
 };

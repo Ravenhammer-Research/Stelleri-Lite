@@ -29,7 +29,6 @@
 #include "IPNetwork.hpp"
 #include "InterfaceConfig.hpp"
 #include "InterfaceToken.hpp"
-#include "Parser.hpp"
 #include "SystemConfigurationManager.hpp"
 #include <arpa/inet.h>
 #include <cerrno>
@@ -39,8 +38,10 @@
 #include <sys/sockio.h>
 #include <unistd.h>
 
-void netcli::Parser::executeDeleteInterface(const InterfaceToken &tok,
-                                            ConfigurationManager *mgr) const {
+namespace netcli {
+
+void executeDeleteInterface(const InterfaceToken &tok,
+                                    ConfigurationManager *mgr) {
   (void)mgr;
 
   const std::string name = tok.name();
@@ -104,4 +105,5 @@ void netcli::Parser::executeDeleteInterface(const InterfaceToken &tok,
     std::cerr << "delete interface: failed to remove '" << name
               << "': " << e.what() << "\n";
   }
+}
 }

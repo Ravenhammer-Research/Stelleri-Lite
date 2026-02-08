@@ -28,11 +28,12 @@
 #include "ArpTableFormatter.hpp"
 #include "ArpToken.hpp"
 #include "ConfigurationManager.hpp"
-#include "Parser.hpp"
 #include <iostream>
 
-void netcli::Parser::executeShowArp(const ArpToken &tok,
-                                    ConfigurationManager *mgr) const {
+namespace netcli {
+
+void executeShowArp(const ArpToken &tok,
+                            ConfigurationManager *mgr) {
   if (!mgr) {
     std::cout << "No ConfigurationManager provided\n";
     return;
@@ -54,4 +55,5 @@ void netcli::Parser::executeShowArp(const ArpToken &tok,
 
   ArpTableFormatter formatter;
   std::cout << formatter.format(entries);
+}
 }

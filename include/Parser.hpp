@@ -27,14 +27,7 @@
 
 #pragma once
 
-#include "ArpToken.hpp"
 #include "Command.hpp"
-#include "ConfigurationManager.hpp"
-#include "InterfaceToken.hpp"
-#include "NdpToken.hpp"
-#include "RouteToken.hpp"
-#include "Token.hpp"
-#include "VRFToken.hpp"
 #include <memory>
 #include <string>
 #include <vector>
@@ -52,37 +45,6 @@ namespace netcli {
     // Parse a token vector into a Command. Returns nullptr on parse error.
     std::unique_ptr<Command>
     parse(const std::vector<std::string> &tokens) const;
-
-    // Main dispatcher: execute a parsed command token chain.
-    void executeCommand(const std::shared_ptr<Token> &head,
-                        ConfigurationManager *mgr) const;
-
-    // Per-target execute handlers (moved from standalone Execute* files).
-    void executeShowInterface(const InterfaceToken &tok,
-                              ConfigurationManager *mgr) const;
-    void executeSetInterface(const InterfaceToken &tok,
-                             ConfigurationManager *mgr) const;
-    void executeDeleteInterface(const InterfaceToken &tok,
-                                ConfigurationManager *mgr) const;
-
-    void executeShowRoute(const RouteToken &tok,
-                          ConfigurationManager *mgr) const;
-    void executeSetRoute(const RouteToken &tok,
-                         ConfigurationManager *mgr) const;
-    void executeDeleteRoute(const RouteToken &tok,
-                            ConfigurationManager *mgr) const;
-
-    void executeShowVRF(const VRFToken &tok, ConfigurationManager *mgr) const;
-    void executeSetVRF(const VRFToken &tok, ConfigurationManager *mgr) const;
-    void executeDeleteVRF(const VRFToken &tok, ConfigurationManager *mgr) const;
-
-    void executeShowArp(const ArpToken &tok, ConfigurationManager *mgr) const;
-    void executeSetArp(const ArpToken &tok, ConfigurationManager *mgr) const;
-    void executeDeleteArp(const ArpToken &tok, ConfigurationManager *mgr) const;
-
-    void executeShowNdp(const NdpToken &tok, ConfigurationManager *mgr) const;
-    void executeSetNdp(const NdpToken &tok, ConfigurationManager *mgr) const;
-    void executeDeleteNdp(const NdpToken &tok, ConfigurationManager *mgr) const;
   };
 
 } // namespace netcli

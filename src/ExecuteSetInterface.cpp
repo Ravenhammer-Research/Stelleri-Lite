@@ -33,7 +33,6 @@
 #include "InterfaceToken.hpp"
 #include "LaggConfig.hpp"
 #include "LoopBackConfig.hpp"
-#include "Parser.hpp"
 #include "TunnelConfig.hpp"
 #include "VLANConfig.hpp"
 #include "VirtualInterfaceConfig.hpp"
@@ -44,8 +43,10 @@
 #include <sys/sockio.h>
 #include <unistd.h>
 
-void netcli::Parser::executeSetInterface(const InterfaceToken &tok,
-                                         ConfigurationManager *mgr) const {
+namespace netcli {
+
+void executeSetInterface(const InterfaceToken &tok,
+                                 ConfigurationManager *mgr) {
   const std::string name = tok.name();
   if (name.empty()) {
     std::cerr << "set interface: missing interface name\n";
@@ -232,4 +233,5 @@ void netcli::Parser::executeSetInterface(const InterfaceToken &tok,
     std::cerr << "set interface: failed to create/update '" << name
               << "': " << e.what() << "\n";
   }
+}
 }

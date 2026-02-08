@@ -27,6 +27,7 @@
 
 #include "SystemConfigurationManager.hpp"
 #include "VirtualInterfaceConfig.hpp"
+#include "Socket.hpp"
 
 #include <cerrno>
 #include <cstring>
@@ -38,7 +39,6 @@
 #include <sys/sockio.h>
 #include <sys/types.h>
 #include <sys/linker.h>
-#include <unistd.h>
 std::vector<VirtualInterfaceConfig>
 SystemConfigurationManager::GetVirtualInterfaces(
     const std::optional<VRFConfig> &vrf) const {
@@ -64,11 +64,7 @@ void SystemConfigurationManager::CreateVirtual(const std::string &nm) const {
   if (InterfaceConfig::exists(check_name))
     return;
 
-  int sock = socket(AF_INET, SOCK_DGRAM, 0);
-  if (sock < 0) {
-    throw std::runtime_error("Failed to create socket: " +
-                             std::string(strerror(errno)));
-  }
+  Socket sock(AF_INET, SOCK_DGRAM);
 
   struct ifreq ifr;
   std::memset(&ifr, 0, sizeof(ifr));
@@ -87,7 +83,6 @@ void SystemConfigurationManager::CreateVirtual(const std::string &nm) const {
         if (kldfind("if_epair.ko") == -1) {
           int kid = kldload("if_epair.ko");
           if (kid == -1) {
-            close(sock);
             throw std::runtime_error("Failed to create epair interface: " +
                                      std::string(strerror(e)));
           }
@@ -95,16 +90,13 @@ void SystemConfigurationManager::CreateVirtual(const std::string &nm) const {
         std::memset(&tmp_ifr, 0, sizeof(tmp_ifr));
         std::strncpy(tmp_ifr.ifr_name, "epair", IFNAMSIZ - 1);
         if (ioctl(sock, SIOCIFCREATE2, &tmp_ifr) < 0) {
-          int e2 = errno;
-          close(sock);
           throw std::runtime_error("Failed to create epair interface: " +
-                                   std::string(strerror(e2)));
+                                   std::string(strerror(errno)));
         }
       }
 
       std::string created = tmp_ifr.ifr_name;
       if (created.empty()) {
-        close(sock);
         throw std::runtime_error("Failed to determine created epair name");
       }
 
@@ -140,19 +132,15 @@ void SystemConfigurationManager::CreateVirtual(const std::string &nm) const {
         rename_iface(tgtA, srcPeerA);
       }
 
-      close(sock);
       if (!okA || !okB) {
         throw std::runtime_error("Failed to create/rename epair interfaces");
       }
       return;
     }
 
-    close(sock);
     throw std::runtime_error("Failed to create interface '" + nm + "': " +
                              std::string(strerror(err)));
   }
-
-  close(sock);
 }
 
 void SystemConfigurationManager::SaveVirtual(const VirtualInterfaceConfig &vic) const {

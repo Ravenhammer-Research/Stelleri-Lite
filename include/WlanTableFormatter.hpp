@@ -34,5 +34,5 @@
 class WlanTableFormatter : public TableFormatter<InterfaceConfig> {
 public:
   WlanTableFormatter() = default;
-  std::string format(const std::vector<InterfaceConfig> &items) const override;
+  std::string format(const std::vector<InterfaceConfig> &items) override;
 };

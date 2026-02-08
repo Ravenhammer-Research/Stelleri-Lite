@@ -27,7 +27,6 @@
 
 #include "ConfigurationManager.hpp"
 #include "IPNetwork.hpp"
-#include "Parser.hpp"
 #include "RouteConfig.hpp"
 #include "RouteToken.hpp"
 #include <iostream>
@@ -37,8 +36,10 @@
 #include <errno.h>
 #include <netinet/in.h>
 
-void netcli::Parser::executeDeleteRoute(const RouteToken &tok,
-                                        ConfigurationManager *mgr) const {
+namespace netcli {
+
+void executeDeleteRoute(const RouteToken &tok,
+                                ConfigurationManager *mgr) {
   (void)mgr;
   RouteConfig rc;
   rc.prefix = tok.prefix();
@@ -63,4 +64,5 @@ void netcli::Parser::executeDeleteRoute(const RouteToken &tok,
   } catch (const std::exception &e) {
     std::cout << "delete route: failed: " << e.what() << "\n";
   }
+}
 }

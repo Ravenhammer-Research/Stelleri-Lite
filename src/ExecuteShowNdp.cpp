@@ -28,11 +28,12 @@
 #include "ConfigurationManager.hpp"
 #include "NdpTableFormatter.hpp"
 #include "NdpToken.hpp"
-#include "Parser.hpp"
 #include <iostream>
 
-void netcli::Parser::executeShowNdp(const NdpToken &tok,
-                                    ConfigurationManager *mgr) const {
+namespace netcli {
+
+void executeShowNdp(const NdpToken &tok,
+                            ConfigurationManager *mgr) {
   if (!mgr) {
     std::cout << "No ConfigurationManager provided\n";
     return;
@@ -54,4 +55,5 @@ void netcli::Parser::executeShowNdp(const NdpToken &tok,
 
   NdpTableFormatter formatter;
   std::cout << formatter.format(entries);
+}
 }

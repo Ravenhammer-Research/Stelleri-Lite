@@ -32,7 +32,7 @@
 #include <sstream>
 
 std::string
-WlanTableFormatter::format(const std::vector<InterfaceConfig> &items) const {
+WlanTableFormatter::format(const std::vector<InterfaceConfig> &items) {
   addColumn("Interface", "Interface", 10, 4, true);
   addColumn("SSID", "SSID", 20, 8, true);
   addColumn("Channel", "Chan", 6, 3, true);

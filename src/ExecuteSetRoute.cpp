@@ -30,7 +30,6 @@
 
 #include "ConfigurationManager.hpp"
 #include "IPNetwork.hpp"
-#include "Parser.hpp"
 #include "RouteConfig.hpp"
 #include "RouteToken.hpp"
 
@@ -40,8 +39,10 @@
 #include <iostream>
 #include <netinet/in.h>
 
-void netcli::Parser::executeSetRoute(const RouteToken &tok,
-                                     ConfigurationManager *mgr) const {
+namespace netcli {
+
+void executeSetRoute(const RouteToken &tok,
+                             ConfigurationManager *mgr) {
   (void)mgr;
   RouteConfig rc;
   rc.prefix = tok.prefix();
@@ -59,4 +60,5 @@ void netcli::Parser::executeSetRoute(const RouteToken &tok,
   } catch (const std::exception &e) {
     std::cout << "set route: failed: " << e.what() << "\n";
   }
+}
 }

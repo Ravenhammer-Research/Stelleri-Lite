@@ -38,7 +38,7 @@
 #include <vector>
 
 std::string TunnelTableFormatter::format(
-    const std::vector<InterfaceConfig> &interfaces) const {
+    const std::vector<InterfaceConfig> &interfaces) {
   if (interfaces.empty()) {
     return "No tunnel interfaces found.\n";
   }

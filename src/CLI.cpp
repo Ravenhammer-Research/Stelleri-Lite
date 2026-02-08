@@ -26,11 +26,9 @@
  */
 
 #include "CLI.hpp"
+#include "CommandDispatcher.hpp"
 #include "DeleteCommand.hpp"
-#include "InterfaceToken.hpp"
 #include "Parser.hpp"
-#include "RouteToken.hpp"
-#include "VRFToken.hpp"
 #include <fstream>
 #include <iostream>
 #include <sys/stat.h>
@@ -78,8 +76,9 @@ void CLI::processLine(const std::string &line) {
     return;
   }
 
-  // Dispatch parsed command to executor via Parser instance
-  parser.executeCommand(cmd->head(), mgr_.get());
+  // Dispatch parsed command via CommandDispatcher
+  netcli::CommandDispatcher dispatcher;
+  dispatcher.dispatch(cmd->head(), mgr_.get());
 }
 
 void CLI::run() {

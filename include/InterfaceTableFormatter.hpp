@@ -53,5 +53,5 @@ public:
    * @return Formatted table string with interface information
    */
   std::string
-  format(const std::vector<InterfaceConfig> &interfaces) const override;
+  format(const std::vector<InterfaceConfig> &interfaces) override;
 };

@@ -42,5 +42,5 @@ public:
   ArpTableFormatter() = default;
 
   // Format ARP entries as ASCII table
-  std::string format(const std::vector<ArpConfig> &entries) const override;
+  std::string format(const std::vector<ArpConfig> &entries) override;
 };

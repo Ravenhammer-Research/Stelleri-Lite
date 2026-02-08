@@ -5,6 +5,7 @@
 #include "SystemConfigurationManager.hpp"
 #include "RouteConfig.hpp"
 #include "IPAddress.hpp"
+#include "Socket.hpp"
 
 #include <arpa/inet.h>
 #include <cerrno>
@@ -25,11 +26,7 @@ void SystemConfigurationManager::DeleteRoute(const RouteConfig &rc) const {
     throw std::runtime_error("Invalid route prefix: " + rc.prefix);
   }
 
-  int s = socket(PF_ROUTE, SOCK_RAW, 0);
-  if (s < 0) {
-    throw std::runtime_error(std::string("open routing socket failed: ") +
-                             strerror(errno));
-  }
+  Socket s(PF_ROUTE, SOCK_RAW);
 
   if (rc.vrf) {
     int fib = *rc.vrf;
@@ -130,12 +127,8 @@ void SystemConfigurationManager::DeleteRoute(const RouteConfig &rc) const {
 
   ssize_t w = write(s, &m_rtmsg, rtm->rtm_msglen);
   if (w == -1) {
-    int err = errno;
-    close(s);
-    throw std::runtime_error(std::string("write to routing socket failed: ") + strerror(err));
+    throw std::runtime_error(std::string("write to routing socket failed: ") + strerror(errno));
   }
-
-  close(s);
 }
 
 void SystemConfigurationManager::AddRoute(const RouteConfig &rc) const {
@@ -144,11 +137,7 @@ void SystemConfigurationManager::AddRoute(const RouteConfig &rc) const {
     throw std::runtime_error("Invalid route prefix: " + rc.prefix);
   }
 
-  int s = socket(PF_ROUTE, SOCK_RAW, 0);
-  if (s < 0) {
-    throw std::runtime_error(std::string("open routing socket failed: ") +
-                             strerror(errno));
-  }
+  Socket s(PF_ROUTE, SOCK_RAW);
 
   if (rc.vrf) {
     int fib = *rc.vrf;
@@ -249,10 +238,6 @@ void SystemConfigurationManager::AddRoute(const RouteConfig &rc) const {
 
   ssize_t w = write(s, &m_rtmsg, rtm->rtm_msglen);
   if (w == -1) {
-    int err = errno;
-    close(s);
-    throw std::runtime_error(std::string("write to routing socket failed: ") + strerror(err));
+    throw std::runtime_error(std::string("write to routing socket failed: ") + strerror(errno));
   }
-
-  close(s);
 }

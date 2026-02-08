@@ -27,13 +27,13 @@
 
 #include "SystemConfigurationManager.hpp"
 #include "VLANConfig.hpp"
+#include "Socket.hpp"
 
 #include <cstring>
 #include <net/if.h>
 #include <net/if_vlan_var.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
-#include <unistd.h>
 
 std::vector<VLANConfig> SystemConfigurationManager::GetVLANInterfaces(
     const std::optional<VRFConfig> &vrf) const {
@@ -43,8 +43,8 @@ std::vector<VLANConfig> SystemConfigurationManager::GetVLANInterfaces(
     if (ic.type == InterfaceType::VLAN) {
       VLANConfig vconf(ic);
 
-      int vsock = socket(AF_INET, SOCK_DGRAM, 0);
-      if (vsock >= 0) {
+      try {
+        Socket vsock(AF_INET, SOCK_DGRAM);
         (void)0;
         struct vlanreq vreq;
         std::memset(&vreq, 0, sizeof(vreq));
@@ -72,23 +72,21 @@ std::vector<VLANConfig> SystemConfigurationManager::GetVLANInterfaces(
         } else {
           (void)0;
         }
-        close(vsock);
 
         auto query_caps =
             [&](const std::string &name) -> std::optional<uint32_t> {
-          int csock = socket(AF_INET, SOCK_DGRAM, 0);
-          if (csock < 0)
+          try {
+            Socket csock(AF_INET, SOCK_DGRAM);
+            struct ifreq cifr;
+            std::memset(&cifr, 0, sizeof(cifr));
+            std::strncpy(cifr.ifr_name, name.c_str(), IFNAMSIZ - 1);
+            if (ioctl(csock, SIOCGIFCAP, &cifr) == 0) {
+              unsigned int curcap = cifr.ifr_curcap;
+              (void)curcap;
+              return static_cast<uint32_t>(curcap);
+            }
             return std::nullopt;
-          struct ifreq cifr;
-          std::memset(&cifr, 0, sizeof(cifr));
-          std::strncpy(cifr.ifr_name, name.c_str(), IFNAMSIZ - 1);
-          if (ioctl(csock, SIOCGIFCAP, &cifr) == 0) {
-            unsigned int curcap = cifr.ifr_curcap;
-            (void)curcap;
-            close(csock);
-            return static_cast<uint32_t>(curcap);
-          } else {
-            close(csock);
+          } catch (...) {
             return std::nullopt;
           }
         };
@@ -102,6 +100,8 @@ std::vector<VLANConfig> SystemConfigurationManager::GetVLANInterfaces(
             (void)0;
           }
         }
+      } catch (...) {
+        // Socket creation failed, skip VLAN details
       }
 
       out.emplace_back(std::move(vconf));
@@ -126,11 +126,7 @@ void SystemConfigurationManager::SaveVlan(const VLANConfig &vlan) const {
   }
 
 #if defined(SIOCSETVLAN)
-  int vsock = socket(AF_INET, SOCK_DGRAM, 0);
-  if (vsock < 0) {
-    throw std::runtime_error("Failed to create socket: " +
-                             std::string(strerror(errno)));
-  }
+  Socket vsock(AF_INET, SOCK_DGRAM);
 
   struct vlanreq vreq;
   std::memset(&vreq, 0, sizeof(vreq));
@@ -146,12 +142,9 @@ void SystemConfigurationManager::SaveVlan(const VLANConfig &vlan) const {
   ifr.ifr_data = reinterpret_cast<char *>(&vreq);
 
   if (ioctl(vsock, SIOCSETVLAN, &ifr) < 0) {
-    close(vsock);
     throw std::runtime_error("Failed to configure VLAN: " +
                              std::string(strerror(errno)));
   }
-
-  close(vsock);
 #else
   throw std::runtime_error("VLAN configuration not supported on this platform");
 #endif

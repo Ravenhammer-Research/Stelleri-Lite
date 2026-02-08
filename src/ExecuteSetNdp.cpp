@@ -27,11 +27,12 @@
 
 #include "ConfigurationManager.hpp"
 #include "NdpToken.hpp"
-#include "Parser.hpp"
 #include <iostream>
 
-void netcli::Parser::executeSetNdp(const NdpToken &tok,
-                                   ConfigurationManager *mgr) const {
+namespace netcli {
+
+void executeSetNdp(const NdpToken &tok,
+                           ConfigurationManager *mgr) {
   if (!mgr) {
     std::cout << "No ConfigurationManager provided\n";
     return;
@@ -49,4 +50,5 @@ void netcli::Parser::executeSetNdp(const NdpToken &tok,
   } else {
     std::cout << "Failed to set NDP entry\n";
   }
+}
 }

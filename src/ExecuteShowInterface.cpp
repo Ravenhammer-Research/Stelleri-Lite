@@ -33,7 +33,6 @@
 #include "InterfaceTableFormatter.hpp"
 #include "InterfaceToken.hpp"
 #include "LaggTableFormatter.hpp"
-#include "Parser.hpp"
 #include "SingleInterfaceSummaryFormatter.hpp"
 #include "SixToFourTableFormatter.hpp"
 #include "TapTableFormatter.hpp"
@@ -45,8 +44,10 @@
 #include <iostream>
 #include <sstream>
 
-void netcli::Parser::executeShowInterface(const InterfaceToken &tok,
-                                          ConfigurationManager *mgr) const {
+namespace netcli {
+
+void executeShowInterface(const InterfaceToken &tok,
+                                  ConfigurationManager *mgr) {
   if (!mgr) {
     std::cout << "No ConfigurationManager provided\n";
     return;
@@ -101,4 +102,5 @@ void netcli::Parser::executeShowInterface(const InterfaceToken &tok,
   }
 
   std::cout << InterfaceConfig::formatInterfaces(interfaces);
+}
 }

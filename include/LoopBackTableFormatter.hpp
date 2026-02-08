@@ -34,5 +34,5 @@
 class LoopBackTableFormatter : public TableFormatter<InterfaceConfig> {
 public:
   LoopBackTableFormatter() = default;
-  std::string format(const std::vector<InterfaceConfig> &items) const override;
+  std::string format(const std::vector<InterfaceConfig> &items) override;
 };

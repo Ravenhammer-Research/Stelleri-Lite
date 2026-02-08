@@ -34,47 +34,8 @@
 #include <net/if.h>
 #include <sstream>
 
-static std::string interfaceTypeToString(InterfaceType t) {
-  switch (t) {
-  case InterfaceType::Unknown:
-    return "Unknown";
-  case InterfaceType::Loopback:
-    return "Loopback";
-  case InterfaceType::Ethernet:
-    return "Ethernet";
-  case InterfaceType::PointToPoint:
-    return "PointToPoint";
-  case InterfaceType::Wireless:
-    return "Wireless";
-  case InterfaceType::Bridge:
-    return "Bridge";
-  case InterfaceType::Lagg:
-    return "LinkAggregate";
-  case InterfaceType::VLAN:
-    return "VLAN";
-  case InterfaceType::PPP:
-    return "PPP";
-  case InterfaceType::Tunnel:
-    return "Tunnel";
-  case InterfaceType::Gif:
-    return "GenericTunnel";
-  case InterfaceType::FDDI:
-    return "FDDI";
-  case InterfaceType::TokenRing:
-    return "TokenRing";
-  case InterfaceType::ATM:
-    return "ATM";
-  case InterfaceType::Virtual:
-    return "Virtual";
-  case InterfaceType::Other:
-    return "Other";
-  default:
-    return "Unknown";
-  }
-}
-
 std::string InterfaceTableFormatter::format(
-    const std::vector<InterfaceConfig> &interfaces) const {
+    const std::vector<InterfaceConfig> &interfaces) {
   if (interfaces.empty()) {
     return "No interfaces found.\n";
   }

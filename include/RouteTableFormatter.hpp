@@ -42,5 +42,5 @@ public:
   RouteTableFormatter() = default;
 
   // Format routes as ASCII table
-  std::string format(const std::vector<RouteConfig> &routes) const override;
+  std::string format(const std::vector<RouteConfig> &routes) override;
 };

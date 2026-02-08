@@ -33,7 +33,7 @@
 #include <net/route.h>
 
 std::string
-RouteTableFormatter::format(const std::vector<RouteConfig> &routes) const {
+RouteTableFormatter::format(const std::vector<RouteConfig> &routes) {
   if (routes.empty())
     return "No routes found.\n";
 

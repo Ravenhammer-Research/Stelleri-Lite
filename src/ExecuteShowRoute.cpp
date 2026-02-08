@@ -26,7 +26,6 @@
  */
 
 #include "ConfigurationManager.hpp"
-#include "Parser.hpp"
 #include "RouteTableFormatter.hpp"
 #include "RouteToken.hpp"
 #include <algorithm>
@@ -34,8 +33,10 @@
 #include <iostream>
 #include <sstream>
 
-void netcli::Parser::executeShowRoute(const RouteToken &tok,
-                                      ConfigurationManager *mgr) const {
+namespace netcli {
+
+void executeShowRoute(const RouteToken &tok,
+                              ConfigurationManager *mgr) {
   if (!mgr) {
     std::cout << "No ConfigurationManager provided\n";
     return;
@@ -74,4 +75,5 @@ void netcli::Parser::executeShowRoute(const RouteToken &tok,
 
   RouteTableFormatter formatter;
   std::cout << formatter.format(routes);
+}
 }
