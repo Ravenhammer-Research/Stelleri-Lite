@@ -25,6 +25,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file TapTableFormatter.hpp
+ * @brief Formatter for TAP interface table output
+ */
+
 #pragma once
 
 #include "InterfaceConfig.hpp"

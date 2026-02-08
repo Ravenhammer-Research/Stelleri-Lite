@@ -25,6 +25,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file SystemConfigurationManager.hpp
+ * @brief FreeBSD system-call-based configuration manager
+ */
+
 #pragma once
 
 #include "ArpConfig.hpp"
@@ -45,11 +50,10 @@
 #include <vector>
 
 /**
- * @brief System configuration helpers (enumeration only)
+ * @brief ConfigurationManager backed by FreeBSD system calls
  *
- * This simplified declaration provides only the static enumeration helpers
- * requested: methods that return smart-pointer-managed arrays of interface
- * configuration objects for each specific interface type.
+ * Implements the full ConfigurationManager interface using ioctl, sysctl,
+ * routing sockets, and ifconfig-style operations on the local system.
  */
 class SystemConfigurationManager : public ConfigurationManager {
 public:

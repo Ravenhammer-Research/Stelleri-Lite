@@ -25,6 +25,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file ArpToken.hpp
+ * @brief Parser token for ARP set/delete commands
+ */
+
 #pragma once
 
 #include "Token.hpp"

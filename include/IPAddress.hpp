@@ -25,6 +25,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file IPAddress.hpp
+ * @brief Polymorphic IP address types (IPv4 and IPv6)
+ */
+
 #pragma once
 
 #include "AddressFamily.hpp"

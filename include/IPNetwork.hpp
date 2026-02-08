@@ -25,6 +25,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file IPNetwork.hpp
+ * @brief Polymorphic IP network types (address + prefix length)
+ */
+
 #pragma once
 
 #include "AddressFamily.hpp"

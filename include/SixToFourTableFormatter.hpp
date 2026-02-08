@@ -25,6 +25,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file SixToFourTableFormatter.hpp
+ * @brief Formatter for 6to4 tunnel interface table output
+ */
+
 #pragma once
 
 #include "InterfaceConfig.hpp"

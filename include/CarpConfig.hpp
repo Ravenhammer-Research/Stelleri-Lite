@@ -25,6 +25,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file CarpConfig.hpp
+ * @brief CARP (Common Address Redundancy Protocol) interface configuration
+ */
+
 #pragma once
 
 #include "InterfaceConfig.hpp"

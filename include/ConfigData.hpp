@@ -25,12 +25,12 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
-
 /**
  * @file ConfigData.hpp
- * @brief Lightweight marker/container for configuration payloads
+ * @brief Base type for configuration data payloads
  */
+
+#pragma once
 
 #include <memory>
 #include <string_view>

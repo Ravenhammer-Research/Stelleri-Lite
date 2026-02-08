@@ -25,6 +25,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file ShowCommand.hpp
+ * @brief Show command stub
+ */
+
 #pragma once
 
 #include "Command.hpp"

@@ -25,6 +25,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file TapConfig.hpp
+ * @brief TAP interface configuration
+ */
+
 #pragma once
 
 #include "InterfaceConfig.hpp"

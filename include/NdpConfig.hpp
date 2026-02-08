@@ -25,6 +25,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file NdpConfig.hpp
+ * @brief NDP (IPv6 Neighbor Discovery) table entry configuration
+ */
+
 #pragma once
 
 #include "ConfigData.hpp"

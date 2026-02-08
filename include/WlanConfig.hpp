@@ -25,6 +25,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file WlanConfig.hpp
+ * @brief Wireless (802.11) interface configuration
+ */
+
 #pragma once
 
 #include "InterfaceConfig.hpp"

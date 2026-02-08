@@ -25,6 +25,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file WlanTableFormatter.hpp
+ * @brief Formatter for wireless interface table output
+ */
+
 #pragma once
 
 #include "InterfaceConfig.hpp"

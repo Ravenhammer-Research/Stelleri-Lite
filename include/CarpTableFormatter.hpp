@@ -25,6 +25,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file CarpTableFormatter.hpp
+ * @brief Formatter for CARP interface table output
+ */
+
 #pragma once
 
 #include "InterfaceConfig.hpp"

@@ -25,7 +25,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-// LAGG port flag enumerations. Label rendering lives in formatters.
+/**
+ * @file LaggFlags.hpp
+ * @brief LAGG port flag enumerations
+ */
+
 #pragma once
 
 #include <cstdint>

@@ -25,6 +25,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file BridgeConfig.hpp
+ * @brief Minimal bridge configuration stub
+ */
+
 #pragma once
 
 // Minimal BridgeConfig stub to satisfy includes during build.

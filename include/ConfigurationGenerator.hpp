@@ -25,6 +25,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file ConfigurationGenerator.hpp
+ * @brief Abstract base for configuration export generators
+ */
+
 #pragma once
 
 #include "ConfigurationManager.hpp"

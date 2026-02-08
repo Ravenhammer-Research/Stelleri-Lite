@@ -25,6 +25,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file Parser.hpp
+ * @brief Command-line tokenizer and parser
+ */
+
 #pragma once
 
 #include "Command.hpp"

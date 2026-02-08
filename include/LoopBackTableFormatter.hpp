@@ -25,6 +25,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file LoopBackTableFormatter.hpp
+ * @brief Formatter for loopback interface table output
+ */
+
 #pragma once
 
 #include "InterfaceConfig.hpp"

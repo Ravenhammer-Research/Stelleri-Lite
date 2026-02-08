@@ -25,6 +25,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file InterfaceToken.hpp
+ * @brief Parser token for interface set/show/delete commands
+ */
+
 #pragma once
 
 #include "BridgeInterfaceConfig.hpp"

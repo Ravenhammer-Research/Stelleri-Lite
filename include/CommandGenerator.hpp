@@ -25,6 +25,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file CommandGenerator.hpp
+ * @brief CLI command-based configuration generator
+ */
+
 #pragma once
 
 #include "ConfigurationGenerator.hpp"

@@ -25,6 +25,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file SixToFourConfig.hpp
+ * @brief 6to4 tunnel interface configuration
+ */
+
 #pragma once
 
 #include "InterfaceConfig.hpp"

@@ -25,14 +25,14 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file LoopBackConfig.hpp
+ * @brief Loopback interface configuration
+ */
+
 #pragma once
 
 #include "InterfaceConfig.hpp"
-
-/**
- * @file LoopBackConfig.hpp
- * @brief Configuration holder for loopback-specific settings
- */
 
 class LoopBackConfig : public InterfaceConfig {
 public:

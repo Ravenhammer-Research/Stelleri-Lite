@@ -25,6 +25,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file ArpConfig.hpp
+ * @brief ARP table entry configuration
+ */
+
 #pragma once
 
 #include "ConfigData.hpp"

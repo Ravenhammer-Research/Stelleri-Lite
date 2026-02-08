@@ -25,8 +25,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-// VLANFlags.hpp
-// Enum and helpers for VLAN/interface capability bits.
+/**
+ * @file VLANFlags.hpp
+ * @brief VLAN and interface capability bit flags
+ */
+
 #pragma once
 
 #include <cstdint>

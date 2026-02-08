@@ -25,6 +25,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file RouteToken.hpp
+ * @brief Parser token for route set/delete commands
+ */
+
 #pragma once
 
 #include "ConfigurationManager.hpp"
