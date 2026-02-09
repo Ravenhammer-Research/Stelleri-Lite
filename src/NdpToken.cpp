@@ -49,8 +49,14 @@ std::string NdpToken::toString() const {
   return result;
 }
 
-std::vector<std::string> NdpToken::autoComplete(std::string_view) const {
-  return {"mac", "interface", "permanent", "temp"};
+std::vector<std::string> NdpToken::autoComplete(std::string_view partial) const {
+  std::vector<std::string> options = {"mac", "interface", "permanent", "temp"};
+  std::vector<std::string> matches;
+  for (const auto &opt : options) {
+    if (opt.rfind(partial, 0) == 0)
+      matches.push_back(opt);
+  }
+  return matches;
 }
 
 std::unique_ptr<Token> NdpToken::clone() const {

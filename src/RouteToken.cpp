@@ -56,8 +56,14 @@ std::string RouteToken::toString() const {
   return result;
 }
 
-std::vector<std::string> RouteToken::autoComplete(std::string_view) const {
-  return {"interface", "next-hop", "blackhole", "reject", "vrf"};
+std::vector<std::string> RouteToken::autoComplete(std::string_view partial) const {
+  std::vector<std::string> options = {"interface", "next-hop", "blackhole", "reject", "vrf"};
+  std::vector<std::string> matches;
+  for (const auto &opt : options) {
+    if (opt.rfind(partial, 0) == 0)
+      matches.push_back(opt);
+  }
+  return matches;
 }
 
 std::unique_ptr<Token> RouteToken::clone() const {

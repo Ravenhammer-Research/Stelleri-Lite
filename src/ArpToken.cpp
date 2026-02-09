@@ -53,8 +53,14 @@ std::string ArpToken::toString() const {
   return result;
 }
 
-std::vector<std::string> ArpToken::autoComplete(std::string_view) const {
-  return {"mac", "interface", "permanent", "temp", "pub"};
+std::vector<std::string> ArpToken::autoComplete(std::string_view partial) const {
+  std::vector<std::string> options = {"mac", "interface", "permanent", "temp", "pub"};
+  std::vector<std::string> matches;
+  for (const auto &opt : options) {
+    if (opt.rfind(partial, 0) == 0)
+      matches.push_back(opt);
+  }
+  return matches;
 }
 
 std::unique_ptr<Token> ArpToken::clone() const {

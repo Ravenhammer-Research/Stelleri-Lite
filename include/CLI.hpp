@@ -86,6 +86,7 @@ private:
   static unsigned char completeCommand(EditLine *el, int ch);
   static unsigned char showInlinePreview(EditLine *el, int ch);
   static unsigned char handleBackspacePreview(EditLine *el, int ch);
+  static unsigned char handleSpace(EditLine *el, int ch);
   static unsigned char handleCtrlC(EditLine *el, int ch);
   static unsigned char handleCtrlL(EditLine *el, int ch);
   static unsigned char handleCtrlD(EditLine *el, int ch);

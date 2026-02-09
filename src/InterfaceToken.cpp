@@ -147,24 +147,25 @@ std::vector<std::string> InterfaceToken::autoComplete(std::string_view partial) 
     return matches;
   }
 
-  // If the user is currently typing the word 'type' itself (e.g. "show interface t..."),
-  // and the partial equals "type", offer the type values next (user likely wants types).
-  if (partial == "type") {
-    std::vector<std::string> types = {"ethernet", "loopback", "bridge", "lagg", "vlan", "tunnel", "epair", "virtual", "wireless", "gre", "gif", "vxlan"};
-    std::vector<std::string> matches;
-    for (const auto &t : types) {
-      if (t.rfind("", 0) == 0)
-        matches.push_back(t);
-    }
-    return matches;
-  }
-
   // If we are at the top-level after `show interface`, only suggest these
   // primary keywords.
   if (name_.empty() && type_ == InterfaceType::Unknown && !vrf && !mtu && !status && !vlan && !lagg && !bridge && !tunnel) {
     std::vector<std::string> top = {"name", "group", "type"};
     std::vector<std::string> matches;
     for (const auto &opt : top) {
+      if (opt.rfind(partial, 0) == 0)
+        matches.push_back(opt);
+    }
+    return matches;
+  }
+
+  // If a name is already set but no other attributes, only suggest
+  // type and group as the next keywords.
+  if (!name_.empty() && type_ == InterfaceType::Unknown && !vrf && !mtu &&
+      !status && !vlan && !lagg && !bridge && !tunnel) {
+    std::vector<std::string> next_opts = {"type", "group"};
+    std::vector<std::string> matches;
+    for (const auto &opt : next_opts) {
       if (opt.rfind(partial, 0) == 0)
         matches.push_back(opt);
     }
@@ -224,6 +225,17 @@ std::vector<std::string> InterfaceToken::autoCompleteWithManager(
       const std::string &iname = i.name;
       if (iname.rfind(partial, 0) == 0)
         matches.push_back(iname);
+    }
+    return matches;
+  }
+
+  // If the previous token is a known interface name (i.e. we are past
+  // "interface name <ifname>"), only suggest type and group.
+  if (tokens.size() >= 2 && tokens[tokens.size() - 2] == "name") {
+    std::vector<std::string> next_opts = {"type", "group"};
+    for (const auto &opt : next_opts) {
+      if (opt.rfind(partial, 0) == 0)
+        matches.push_back(opt);
     }
     return matches;
   }

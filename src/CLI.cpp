@@ -150,6 +150,12 @@ void CLI::setupEditLine() {
   el_set(el_, EL_BIND, "^H", "ed-backspace-preview", nullptr);
   el_set(el_, EL_BIND, "^?", "ed-backspace-preview", nullptr);
 
+  // Space must clear any active preview and insert the space character.
+  // We bind via the hex escape \x20 since a bare " " confuses el_set.
+  el_set(el_, EL_ADDFN, "ed-space-preview", "Space with preview clear",
+         &CLI::handleSpace);
+  el_set(el_, EL_BIND, "\\x20", "ed-space-preview", nullptr);
+
     // Control key bindings
     el_set(el_, EL_ADDFN, "ed-ctrlc", "Cancel line (Ctrl-C)", &CLI::handleCtrlC);
     el_set(el_, EL_BIND, "^C", "ed-ctrlc", nullptr);
@@ -399,6 +405,25 @@ unsigned char CLI::handleBackspacePreview(EditLine *el, int ch) {
     cli->preview_len_ = static_cast<int>(preview.size());
   }
 
+  return CC_REDISPLAY;
+}
+
+unsigned char CLI::handleSpace(EditLine *el, int ch) {
+  (void)ch;
+  CLI *cli = nullptr;
+  el_get(el, EL_CLIENTDATA, &cli);
+  if (!cli)
+    return CC_ERROR;
+
+  // Remove any active preview first
+  if (cli->preview_len_ > 0) {
+    el_cursor(el, cli->preview_len_);
+    el_deletestr(el, cli->preview_len_);
+    cli->preview_len_ = 0;
+  }
+
+  // Insert the space character
+  el_insertstr(el, " ");
   return CC_REDISPLAY;
 }
 

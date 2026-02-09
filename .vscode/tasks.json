@@ -1,0 +1,15 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "build",
+			"type": "shell",
+			"command": "cd /home/sq/netcli && cmake --build build 2>&1"
+		},
+		{
+			"label": "build",
+			"type": "shell",
+			"command": "cd /home/sq/netcli && cmake --build build 2>&1"
+		}
+	]
+}
