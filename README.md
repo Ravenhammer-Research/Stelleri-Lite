@@ -423,6 +423,8 @@ The following features are slated as lowest priority but open to discussion:
 
 - **Firewall Management** (`set/show/delete fw`): Firewall rule management using the same kernel API as ipfw. This will provide a consistent CLI syntax for firewall configuration alongside other network settings.
 
+- Intel SGX
+
 ## See Also
 
 This tool combines the functionality of several BSD utilities into a cohesive configuration syntax that can be easily maintained:

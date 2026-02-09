@@ -49,6 +49,9 @@ public:
 
   std::string toString() const override;
   std::vector<std::string> autoComplete(std::string_view) const override;
+  std::vector<std::string> autoCompleteWithManager(
+      const std::vector<std::string> &tokens, std::string_view partial,
+      ConfigurationManager *mgr) const;
   std::unique_ptr<Token> clone() const override;
 
   const std::string &name() const { return name_; }
@@ -86,4 +89,5 @@ private:
 
   InterfaceType type_ = InterfaceType::Unknown;
   std::string name_;
+  bool expect_type_value_ = false;
 };

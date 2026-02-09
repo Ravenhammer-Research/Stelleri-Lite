@@ -38,6 +38,7 @@
 #include <iostream>
 #include <netinet/in.h>
 #include <sstream>
+#include <unordered_set>
 
 InterfaceToken::InterfaceToken(InterfaceType t, std::string name)
     : type_(t), name_(std::move(name)) {}
@@ -135,7 +136,42 @@ std::string InterfaceToken::toString() const {
 }
 
 std::vector<std::string> InterfaceToken::autoComplete(std::string_view partial) const {
-  // Suggest interface-related keywords and values
+  // If user typed `type` and is now completing the type value, suggest types
+  if (expect_type_value_) {
+    std::vector<std::string> types = {"ethernet", "loopback", "bridge", "lagg", "vlan", "tunnel", "epair", "virtual", "wireless", "gre", "gif", "vxlan"};
+    std::vector<std::string> matches;
+    for (const auto &t : types) {
+      if (t.rfind(partial, 0) == 0)
+        matches.push_back(t);
+    }
+    return matches;
+  }
+
+  // If the user is currently typing the word 'type' itself (e.g. "show interface t..."),
+  // and the partial equals "type", offer the type values next (user likely wants types).
+  if (partial == "type") {
+    std::vector<std::string> types = {"ethernet", "loopback", "bridge", "lagg", "vlan", "tunnel", "epair", "virtual", "wireless", "gre", "gif", "vxlan"};
+    std::vector<std::string> matches;
+    for (const auto &t : types) {
+      if (t.rfind("", 0) == 0)
+        matches.push_back(t);
+    }
+    return matches;
+  }
+
+  // If we are at the top-level after `show interface`, only suggest these
+  // primary keywords.
+  if (name_.empty() && type_ == InterfaceType::Unknown && !vrf && !mtu && !status && !vlan && !lagg && !bridge && !tunnel) {
+    std::vector<std::string> top = {"name", "group", "type"};
+    std::vector<std::string> matches;
+    for (const auto &opt : top) {
+      if (opt.rfind(partial, 0) == 0)
+        matches.push_back(opt);
+    }
+    return matches;
+  }
+
+  // Fallback: suggest the usual wide set
   std::vector<std::string> options = {
       "name", "type", "inet", "inet6", "address", "mtu", "vrf", "status",
       "up", "down", "group", "vid", "parent", "member", "source",
@@ -156,6 +192,44 @@ std::vector<std::string> InterfaceToken::autoComplete(std::string_view partial) 
 
 std::unique_ptr<Token> InterfaceToken::clone() const {
   return std::make_unique<InterfaceToken>(*this);
+}
+
+std::vector<std::string> InterfaceToken::autoCompleteWithManager(
+    const std::vector<std::string> &tokens, std::string_view partial,
+    ConfigurationManager *mgr) const {
+  std::vector<std::string> matches;
+  if (!mgr)
+    return matches;
+
+  // If completing a group value (tokens end with 'group'), list all groups
+  if (!tokens.empty() && tokens.back() == "group") {
+    std::unordered_set<std::string> groups;
+    auto ifs = mgr->GetInterfaces();
+    for (const auto &i : ifs) {
+      for (const auto &g : i.groups) {
+        groups.insert(g);
+      }
+    }
+    for (const auto &g : groups) {
+      if (g.rfind(partial, 0) == 0)
+        matches.push_back(g);
+    }
+    return matches;
+  }
+
+  // If completing an interface name (after the 'name' keyword), list names
+  if (!tokens.empty() && tokens.back() == "name") {
+    auto ifs = mgr->GetInterfaces();
+    for (const auto &i : ifs) {
+      const std::string &iname = i.name;
+      if (iname.rfind(partial, 0) == 0)
+        matches.push_back(iname);
+    }
+    return matches;
+  }
+
+  // Fallback to default behavior
+  return autoComplete(partial);
 }
 
 void InterfaceToken::parseKeywords(std::shared_ptr<InterfaceToken> &tok,
@@ -271,33 +345,33 @@ std::shared_ptr<InterfaceToken>
 InterfaceToken::parseFromTokens(const std::vector<std::string> &tokens,
                                 size_t start, size_t &next) {
   next = start + 1; // by default consume the 'interfaces' token
-  if (start + 2 < tokens.size()) {
-    // Support forms:
-    //  - interfaces name <name>
-    //  - interfaces <type> <name>
-    //  - interfaces type <type> [name]
+  if (start + 1 < tokens.size()) {
+    // There is at least one token after 'interfaces'
     const std::string &a = tokens[start + 1];
-    const std::string &b = tokens[start + 2];
+    const std::string b = (start + 2 < tokens.size()) ? tokens[start + 2] : std::string();
 
     // support `interfaces group <group>`
     if (a == "group") {
-      std::string grp = b;
-      size_t nnext = start + 3;
-      auto tok = std::make_shared<InterfaceToken>(InterfaceType::Unknown,
-                                                  std::string());
-      tok->group = grp;
-      next = nnext;
-      return tok;
+      if (!b.empty()) {
+        std::string grp = b;
+        size_t nnext = start + 3;
+        auto tok = std::make_shared<InterfaceToken>(InterfaceType::Unknown, std::string());
+        tok->group = grp;
+        next = nnext;
+        return tok;
+      }
     }
 
     // support `interfaces name <name>`
     if (a == "name") {
-      std::string name = b;
-      auto tok = std::make_shared<InterfaceToken>(InterfaceType::Unknown, name);
-      size_t cur = start + 3;
-      parseKeywords(tok, tokens, cur);
-      next = cur;
-      return tok;
+      if (!b.empty()) {
+        std::string name = b;
+        auto tok = std::make_shared<InterfaceToken>(InterfaceType::Unknown, name);
+        size_t cur = start + 3;
+        parseKeywords(tok, tokens, cur);
+        next = cur;
+        return tok;
+      }
     }
 
     InterfaceType itype = InterfaceType::Unknown;
@@ -305,6 +379,14 @@ InterfaceToken::parseFromTokens(const std::vector<std::string> &tokens,
 
     if (a == "type") {
       // form: interfaces type <type> [name]
+      if (start + 2 >= tokens.size()) {
+        // user typed 'type' but no value yet
+        auto tok = std::make_shared<InterfaceToken>(InterfaceType::Unknown, std::string());
+        tok->expect_type_value_ = true;
+        next = start + 2;
+        return tok;
+      }
+
       itype = interfaceTypeFromString(b);
 
       if (itype != InterfaceType::Unknown) {
@@ -315,8 +397,7 @@ InterfaceToken::parseFromTokens(const std::vector<std::string> &tokens,
           else
             name = tokens[start + 3];
         }
-        size_t cur =
-            start + (name.empty() ? 3 : (tokens[start + 3] == "name" ? 5 : 4));
+        size_t cur = start + (name.empty() ? 3 : (tokens[start + 3] == "name" ? 5 : 4));
 
         auto tok = std::make_shared<InterfaceToken>(itype, name);
         parseKeywords(tok, tokens, cur);
@@ -326,7 +407,7 @@ InterfaceToken::parseFromTokens(const std::vector<std::string> &tokens,
     } else {
       // original form: interfaces <type> <name>
       itype = interfaceTypeFromString(a);
-      if (itype != InterfaceType::Unknown) {
+      if (itype != InterfaceType::Unknown && !b.empty()) {
         auto tok = std::make_shared<InterfaceToken>(itype, b);
         size_t cur = start + 3;
         parseKeywords(tok, tokens, cur);

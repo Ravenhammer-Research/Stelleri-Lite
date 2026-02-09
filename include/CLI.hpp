@@ -72,6 +72,8 @@ private:
   EditLine *el_;
   History *hist_;
   HistEvent ev_;
+  std::string preview_;
+  int preview_len_ = 0;
 
   void loadHistory();
   void saveHistory(const std::string &line);
@@ -82,5 +84,11 @@ private:
   std::vector<std::string> getCompletions(const std::vector<std::string> &tokens,
                                           const std::string &partial) const;
   static unsigned char completeCommand(EditLine *el, int ch);
+  static unsigned char showInlinePreview(EditLine *el, int ch);
+  static unsigned char handleBackspacePreview(EditLine *el, int ch);
+  static unsigned char handleCtrlC(EditLine *el, int ch);
+  static unsigned char handleCtrlL(EditLine *el, int ch);
+  static unsigned char handleCtrlD(EditLine *el, int ch);
+  static unsigned char handleCtrlR(EditLine *el, int ch);
   static char *promptFunc(EditLine *el);
 };
