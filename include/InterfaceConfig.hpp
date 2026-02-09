@@ -43,6 +43,8 @@
 #include "VRFConfig.hpp"
 #include <string_view>
 
+class ConfigurationManager; // Forward declaration to avoid circular dependency
+
 /**
  * @brief Complete configuration for a network interface
  *

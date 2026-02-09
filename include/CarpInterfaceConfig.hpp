@@ -26,12 +26,45 @@
  */
 
 /**
- * @file BridgeConfig.hpp
- * @brief Minimal bridge configuration stub
+ * @file CarpConfig.hpp
+ * @brief CARP (Common Address Redundancy Protocol) interface configuration
  */
 
 #pragma once
 
-// Minimal BridgeConfig stub to satisfy includes during build.
-// Expand as needed later.
-class BridgeConfig {};
+#include "InterfaceConfig.hpp"
+#include <optional>
+#include <string>
+#include "ConfigurationManager.hpp"
+#include <stdexcept>
+
+/**
+ * @brief Configuration for CARP redundancy interfaces
+ *
+ * Wraps the FreeBSD CARP parameters from struct carpreq (ip_carp.h):
+ * virtual-host ID, advertisement skew/base, passphrase key, and state.
+ */
+class CarpInterfaceConfig : public InterfaceConfig {
+public:
+  explicit CarpInterfaceConfig(const InterfaceConfig &base) : InterfaceConfig(base) {}
+
+  /// Virtual Host ID (1–255)
+  std::optional<int> vhid;
+
+  /// Advertisement skew (0–240)
+  std::optional<int> advskew;
+
+  /// Advertisement interval in seconds
+  std::optional<int> advbase;
+
+  /// CARP passphrase / HMAC key (max CARP_KEY_LEN = 20 bytes)
+  std::optional<std::string> key;
+
+  /// Current CARP state as string: INIT, BACKUP, or MASTER
+  std::optional<std::string> state;
+
+  void save(ConfigurationManager &mgr) const override;
+  void create(ConfigurationManager &mgr) const;
+  void destroy(ConfigurationManager &mgr) const override;
+};
+// implementations in src/cfg/CarpInterfaceConfig.cpp

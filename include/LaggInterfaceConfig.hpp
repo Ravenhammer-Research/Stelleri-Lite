@@ -38,15 +38,16 @@
 #include <vector>
 
 #include "LaggProtocol.hpp"
+#include "ConfigurationManager.hpp"
 
 /**
  * @brief Configuration for link aggregation interfaces
  */
-class LaggConfig : public InterfaceConfig {
+class LaggInterfaceConfig : public InterfaceConfig {
 public:
-  LaggConfig() = default;
-  LaggConfig(const InterfaceConfig &base);
-  LaggConfig(const InterfaceConfig &base, LaggProtocol protocol,
+  LaggInterfaceConfig() = default;
+  LaggInterfaceConfig(const InterfaceConfig &base);
+  LaggInterfaceConfig(const InterfaceConfig &base, LaggProtocol protocol,
              std::vector<std::string> members,
              std::optional<uint32_t> hash_policy, std::optional<int> lacp_rate,
              std::optional<int> min_links);
@@ -66,9 +67,11 @@ public:
   std::optional<int> active_ports;     ///< Number of active ports (read-only)
   std::optional<int> flapping;         ///< Port flapping counter (read-only)
 
-  ~LaggConfig() override = default;
+  ~LaggInterfaceConfig() override = default;
   void save(ConfigurationManager &mgr) const override;
 
 private:
   void create(ConfigurationManager &mgr) const;
 };
+
+// implementations in src/cfg/LaggInterfaceConfig.cpp

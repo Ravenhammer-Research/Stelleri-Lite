@@ -26,62 +26,19 @@
  */
 
 /**
- * @file VXLANConfig.hpp
- * @brief VXLAN tunnel interface configuration
+ * @file TapConfig.hpp
+ * @brief TAP interface configuration
  */
 
 #pragma once
 
 #include "InterfaceConfig.hpp"
-#include <optional>
-#include <string>
 
-/**
- * @brief Configuration for VXLAN overlay interfaces
- *
- * Wraps the FreeBSD if_vxlan(4) parameters from struct ifvxlancfg:
- * VNI, local/remote addresses, ports, TTL, and learning behaviour.
- */
-class VXLANConfig : public InterfaceConfig {
+#include "ConfigurationManager.hpp"
+
+class TapInterfaceConfig : public InterfaceConfig {
 public:
-  explicit VXLANConfig(const InterfaceConfig &base) : InterfaceConfig(base) {}
-
-  /// VXLAN Network Identifier (24-bit)
-  std::optional<uint32_t> vni;
-
-  /// Local VTEP address
-  std::optional<std::string> localAddr;
-
-  /// Remote VTEP / multicast group address
-  std::optional<std::string> remoteAddr;
-
-  /// Local UDP port (default 4789)
-  std::optional<uint16_t> localPort;
-
-  /// Remote UDP port
-  std::optional<uint16_t> remotePort;
-
-  /// IP TTL for encapsulated packets
-  std::optional<uint8_t> ttl;
-
-  /// MAC learning enabled
-  std::optional<bool> learn;
-
-  /// Multicast interface name for BUM traffic
-  std::optional<std::string> multicastIf;
-
-  /// Minimum source UDP port for port range
-  std::optional<uint16_t> portMin;
-
-  /// Maximum source UDP port for port range
-  std::optional<uint16_t> portMax;
-
-  /// Forwarding table entry timeout in seconds
-  std::optional<uint32_t> ftableTimeout;
-
-  /// Maximum forwarding table entries
-  std::optional<uint32_t> ftableMax;
-
+  explicit TapInterfaceConfig(const InterfaceConfig &base) : InterfaceConfig(base) {}
   void save(ConfigurationManager &mgr) const override;
   void create(ConfigurationManager &mgr) const;
   void destroy(ConfigurationManager &mgr) const override;

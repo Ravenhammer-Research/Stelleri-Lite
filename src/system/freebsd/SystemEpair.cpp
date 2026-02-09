@@ -40,11 +40,11 @@
 #include <sys/socket.h>
 #include <sys/sockio.h>
 #include <sys/types.h>
-std::vector<VirtualInterfaceConfig>
-SystemConfigurationManager::GetVirtualInterfaces(
+std::vector<EpairInterfaceConfig>
+SystemConfigurationManager::GetEpairInterfaces(
     const std::optional<VRFConfig> &vrf) const {
   auto bases = GetInterfaces(vrf);
-  std::vector<VirtualInterfaceConfig> out;
+  std::vector<EpairInterfaceConfig> out;
   for (const auto &ic : bases) {
     if (ic.type == InterfaceType::Virtual || ic.type == InterfaceType::Tun) {
       out.emplace_back(ic);
@@ -53,7 +53,7 @@ SystemConfigurationManager::GetVirtualInterfaces(
   return out;
 }
 
-void SystemConfigurationManager::CreateVirtual(const std::string &nm) const {
+void SystemConfigurationManager::CreateEpair(const std::string &nm) const {
   // For epair interfaces, check if the pair already exists
   std::string check_name = nm;
   if (nm.rfind("epair", 0) == 0 && !nm.empty() && nm.back() != 'a' &&
@@ -138,8 +138,8 @@ void SystemConfigurationManager::CreateVirtual(const std::string &nm) const {
   }
 }
 
-void SystemConfigurationManager::SaveVirtual(
-    const VirtualInterfaceConfig &vic) const {
+void SystemConfigurationManager::SaveEpair(
+  const EpairInterfaceConfig &vic) const {
   // Create virtual interface if it doesn't exist, then apply all settings
   // For epair interfaces, check if the 'a' side exists since epairs come in
   // pairs
@@ -152,11 +152,11 @@ void SystemConfigurationManager::SaveVirtual(
   }
 
   if (!InterfaceConfig::exists(*this, check_name))
-    CreateVirtual(vic.name);
+    CreateEpair(vic.name);
 
   // Always call SaveInterface to apply VRF, groups, MTU, etc.
   // Use actual_name which includes 'a' suffix for epairs
-  VirtualInterfaceConfig actual_vic = vic;
+  EpairInterfaceConfig actual_vic = vic;
   actual_vic.name = actual_name;
   SaveInterface(static_cast<const InterfaceConfig &>(actual_vic));
   // Promiscuous or other virtual-specific settings could be applied here

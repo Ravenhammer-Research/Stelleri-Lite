@@ -26,18 +26,30 @@
  */
 
 /**
- * @file VXLANTableFormatter.hpp
- * @brief Formatter for VXLAN interface table output
+ * @file VlanTableFormatter.hpp
+ * @brief Formatter for VLAN interface details
  */
 
 #pragma once
 
 #include "InterfaceConfig.hpp"
 #include "TableFormatter.hpp"
+#include <string>
 #include <vector>
 
-class VXLANTableFormatter : public TableFormatter<InterfaceConfig> {
+/**
+ * @brief Formats VLAN interface configuration as ASCII table
+ *
+ * Shows VLAN-specific details like VLAN ID, parent interface, PCP.
+ */
+class VlanTableFormatter : public TableFormatter<InterfaceConfig> {
 public:
-  VXLANTableFormatter() = default;
-  std::string format(const std::vector<InterfaceConfig> &items) override;
+  VlanTableFormatter() = default;
+
+  /**
+   * @brief Format VLAN interfaces into a detailed table
+   * @param interfaces List of InterfaceConfig with VLAN configurations
+   * @return Formatted ASCII table string
+   */
+  std::string format(const std::vector<InterfaceConfig> &interfaces) override;
 };

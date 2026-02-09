@@ -26,21 +26,47 @@
  */
 
 /**
- * @file LoopBackConfig.hpp
- * @brief Loopback interface configuration
+ * @file VLANConfig.hpp
+ * @brief VLAN interface configuration
  */
 
 #pragma once
 
 #include "InterfaceConfig.hpp"
+#include "PriorityCodePoint.hpp"
+#include "VlanProto.hpp"
+#include <cstdint>
+#include <optional>
+#include <string>
+#include "ConfigurationManager.hpp"
+#include <stdexcept>
 
-class LoopBackConfig : public InterfaceConfig {
+/**
+ * @brief Configuration for VLAN interfaces
+ *
+ * Stores VLAN ID and parent interface relationship.
+ */
+class VlanInterfaceConfig : public InterfaceConfig {
 public:
-  explicit LoopBackConfig(const InterfaceConfig &base)
-      : InterfaceConfig(base) {}
+  VlanInterfaceConfig() = default;
+  VlanInterfaceConfig(const InterfaceConfig &base);
+  VlanInterfaceConfig(const InterfaceConfig &base, uint16_t id,
+             std::optional<std::string> parent,
+             std::optional<PriorityCodePoint> pcp);
 
-  // No extra fields for now; placeholder for future loopback-specific options
+  uint16_t id = 0; ///< VLAN ID (1-4094)
+  std::optional<std::string>
+      parent; ///< Parent interface (e.g., "em0" for em0.100)
+  std::optional<PriorityCodePoint> pcp; ///< Priority Code Point (0-7)
+  std::optional<VLANProto> proto;       ///< VLAN protocol as enum
+  std::optional<uint32_t>
+      options_bits; ///< Raw interface capability bits (IFCAP_*)
+
   void save(ConfigurationManager &mgr) const override;
-  void create(ConfigurationManager &mgr) const;
+
   void destroy(ConfigurationManager &mgr) const override;
+
+private:
+  void create(ConfigurationManager &mgr) const;
 };
+// implementations in src/cfg/VlanInterfaceConfig.cpp

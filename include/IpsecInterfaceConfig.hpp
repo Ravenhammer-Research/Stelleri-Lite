@@ -9,12 +9,14 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include "ConfigurationManager.hpp"
+#include "InterfaceType.hpp"
 
-class IpsecConfig : public InterfaceConfig {
+class IpsecInterfaceConfig : public InterfaceConfig {
 public:
-  IpsecConfig() = default;
-  IpsecConfig(const InterfaceConfig &base);
-  IpsecConfig(const InterfaceConfig &base,
+  IpsecInterfaceConfig() = default;
+  IpsecInterfaceConfig(const InterfaceConfig &base);
+  IpsecInterfaceConfig(const InterfaceConfig &base,
               std::unique_ptr<IPAddress> source,
               std::unique_ptr<IPAddress> destination);
 
@@ -23,7 +25,7 @@ public:
   std::optional<uint32_t> options;
   std::optional<int> tunnel_vrf;
 
-  IpsecConfig(const IpsecConfig &o) : InterfaceConfig(o), options(o.options),
+  IpsecInterfaceConfig(const IpsecInterfaceConfig &o) : InterfaceConfig(o), options(o.options),
                                      tunnel_vrf(o.tunnel_vrf) {
     if (o.source)
       source = o.source->clone();
@@ -35,3 +37,4 @@ public:
 private:
   void create(ConfigurationManager &mgr) const;
 };
+// implementations in src/cfg/IpsecInterfaceConfig.cpp

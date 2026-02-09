@@ -26,30 +26,47 @@
  */
 
 /**
- * @file VLANTableFormatter.hpp
- * @brief Formatter for VLAN interface details
+ * @file GREConfig.hpp
+ * @brief GRE tunnel interface configuration
  */
 
 #pragma once
 
 #include "InterfaceConfig.hpp"
-#include "TableFormatter.hpp"
+#include <optional>
 #include <string>
-#include <vector>
+#include <stdexcept>
+#include "ConfigurationManager.hpp"
 
 /**
- * @brief Formats VLAN interface configuration as ASCII table
+ * @brief Configuration for GRE tunnel interfaces
  *
- * Shows VLAN-specific details like VLAN ID, parent interface, PCP.
+ * Wraps the FreeBSD gre(4) interface parameters accessible via
+ * GRESADDRS/GRESADDRD/GRESKEY/GRESOPTS ioctls.
  */
-class VLANTableFormatter : public TableFormatter<InterfaceConfig> {
+class GreInterfaceConfig : public InterfaceConfig {
 public:
-  VLANTableFormatter() = default;
+  explicit GreInterfaceConfig(const InterfaceConfig &base) : InterfaceConfig(base) {}
 
-  /**
-   * @brief Format VLAN interfaces into a detailed table
-   * @param interfaces List of InterfaceConfig with VLAN configurations
-   * @return Formatted ASCII table string
-   */
-  std::string format(const std::vector<InterfaceConfig> &interfaces) override;
+  /// Tunnel source address
+  std::optional<std::string> greSource;
+
+  /// Tunnel destination (remote) address
+  std::optional<std::string> greDestination;
+
+  /// GRE key (0 = disabled)
+  std::optional<uint32_t> greKey;
+
+  /// GRE options bitmask (GRE_ENABLE_SEQ, GRE_ENABLE_CSUM, etc.)
+  std::optional<uint32_t> greOptions;
+
+  /// UDP encapsulation port (0 = no UDP encap)
+  std::optional<uint16_t> grePort;
+
+  /// Tunnel outer protocol family (AF_INET or AF_INET6, via GRESPROTO)
+  std::optional<int> greProto;
+
+  void save(ConfigurationManager &mgr) const override;
+  void create(ConfigurationManager &mgr) const;
+  void destroy(ConfigurationManager &mgr) const override;
 };

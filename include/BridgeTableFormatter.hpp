@@ -32,7 +32,6 @@
 
 #pragma once
 
-#include "BridgeConfig.hpp"
 #include "BridgeInterfaceConfig.hpp"
 #include "TableFormatter.hpp"
 #include <string>

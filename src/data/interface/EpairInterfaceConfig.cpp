@@ -26,7 +26,6 @@
  */
 
 #include "EpairInterfaceConfig.hpp"
-
 #include "ConfigurationManager.hpp"
 
 #include <cerrno>
@@ -77,9 +76,9 @@ EpairInterfaceConfig::EpairInterfaceConfig(const InterfaceConfig &base,
 }
 
 void EpairInterfaceConfig::save(ConfigurationManager &mgr) const {
-  mgr.SaveVirtual(*this);
+  mgr.SaveEpair(*this);
 }
 
 void EpairInterfaceConfig::create(ConfigurationManager &mgr) const {
-  mgr.CreateVirtual(name);
+  mgr.CreateEpair(name);
 }

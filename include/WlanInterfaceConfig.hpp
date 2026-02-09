@@ -34,10 +34,11 @@
 
 #include "InterfaceConfig.hpp"
 #include "WlanAuthMode.hpp"
+#include "ConfigurationManager.hpp"
 
-class WlanConfig : public InterfaceConfig {
+class WlanInterfaceConfig : public InterfaceConfig {
 public:
-  explicit WlanConfig(const InterfaceConfig &base) : InterfaceConfig(base) {}
+  explicit WlanInterfaceConfig(const InterfaceConfig &base) : InterfaceConfig(base) {}
   void save(ConfigurationManager &mgr) const override;
   void create(ConfigurationManager &mgr) const;
   void destroy(ConfigurationManager &mgr) const override;
@@ -52,7 +53,7 @@ public:
   std::optional<int> opmode; ///< Operating mode (IEEE80211_M_STA, etc.)
   std::optional<std::string> macaddr; ///< Locally-assigned MAC address
   // Copy constructor from another WlanConfig
-  WlanConfig(const WlanConfig &o) : InterfaceConfig(o) {
+  WlanInterfaceConfig(const WlanInterfaceConfig &o) : InterfaceConfig(o) {
     ssid = o.ssid;
     channel = o.channel;
     bssid = o.bssid;
@@ -63,5 +64,7 @@ public:
     opmode = o.opmode;
     macaddr = o.macaddr;
   }
-  WlanConfig &operator=(const WlanConfig &o) = delete;
+  WlanInterfaceConfig &operator=(const WlanInterfaceConfig &o) = delete;
 };
+
+// implementations in src/cfg/WlanInterfaceConfig.cpp

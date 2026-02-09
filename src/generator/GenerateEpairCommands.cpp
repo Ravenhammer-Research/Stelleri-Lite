@@ -13,7 +13,7 @@ namespace netcli {
   void
   CommandGenerator::generateEpairs(ConfigurationManager &mgr,
                                    std::set<std::string> &processedInterfaces) {
-    auto virtuals = mgr.GetVirtualInterfaces();
+    auto virtuals = mgr.GetEpairInterfaces();
     for (const auto &ifc : virtuals) {
       if (processedInterfaces.count(ifc.name))
         continue;

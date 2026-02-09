@@ -32,27 +32,30 @@
 
 #pragma once
 
-#include "BridgeConfig.hpp"
-#include "BridgeInterfaceConfig.hpp"
-#include "CarpConfig.hpp"
-#include "ConfigurationManager.hpp"
-#include "GREConfig.hpp"
-#include "InterfaceConfig.hpp"
-#include "InterfaceType.hpp"
-#include "LaggConfig.hpp"
-#include "SixToFourConfig.hpp"
-#include "TapConfig.hpp"
-#include "Token.hpp"
-#include "TunConfig.hpp"
-#include "GifConfig.hpp"
-#include "OvpnConfig.hpp"
-#include "IpsecConfig.hpp"
-#include "VLANConfig.hpp"
-#include "VXLANConfig.hpp"
-#include "WlanConfig.hpp"
 #include <iostream>
 #include <optional>
 #include <string>
+#include "InterfaceType.hpp"
+
+#include "BridgeInterfaceConfig.hpp"
+#include "BridgeMemberConfig.hpp"
+#include "CarpInterfaceConfig.hpp"
+#include "EpairInterfaceConfig.hpp"
+#include "GifInterfaceConfig.hpp"
+#include "GreInterfaceConfig.hpp"
+#include "InterfaceConfig.hpp"
+#include "IpsecInterfaceConfig.hpp"
+#include "LaggInterfaceConfig.hpp"
+#include "LoopBackInterfaceConfig.hpp"
+#include "OvpnInterfaceConfig.hpp"
+#include "SixToFourInterfaceConfig.hpp"
+#include "TapInterfaceConfig.hpp"
+#include "TunInterfaceConfig.hpp"
+#include "VRFConfig.hpp"
+#include "VlanInterfaceConfig.hpp"
+#include "VxlanInterfaceConfig.hpp"
+#include "WlanInterfaceConfig.hpp"
+#include "Token.hpp"
 
 class InterfaceToken : public Token {
 public:
@@ -64,20 +67,20 @@ public:
   static std::string toString(InterfaceConfig *cfg);
 
   /* overloads for specific interface-related configs */
-  static std::string toString(BridgeConfig *cfg);
-  static std::string toString(CarpConfig *cfg);
-  static std::string toString(GREConfig *cfg);
-  static std::string toString(LaggConfig *cfg);
-  static std::string toString(SixToFourConfig *cfg);
-  static std::string toString(TapConfig *cfg);
+  static std::string toString(BridgeInterfaceConfig *cfg);
+  static std::string toString(CarpInterfaceConfig *cfg);
+  static std::string toString(GreInterfaceConfig *cfg);
+  static std::string toString(LaggInterfaceConfig *cfg);
+  static std::string toString(SixToFourInterfaceConfig *cfg);
+  static std::string toString(TapInterfaceConfig *cfg);
   
-  static std::string toString(TunConfig *cfg);
-  static std::string toString(GifConfig *cfg);
-  static std::string toString(OvpnConfig *cfg);
-  static std::string toString(IpsecConfig *cfg);
-  static std::string toString(VLANConfig *cfg);
-  static std::string toString(VXLANConfig *cfg);
-  static std::string toString(WlanConfig *cfg);
+  static std::string toString(TunInterfaceConfig *cfg);
+  static std::string toString(GifInterfaceConfig *cfg);
+  static std::string toString(OvpnInterfaceConfig *cfg);
+  static std::string toString(IpsecInterfaceConfig *cfg);
+  static std::string toString(VlanInterfaceConfig *cfg);
+  static std::string toString(VxlanInterfaceConfig *cfg);
+  static std::string toString(WlanInterfaceConfig *cfg);
   std::vector<std::string>
   autoComplete(std::string_view partial) const override;
   std::vector<std::string>
@@ -95,13 +98,12 @@ public:
   std::optional<int> mtu;
   std::optional<bool> status; // true=up, false=down
   std::optional<BridgeInterfaceConfig> bridge;
-  std::optional<LaggConfig> lagg;
-  std::optional<VLANConfig> vlan;
-  std::optional<TunConfig> tun;
-  std::optional<GifConfig> gif;
-  std::optional<OvpnConfig> ovpn;
-  std::optional<IpsecConfig> ipsec;
-
+  std::optional<LaggInterfaceConfig> lagg;
+  std::optional<VlanInterfaceConfig> vlan;
+  std::optional<TunInterfaceConfig> tun;
+  std::optional<GifInterfaceConfig> gif;
+  std::optional<OvpnInterfaceConfig> ovpn;
+  std::optional<IpsecInterfaceConfig> ipsec;
   // (Rendering moved to execute handlers. Token is parse-only.)
 
   // Parse an `interfaces` sequence starting at index `start` in `tokens`.

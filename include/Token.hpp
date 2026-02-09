@@ -37,8 +37,8 @@
 #include <string_view>
 #include <vector>
 
-class ConfigurationManager; // forward declaration
-class ConfigData;           // forward declaration for toString parameter
+#include "ConfigurationManager.hpp"
+#include "ConfigData.hpp"
 
 /**
  * @brief Base class for command tokens in the parser chain

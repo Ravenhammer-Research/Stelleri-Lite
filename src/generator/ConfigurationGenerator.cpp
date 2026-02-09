@@ -25,14 +25,37 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "DeleteCommand.hpp"
+#include "ConfigurationGenerator.hpp"
+#include "GenerateTunCommands.hpp"
+#include "GenerateGifCommands.hpp"
+#include "GenerateOvpnCommands.hpp"
+#include "GenerateIpsecCommands.hpp"
 
-// toString(ConfigData*) removed — implementation deleted per request
+namespace netcli {
 
-std::vector<std::string> DeleteCommand::autoComplete(std::string_view) const {
-  return {};
-}
+  void
+  ConfigurationGenerator::generateConfiguration(ConfigurationManager &mgr) {
+    std::set<std::string> processedInterfaces;
 
-std::unique_ptr<Token> DeleteCommand::clone() const {
-  return std::make_unique<DeleteCommand>(*this);
-}
+    // Generate VRFs
+    generateVRFs(mgr);
+
+    // Generate interfaces with addresses
+    generateLoopbacks(mgr, processedInterfaces);
+    generateEpairs(mgr, processedInterfaces);
+    generateBasicInterfaces(mgr, processedInterfaces);
+    generateBridges(mgr, processedInterfaces);
+    generateLaggs(mgr, processedInterfaces);
+    generateVLANs(mgr, processedInterfaces);
+    // Generate tunnels by specific type
+    generateTunCommands(mgr, processedInterfaces);
+    generateGifCommands(mgr, processedInterfaces);
+    generateOvpnCommands(mgr, processedInterfaces);
+    generateIpsecCommands(mgr, processedInterfaces);
+    generateEpairs(mgr, processedInterfaces);
+
+    // Generate routes
+    generateRoutes(mgr);
+  }
+
+} // namespace netcli

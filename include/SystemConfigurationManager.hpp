@@ -27,184 +27,151 @@
 
 /**
  * @file SystemConfigurationManager.hpp
- * @brief FreeBSD system-call-based configuration manager
+ * @brief Thin system-specific ConfigurationManager helpers
  */
 
 #pragma once
 
-#include "ArpConfig.hpp"
-#include "BridgeInterfaceConfig.hpp"
 #include "ConfigurationManager.hpp"
-#include "GREConfig.hpp"
 #include "InterfaceConfig.hpp"
-#include "LaggConfig.hpp"
-#include "NdpConfig.hpp"
-#include "RouteConfig.hpp"
-#include "TapConfig.hpp"
-#include "TunConfig.hpp"
-#include "GifConfig.hpp"
-#include "OvpnConfig.hpp"
-#include "IpsecConfig.hpp"
-#include "VLANConfig.hpp"
 #include "VRFConfig.hpp"
-#include "VXLANConfig.hpp"
-#include "EpairInterfaceConfig.hpp"
-#include "WlanConfig.hpp"
+
 #include <optional>
+#include <string>
 #include <string_view>
 #include <vector>
+#include <utility>
 
-/**
- * @brief ConfigurationManager backed by FreeBSD system calls
- *
- * Implements the full ConfigurationManager interface using ioctl, sysctl,
- * routing sockets, and ifconfig-style operations on the local system.
- */
+struct ifreq;
+
 class SystemConfigurationManager : public ConfigurationManager {
 public:
-  // Instance overrides implement the abstract `ConfigurationManager` API.
-  std::vector<InterfaceConfig> GetInterfaces(
-      const std::optional<VRFConfig> &vrf = std::nullopt) const override;
+  ~SystemConfigurationManager() override = default;
+
+  // Enumeration / query API
+  std::vector<InterfaceConfig>
+  GetInterfaces(const std::optional<VRFConfig> &vrf = std::nullopt) const override;
   std::vector<InterfaceConfig>
   GetInterfacesByGroup(const std::optional<VRFConfig> &vrf,
-                       std::string_view group) const override;
+					   std::string_view group) const override;
   std::vector<BridgeInterfaceConfig> GetBridgeInterfaces(
-      const std::optional<VRFConfig> &vrf = std::nullopt) const override;
-  std::vector<LaggConfig> GetLaggInterfaces(
-      const std::optional<VRFConfig> &vrf = std::nullopt) const override;
-  std::vector<VLANConfig> GetVLANInterfaces(
-      const std::optional<VRFConfig> &vrf = std::nullopt) const override;
-  
-  std::vector<TunConfig> GetTunInterfaces(
-      const std::optional<VRFConfig> &vrf = std::nullopt) const override;
-  std::vector<GifConfig> GetGifInterfaces(
-      const std::optional<VRFConfig> &vrf = std::nullopt) const override;
-  std::vector<OvpnConfig> GetOvpnInterfaces(
-      const std::optional<VRFConfig> &vrf = std::nullopt) const override;
-  std::vector<IpsecConfig> GetIpsecInterfaces(
-      const std::optional<VRFConfig> &vrf = std::nullopt) const override;
-  std::vector<VirtualInterfaceConfig> GetVirtualInterfaces(
-      const std::optional<VRFConfig> &vrf = std::nullopt) const override;
-  std::vector<GREConfig> GetGreInterfaces(
-      const std::optional<VRFConfig> &vrf = std::nullopt) const override;
-  std::vector<VXLANConfig> GetVxlanInterfaces(
-      const std::optional<VRFConfig> &vrf = std::nullopt) const override;
-  std::vector<RouteConfig> GetStaticRoutes(
-      const std::optional<VRFConfig> &vrf = std::nullopt) const override;
+	  const std::optional<VRFConfig> &vrf = std::nullopt) const override;
+  std::vector<LaggInterfaceConfig> GetLaggInterfaces(
+	  const std::optional<VRFConfig> &vrf = std::nullopt) const override;
+  std::vector<VlanInterfaceConfig> GetVLANInterfaces(
+	  const std::optional<VRFConfig> &vrf = std::nullopt) const override;
+
+  std::vector<TunInterfaceConfig> GetTunInterfaces(
+	  const std::optional<VRFConfig> &vrf = std::nullopt) const override;
+  std::vector<GifInterfaceConfig> GetGifInterfaces(
+	  const std::optional<VRFConfig> &vrf = std::nullopt) const override;
+  std::vector<OvpnInterfaceConfig> GetOvpnInterfaces(
+	  const std::optional<VRFConfig> &vrf = std::nullopt) const override;
+  std::vector<IpsecInterfaceConfig> GetIpsecInterfaces(
+	  const std::optional<VRFConfig> &vrf = std::nullopt) const override;
+  std::vector<GreInterfaceConfig> GetGreInterfaces(
+	  const std::optional<VRFConfig> &vrf = std::nullopt) const override;
+  std::vector<VxlanInterfaceConfig> GetVxlanInterfaces(
+	  const std::optional<VRFConfig> &vrf = std::nullopt) const override;
+  std::vector<EpairInterfaceConfig> GetEpairInterfaces(
+	  const std::optional<VRFConfig> &vrf = std::nullopt) const override;
+  std::vector<RouteConfig>
+  GetStaticRoutes(const std::optional<VRFConfig> &vrf = std::nullopt) const override;
   std::vector<RouteConfig>
   GetRoutes(const std::optional<VRFConfig> &vrf = std::nullopt) const override;
-  /** @brief Return discovered VRF configurations on this system */
   std::vector<VRFConfig> GetVrfs() const override;
 
-  // ARP/NDP neighbor cache management
-  std::vector<ArpConfig>
-  GetArpEntries(const std::optional<std::string> &ip_filter = std::nullopt,
-                const std::optional<std::string> &iface_filter =
-                    std::nullopt) const override;
+  std::vector<ArpConfig> GetArpEntries(
+	  const std::optional<std::string> &ip_filter = std::nullopt,
+	  const std::optional<std::string> &iface_filter = std::nullopt) const override;
   bool SetArpEntry(const std::string &ip, const std::string &mac,
-                   const std::optional<std::string> &iface = std::nullopt,
-                   bool temp = false, bool pub = false) const override;
-  bool DeleteArpEntry(
-      const std::string &ip,
-      const std::optional<std::string> &iface = std::nullopt) const override;
+				   const std::optional<std::string> &iface = std::nullopt,
+				   bool temp = false, bool pub = false) const override;
+  bool DeleteArpEntry(const std::string &ip,
+					  const std::optional<std::string> &iface = std::nullopt) const override;
 
-  std::vector<NdpConfig>
-  GetNdpEntries(const std::optional<std::string> &ip_filter = std::nullopt,
-                const std::optional<std::string> &iface_filter =
-                    std::nullopt) const override;
+  std::vector<NdpConfig> GetNdpEntries(
+	  const std::optional<std::string> &ip_filter = std::nullopt,
+	  const std::optional<std::string> &iface_filter = std::nullopt) const override;
   bool SetNdpEntry(const std::string &ip, const std::string &mac,
-                   const std::optional<std::string> &iface = std::nullopt,
-                   bool temp = false) const override;
-  bool DeleteNdpEntry(
-      const std::string &ip,
-      const std::optional<std::string> &iface = std::nullopt) const override;
+				   const std::optional<std::string> &iface = std::nullopt,
+				   bool temp = false) const override;
+  bool DeleteNdpEntry(const std::string &ip,
+					  const std::optional<std::string> &iface = std::nullopt) const override;
 
-public:
-  enum class IfreqIntField { Metric, Fib, Mtu };
-
-  // Helper methods for interface queries
-  void prepare_ifreq(struct ifreq &ifr, const std::string &name) const;
-  void cloneInterface(const std::string &name, unsigned long cmd) const;
-  std::optional<int> query_ifreq_int(const std::string &ifname,
-                                     unsigned long req,
-                                     IfreqIntField which) const;
-  std::optional<std::pair<std::string, int>>
-  query_ifreq_sockaddr(const std::string &ifname, unsigned long req) const;
-  std::vector<std::string>
-  query_interface_groups(const std::string &ifname) const;
-  void populateInterfaceMetadata(InterfaceConfig &ic) const;
-
-  // Interface type detection
-  bool interfaceIsLagg(const std::string &ifname) const;
-  bool interfaceIsBridge(const std::string &ifname) const;
-
-  // Return list of addresses configured on an interface (string format
-  // "addr/prefix")
-  std::vector<std::string> GetInterfaceAddresses(const std::string &ifname,
-                                                 int family) const override;
-
-  // Bridge-specific system operations
-  void CreateBridge(const std::string &name) const override;
-  void SaveBridge(const BridgeInterfaceConfig &bic) const override;
-  std::vector<std::string>
-  GetBridgeMembers(const std::string &name) const override;
-
-  // Virtual interface (epair/clone) operations
-  void CreateVirtual(const std::string &name) const override;
-  void SaveVirtual(const VirtualInterfaceConfig &vic) const override;
-
-  // LAGG-specific system operations
-  void CreateLagg(const std::string &name) const override;
-  void SaveLagg(const LaggConfig &lac) const override;
-
-  // Generic interface operations
+  // Mutation API
   void CreateInterface(const std::string &name) const override;
   void SaveInterface(const InterfaceConfig &ic) const override;
   void DestroyInterface(const std::string &name) const override;
   void RemoveInterfaceAddress(const std::string &ifname,
-                              const std::string &addr) const override;
+							  const std::string &addr) const override;
   void RemoveInterfaceGroup(const std::string &ifname,
-                            const std::string &group) const override;
-  // Query whether a named interface exists on the system
+							const std::string &group) const override;
   bool InterfaceExists(std::string_view name) const override;
+  std::vector<std::string>
+  GetInterfaceAddresses(const std::string &ifname, int family) const override;
 
-  // WLAN-specific operations
+  // Helper methods (overrides of ConfigurationManager convenience helpers)
+  void prepare_ifreq(struct ifreq &ifr, const std::string &name) const override;
+  void cloneInterface(const std::string &name, unsigned long cmd) const override;
+  std::optional<int> query_ifreq_int(const std::string &ifname,
+                                     unsigned long req,
+                                     IfreqIntField which) const override;
+  std::optional<std::pair<std::string, int>>
+  query_ifreq_sockaddr(const std::string &ifname, unsigned long req) const override;
+  std::vector<std::string> query_interface_groups(const std::string &ifname) const override;
+  void populateInterfaceMetadata(InterfaceConfig &ic) const override;
+  // VRF matching helper
+  bool matches_vrf(const InterfaceConfig &ic, const std::optional<VRFConfig> &vrf) const override;
+
+  // Bridge
+  void CreateBridge(const std::string &name) const override;
+  void SaveBridge(const BridgeInterfaceConfig &bic) const override;
+  std::vector<std::string> GetBridgeMembers(const std::string &name) const override;
+
+  // LAGG
+  void CreateLagg(const std::string &name) const override;
+  void SaveLagg(const LaggInterfaceConfig &lac) const override;
+
+  // VLAN
+  void SaveVlan(const VlanInterfaceConfig &vlan) const override;
+
+  // Tunnel types
+  void CreateTun(const std::string &name) const override;
+  void SaveTun(const TunInterfaceConfig &tun) const override;
+  void CreateGif(const std::string &name) const override;
+  void SaveGif(const GifInterfaceConfig &gif) const override;
+  void CreateOvpn(const std::string &name) const override;
+  void SaveOvpn(const OvpnInterfaceConfig &ovpn) const override;
+  void CreateIpsec(const std::string &name) const override;
+  void SaveIpsec(const IpsecInterfaceConfig &ipsec) const override;
+
+  // WLAN
   void CreateWlan(const std::string &name) const override;
-  void SaveWlan(const WlanConfig &wlan) const override;
+  void SaveWlan(const WlanInterfaceConfig &wlan) const override;
 
-  // TAP-specific operations
+  // TAP
   void CreateTap(const std::string &name) const override;
-  void SaveTap(const TapConfig &tap) const override;
+  void SaveTap(const TapInterfaceConfig &tap) const override;
 
-  // GRE-specific operations
+  // GRE
   void CreateGre(const std::string &name) const override;
-  void SaveGre(const GREConfig &gre) const override;
+  void SaveGre(const GreInterfaceConfig &gre) const override;
 
-  // VXLAN-specific operations
+  // VXLAN
   void CreateVxlan(const std::string &name) const override;
-  void SaveVxlan(const VXLANConfig &vxlan) const override;
+  void SaveVxlan(const VxlanInterfaceConfig &vxlan) const override;
 
-  // CARP-specific operations
-  void SaveCarp(const CarpConfig &carp) const override;
+  // CARP
+  void SaveCarp(const CarpInterfaceConfig &carp) const override;
 
-    // Tunnel-specific operations for concrete types
-    void CreateTun(const std::string &name) const override;
-    void SaveTun(const TunConfig &tun) const override;
-    void CreateGif(const std::string &name) const override;
-    void SaveGif(const GifConfig &gif) const override;
-    void CreateOvpn(const std::string &name) const override;
-    void SaveOvpn(const OvpnConfig &ovpn) const override;
-    void CreateIpsec(const std::string &name) const override;
-    void SaveIpsec(const IpsecConfig &ipsec) const override;
-
-  // VLAN-specific operations
-  void SaveVlan(const VLANConfig &vlan) const override;
-
-  // Route operations
+  // Routes
   void AddRoute(const RouteConfig &route) const override;
   void DeleteRoute(const RouteConfig &route) const override;
 
-  // VRF matching helper
-  bool matches_vrf(const InterfaceConfig &ic,
-                   const std::optional<VRFConfig> &vrf) const;
+  // Epair
+  void CreateEpair(const std::string &name) const override;
+  void SaveEpair(const EpairInterfaceConfig &epair) const override;
+  bool interfaceIsLagg(const std::string &ifname) const override;
+  bool interfaceIsBridge(const std::string &ifname) const override;
 };

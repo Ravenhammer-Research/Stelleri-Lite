@@ -36,7 +36,6 @@
 #include <string_view>
 
 class ConfigurationManager;
-
 /**
  * @brief Lightweight configuration container/base type
  *

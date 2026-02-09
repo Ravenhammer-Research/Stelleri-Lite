@@ -25,37 +25,19 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "ConfigurationGenerator.hpp"
-#include "GenerateTunCommands.hpp"
-#include "GenerateGifCommands.hpp"
-#include "GenerateOvpnCommands.hpp"
-#include "GenerateIpsecCommands.hpp"
+/**
+ * @file VXLANTableFormatter.hpp
+ * @brief Formatter for VXLAN interface table output
+ */
 
-namespace netcli {
+#pragma once
 
-  void
-  ConfigurationGenerator::generateConfiguration(ConfigurationManager &mgr) {
-    std::set<std::string> processedInterfaces;
+#include "InterfaceConfig.hpp"
+#include "TableFormatter.hpp"
+#include <vector>
 
-    // Generate VRFs
-    generateVRFs(mgr);
-
-    // Generate interfaces with addresses
-    generateLoopbacks(mgr, processedInterfaces);
-    generateEpairs(mgr, processedInterfaces);
-    generateBasicInterfaces(mgr, processedInterfaces);
-    generateBridges(mgr, processedInterfaces);
-    generateLaggs(mgr, processedInterfaces);
-    generateVLANs(mgr, processedInterfaces);
-    // Generate tunnels by specific type
-    generateTunCommands(mgr, processedInterfaces);
-    generateGifCommands(mgr, processedInterfaces);
-    generateOvpnCommands(mgr, processedInterfaces);
-    generateIpsecCommands(mgr, processedInterfaces);
-    generateVirtuals(mgr, processedInterfaces);
-
-    // Generate routes
-    generateRoutes(mgr);
-  }
-
-} // namespace netcli
+class VxlanTableFormatter : public TableFormatter<InterfaceConfig> {
+public:
+  VxlanTableFormatter() = default;
+  std::string format(const std::vector<InterfaceConfig> &items) override;
+};

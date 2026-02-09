@@ -40,24 +40,25 @@
 #include <string_view>
 #include <vector>
 // Ensure configuration type declarations are available for method signatures
-#include "ArpConfig.hpp"
-#include "BridgeInterfaceConfig.hpp"
-#include "CarpConfig.hpp"
-#include "GREConfig.hpp"
-#include "LaggConfig.hpp"
-#include "NdpConfig.hpp"
-#include "RouteConfig.hpp"
-#include "TapConfig.hpp"
-#include "TunConfig.hpp"
-#include "TunConfig.hpp"
-#include "GifConfig.hpp"
-#include "OvpnConfig.hpp"
-#include "IpsecConfig.hpp"
-#include "VLANConfig.hpp"
-#include "VRFConfig.hpp"
-#include "VXLANConfig.hpp"
-#include "EpairInterfaceConfig.hpp"
-#include "WlanConfig.hpp"
+
+class ArpConfig;
+class BridgeInterfaceConfig;
+class GreInterfaceConfig;
+class InterfaceConfig;
+class LaggInterfaceConfig;
+class NdpConfig;
+class RouteConfig;
+class TunInterfaceConfig;
+class GifInterfaceConfig;
+class OvpnInterfaceConfig;
+class IpsecInterfaceConfig;
+class VlanInterfaceConfig;
+class VRFConfig;
+class VxlanInterfaceConfig;
+class EpairInterfaceConfig;
+class WlanInterfaceConfig;
+class TapInterfaceConfig;
+class CarpInterfaceConfig;
 
 /**
  * @brief Abstract base class for configuration storage and retrieval
@@ -79,24 +80,24 @@ public:
                        std::string_view group) const = 0;
   virtual std::vector<BridgeInterfaceConfig> GetBridgeInterfaces(
       const std::optional<VRFConfig> &vrf = std::nullopt) const = 0;
-  virtual std::vector<LaggConfig> GetLaggInterfaces(
+  virtual std::vector<LaggInterfaceConfig> GetLaggInterfaces(
       const std::optional<VRFConfig> &vrf = std::nullopt) const = 0;
-  virtual std::vector<VLANConfig> GetVLANInterfaces(
+  virtual std::vector<VlanInterfaceConfig> GetVLANInterfaces(
       const std::optional<VRFConfig> &vrf = std::nullopt) const = 0;
   
-  virtual std::vector<TunConfig> GetTunInterfaces(
+  virtual std::vector<TunInterfaceConfig> GetTunInterfaces(
       const std::optional<VRFConfig> &vrf = std::nullopt) const = 0;
-  virtual std::vector<GifConfig> GetGifInterfaces(
+  virtual std::vector<GifInterfaceConfig> GetGifInterfaces(
       const std::optional<VRFConfig> &vrf = std::nullopt) const = 0;
-  virtual std::vector<OvpnConfig> GetOvpnInterfaces(
+  virtual std::vector<OvpnInterfaceConfig> GetOvpnInterfaces(
       const std::optional<VRFConfig> &vrf = std::nullopt) const = 0;
-  virtual std::vector<IpsecConfig> GetIpsecInterfaces(
+  virtual std::vector<IpsecInterfaceConfig> GetIpsecInterfaces(
       const std::optional<VRFConfig> &vrf = std::nullopt) const = 0;
-  virtual std::vector<VirtualInterfaceConfig> GetVirtualInterfaces(
+  virtual std::vector<GreInterfaceConfig> GetGreInterfaces(
       const std::optional<VRFConfig> &vrf = std::nullopt) const = 0;
-  virtual std::vector<GREConfig> GetGreInterfaces(
+  virtual std::vector<VxlanInterfaceConfig> GetVxlanInterfaces(
       const std::optional<VRFConfig> &vrf = std::nullopt) const = 0;
-  virtual std::vector<VXLANConfig> GetVxlanInterfaces(
+  virtual std::vector<EpairInterfaceConfig> GetEpairInterfaces(
       const std::optional<VRFConfig> &vrf = std::nullopt) const = 0;
   virtual std::vector<RouteConfig>
   GetStaticRoutes(const std::optional<VRFConfig> &vrf = std::nullopt) const = 0;
@@ -149,48 +150,47 @@ public:
 
   // LAGG operations
   virtual void CreateLagg(const std::string &name) const = 0;
-  virtual void SaveLagg(const LaggConfig &lac) const = 0;
+  virtual void SaveLagg(const LaggInterfaceConfig &lac) const = 0;
 
   // VLAN operations
-  virtual void SaveVlan(const VLANConfig &vlan) const = 0;
+  virtual void SaveVlan(const VlanInterfaceConfig &vlan) const = 0;
 
     // Tunnel operations (specific types below)
   
     virtual void CreateTun(const std::string &name) const = 0;
-    virtual void SaveTun(const TunConfig &tun) const = 0;
+    virtual void SaveTun(const TunInterfaceConfig &tun) const = 0;
     virtual void CreateGif(const std::string &name) const = 0;
-    virtual void SaveGif(const GifConfig &gif) const = 0;
+    virtual void SaveGif(const GifInterfaceConfig &gif) const = 0;
     virtual void CreateOvpn(const std::string &name) const = 0;
-    virtual void SaveOvpn(const OvpnConfig &ovpn) const = 0;
+    virtual void SaveOvpn(const OvpnInterfaceConfig &ovpn) const = 0;
     virtual void CreateIpsec(const std::string &name) const = 0;
-    virtual void SaveIpsec(const IpsecConfig &ipsec) const = 0;
-
-  // Virtual interface (epair/clone) operations
-  virtual void CreateVirtual(const std::string &name) const = 0;
-  virtual void SaveVirtual(const VirtualInterfaceConfig &vic) const = 0;
+    virtual void SaveIpsec(const IpsecInterfaceConfig &ipsec) const = 0;
 
   // WLAN operations
   virtual void CreateWlan(const std::string &name) const = 0;
-  virtual void SaveWlan(const WlanConfig &wlan) const = 0;
+  virtual void SaveWlan(const WlanInterfaceConfig &wlan) const = 0;
 
   // TAP operations
   virtual void CreateTap(const std::string &name) const = 0;
-  virtual void SaveTap(const TapConfig &tap) const = 0;
+  virtual void SaveTap(const TapInterfaceConfig &tap) const = 0;
 
   // GRE operations
   virtual void CreateGre(const std::string &name) const = 0;
-  virtual void SaveGre(const GREConfig &gre) const = 0;
+  virtual void SaveGre(const GreInterfaceConfig &gre) const = 0;
 
   // VXLAN operations
   virtual void CreateVxlan(const std::string &name) const = 0;
-  virtual void SaveVxlan(const VXLANConfig &vxlan) const = 0;
+  virtual void SaveVxlan(const VxlanInterfaceConfig &vxlan) const = 0;
 
   // CARP operations
-  virtual void SaveCarp(const CarpConfig &carp) const = 0;
+  virtual void SaveCarp(const CarpInterfaceConfig &carp) const = 0;
 
   // Route operations
   virtual void AddRoute(const RouteConfig &route) const = 0;
   virtual void DeleteRoute(const RouteConfig &route) const = 0;
+
+  virtual void CreateEpair(const std::string &name) const = 0;
+  virtual void SaveEpair(const EpairInterfaceConfig &epair) const = 0;
 
   // VRF helpers
   // Use `GetVrfs(...)` for retrieving VRF definitions.
@@ -206,4 +206,26 @@ public:
     }
     return std::nullopt;
   }
+  enum class IfreqIntField { Metric, Fib, Mtu };
+
+  // Helper methods used by system-specific implementations (defined in
+  // src/system/freebsd/*.cpp)
+  virtual void prepare_ifreq(struct ifreq &ifr, const std::string &name) const = 0;
+  virtual void cloneInterface(const std::string &name, unsigned long cmd) const = 0;
+  virtual std::optional<int> query_ifreq_int(const std::string &ifname,
+                                     unsigned long req,
+                                     IfreqIntField which) const = 0;
+  virtual std::optional<std::pair<std::string, int>>
+  query_ifreq_sockaddr(const std::string &ifname, unsigned long req) const = 0;
+  virtual std::vector<std::string> query_interface_groups(const std::string &ifname)
+      const = 0;
+  virtual void populateInterfaceMetadata(InterfaceConfig &ic) const = 0;
+
+  // Interface type detection
+    virtual bool interfaceIsLagg(const std::string &ifname) const = 0;
+    virtual bool interfaceIsBridge(const std::string &ifname) const = 0;
+
+  // VRF matching helper
+    virtual bool matches_vrf(const InterfaceConfig &ic,
+                                     const std::optional<VRFConfig> &vrf) const = 0;
 };
