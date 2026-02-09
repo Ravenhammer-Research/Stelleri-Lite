@@ -26,26 +26,19 @@
  */
 
 #include "NdpToken.hpp"
+#include "NdpConfig.hpp"
 
 NdpToken::NdpToken(std::string ip) : ip_(std::move(ip)) {}
 
-std::string NdpToken::toString() const {
-  std::string result = "ndp " + ip_;
-
-  if (mac) {
-    result += " mac " + *mac;
-  }
-
-  if (iface) {
-    result += " interface " + *iface;
-  }
-
-  if (permanent) {
-    result += " permanent";
-  } else if (temp) {
-    result += " temp";
-  }
-
+// Static renderer for NdpConfig
+std::string NdpToken::toString(NdpConfig *cfg) {
+  if (!cfg) return std::string();
+  std::string result = "ndp " + cfg->ip;
+  if (!cfg->mac.empty()) result += " mac " + cfg->mac;
+  if (cfg->iface) result += " interface " + *cfg->iface;
+  if (cfg->permanent) result += " permanent";
+  if (cfg->router) result += " router";
+  if (cfg->expire) result += " expire " + std::to_string(*cfg->expire);
   return result;
 }
 

@@ -29,12 +29,10 @@
 
 VRFToken::VRFToken(int table) : table_(table) {}
 
-std::string VRFToken::toString() const {
-  std::string result = "vrf " + std::to_string(table_);
-  if (next_) {
-    result += " " + next_->toString();
-  }
-  return result;
+// Static renderer for VRFConfig
+std::string VRFToken::toString(VRFConfig *cfg) {
+  if (!cfg) return std::string();
+  return std::string("vrf ") + std::to_string(cfg->table);
 }
 
 std::vector<std::string> VRFToken::autoComplete(std::string_view) const {

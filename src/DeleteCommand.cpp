@@ -27,13 +27,7 @@
 
 #include "DeleteCommand.hpp"
 
-std::string DeleteCommand::toString() const {
-  std::string result = "delete";
-  if (next_) {
-    result += " " + next_->toString();
-  }
-  return result;
-}
+// toString(ConfigData*) removed — implementation deleted per request
 
 std::vector<std::string> DeleteCommand::autoComplete(std::string_view) const {
   return {};

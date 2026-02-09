@@ -27,13 +27,7 @@
 
 #include "ShowToken.hpp"
 
-std::string ShowToken::toString() const {
-  std::string result = "show";
-  if (next_) {
-    result += " " + next_->toString();
-  }
-  return result;
-}
+std::string ShowToken::toString() const { return "show"; }
 
 std::vector<std::string> ShowToken::autoComplete(std::string_view partial) const {
   // Suggest the canonical nouns that follow 'show'

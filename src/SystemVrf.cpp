@@ -186,31 +186,18 @@ std::vector<RouteConfig> SystemConfigurationManager::GetStaticRoutes(
   return routes;
 }
 
-std::vector<VRFConfig> SystemConfigurationManager::GetNetworkInstances(
-    const std::optional<int> &table) const {
+std::vector<VRFConfig> SystemConfigurationManager::GetVrfs() const {
   std::vector<VRFConfig> out;
-  std::unordered_map<int, VRFConfig> seen;
-  auto ifs = GetInterfaces(std::nullopt);
-  for (const auto &ic : ifs) {
-    if (!ic.vrf)
-      continue;
-    if (table && *table != ic.vrf->table)
-      continue;
-    VRFConfig v = *ic.vrf;
-    seen[v.table] = v;
-  }
-  for (const auto &kv : seen)
-    out.emplace_back(kv.second);
-  return out;
-}
-
-int SystemConfigurationManager::GetFibs() const {
   int fibs = 1;
   size_t len = sizeof(fibs);
-  if (sysctlbyname("net.fibs", &fibs, &len, nullptr, 0) == 0) {
-    return fibs;
+  if (sysctlbyname("net.fibs", &fibs, &len, nullptr, 0) != 0)
+    fibs = 1;
+  if (fibs <= 0)
+    fibs = 1;
+  for (int i = 0; i < fibs; ++i) {
+    out.emplace_back(VRFConfig(i));
   }
-  return 1;
+  return out;
 }
 
 std::vector<RouteConfig> SystemConfigurationManager::GetRoutes(

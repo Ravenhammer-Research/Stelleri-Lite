@@ -26,32 +26,11 @@
  */
 
 #include "ArpToken.hpp"
+#include "ArpConfig.hpp"
 
 ArpToken::ArpToken(std::string ip) : ip_(std::move(ip)) {}
 
-std::string ArpToken::toString() const {
-  std::string result = "arp " + ip_;
-
-  if (mac) {
-    result += " mac " + *mac;
-  }
-
-  if (iface) {
-    result += " interface " + *iface;
-  }
-
-  if (permanent) {
-    result += " permanent";
-  } else if (temp) {
-    result += " temp";
-  }
-
-  if (pub) {
-    result += " pub";
-  }
-
-  return result;
-}
+// toString(ConfigData*) removed — implementation deleted per request
 
 std::vector<std::string> ArpToken::autoComplete(std::string_view partial) const {
   std::vector<std::string> options = {"mac", "interface", "permanent", "temp", "pub"};
@@ -109,4 +88,16 @@ ArpToken::parseFromTokens(const std::vector<std::string> &tokens, size_t start,
 
   next = i;
   return tok;
+}
+
+// Static renderer for ArpConfig
+std::string ArpToken::toString(ArpConfig *cfg) {
+  if (!cfg) return std::string();
+  std::string result = "arp " + cfg->ip;
+  if (!cfg->mac.empty()) result += " mac " + cfg->mac;
+  if (cfg->iface) result += " interface " + *cfg->iface;
+  if (cfg->permanent) result += " permanent";
+  if (cfg->published) result += " pub";
+  if (cfg->expire) result += " expire " + std::to_string(*cfg->expire);
+  return result;
 }

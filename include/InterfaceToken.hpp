@@ -33,12 +33,20 @@
 #pragma once
 
 #include "BridgeInterfaceConfig.hpp"
+#include "BridgeConfig.hpp"
+#include "CarpConfig.hpp"
 #include "ConfigurationManager.hpp"
+#include "GREConfig.hpp"
 #include "InterfaceType.hpp"
 #include "LaggConfig.hpp"
+#include "InterfaceConfig.hpp"
 #include "Token.hpp"
+#include "SixToFourConfig.hpp"
+#include "TapConfig.hpp"
 #include "TunnelConfig.hpp"
 #include "VLANConfig.hpp"
+#include "VXLANConfig.hpp"
+#include "WlanConfig.hpp"
 #include <iostream>
 #include <optional>
 #include <string>
@@ -46,8 +54,23 @@
 class InterfaceToken : public Token {
 public:
   InterfaceToken(InterfaceType t, std::string name);
+  
+  /**
+   * @brief Render an InterfaceConfig to a command string
+   */
+  static std::string toString(InterfaceConfig *cfg);
 
-  std::string toString() const override;
+  /* overloads for specific interface-related configs */
+  static std::string toString(BridgeConfig *cfg);
+  static std::string toString(CarpConfig *cfg);
+  static std::string toString(GREConfig *cfg);
+  static std::string toString(LaggConfig *cfg);
+  static std::string toString(SixToFourConfig *cfg);
+  static std::string toString(TapConfig *cfg);
+  static std::string toString(TunnelConfig *cfg);
+  static std::string toString(VLANConfig *cfg);
+  static std::string toString(VXLANConfig *cfg);
+  static std::string toString(WlanConfig *cfg);
   std::vector<std::string> autoComplete(std::string_view partial) const override;
   std::vector<std::string> autoComplete(const std::vector<std::string> &tokens,
                                         std::string_view partial,

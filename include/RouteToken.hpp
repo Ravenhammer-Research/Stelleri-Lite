@@ -43,12 +43,13 @@
 #include <optional>
 #include <sstream>
 #include <string>
+#include "RouteConfig.hpp"
 
 class RouteToken : public Token {
 public:
   explicit RouteToken(std::string prefix);
 
-  std::string toString() const override;
+  
   std::vector<std::string> autoComplete(std::string_view) const override;
   std::unique_ptr<Token> clone() const override;
 
@@ -71,4 +72,9 @@ public:
 
 private:
   std::string prefix_;
+public:
+  /**
+   * @brief Render a RouteConfig to a command string
+   */
+  static std::string toString(RouteConfig *cfg);
 };

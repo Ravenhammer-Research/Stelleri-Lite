@@ -83,11 +83,8 @@ public:
       const std::optional<VRFConfig> &vrf = std::nullopt) const override;
   std::vector<RouteConfig>
   GetRoutes(const std::optional<VRFConfig> &vrf = std::nullopt) const override;
-  std::vector<VRFConfig> GetNetworkInstances(
-      const std::optional<int> &table = std::nullopt) const override;
-
-  /** @brief Get the number of configured FIBs from net.fibs sysctl */
-  int GetFibs() const override;
+    /** @brief Return discovered VRF configurations on this system */
+    std::vector<VRFConfig> GetVrfs() const override;
 
   // ARP/NDP neighbor cache management
   std::vector<ArpConfig>

@@ -51,7 +51,7 @@ public:
   explicit ProtocolsToken(std::string proto);
 
   /** @brief Convert to command string */
-  std::string toString() const override;
+  
 
   /** @brief Get autocomplete suggestions (currently only "static") */
   std::vector<std::string> autoComplete(std::string_view) const override;

@@ -33,6 +33,7 @@
 #pragma once
 
 #include "Token.hpp"
+#include "ArpConfig.hpp"
 #include <memory>
 #include <optional>
 #include <string>
@@ -41,7 +42,11 @@ class ArpToken : public Token {
 public:
   explicit ArpToken(std::string ip);
 
-  std::string toString() const override;
+  /**
+   * @brief Render an ArpConfig to a command string
+   */
+  static std::string toString(ArpConfig *cfg);
+
   std::vector<std::string> autoComplete(std::string_view) const override;
   std::unique_ptr<Token> clone() const override;
 

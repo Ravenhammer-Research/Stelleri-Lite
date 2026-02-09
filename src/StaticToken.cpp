@@ -27,13 +27,7 @@
 
 #include "StaticToken.hpp"
 
-std::string StaticToken::toString() const {
-  std::string result = "static";
-  if (next_) {
-    result += " " + next_->toString();
-  }
-  return result;
-}
+// toString(ConfigData*) removed — implementation deleted per request
 
 std::vector<std::string> StaticToken::autoComplete(std::string_view) const {
   return {};

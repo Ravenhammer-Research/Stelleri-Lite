@@ -28,31 +28,17 @@
 #include "RouteToken.hpp"
 
 RouteToken::RouteToken(std::string prefix) : prefix_(std::move(prefix)) {}
-
-std::string RouteToken::toString() const {
-  std::string result = "route protocol static dest " + prefix_;
-
-  if (blackhole) {
-    result += " nexthop blackhole";
-  } else if (reject) {
-    result += " nexthop reject";
-  } else if (nexthop) {
-    result += " nexthop " + nexthop->toString();
-    if (interface) {
-      result += " interface " + interface->name();
-    }
-  } else if (interface) {
-    // No nexthop IP, only interface - use nexthop-interface
-    result += " nexthop-interface " + interface->name();
-  }
-
-  if (vrf) {
-    result += " vrf " + std::to_string(vrf->table());
-  }
-
-  if (next_) {
-    result += " " + next_->toString();
-  }
+// Static renderer for RouteConfig
+std::string RouteToken::toString(RouteConfig *cfg) {
+  if (!cfg) return std::string();
+  std::string result = "route protocol static dest " + cfg->prefix;
+  if (cfg->nexthop) result += " nexthop " + *cfg->nexthop;
+  if (cfg->iface) result += " interface " + *cfg->iface;
+  if (cfg->vrf) result += " vrf " + std::to_string(*cfg->vrf);
+  if (cfg->blackhole) result += " blackhole";
+  if (cfg->reject) result += " reject";
+  if (cfg->scope) result += " scope " + *cfg->scope;
+  if (cfg->expire) result += " expire " + std::to_string(*cfg->expire);
   return result;
 }
 

@@ -38,6 +38,7 @@
 #include <vector>
 
 class ConfigurationManager; // forward declaration
+class ConfigData; // forward declaration for toString parameter
 
 /**
  * @brief Base class for command tokens in the parser chain
@@ -50,10 +51,18 @@ public:
   virtual ~Token();
 
   /**
-   * @brief Convert token chain to command string
-   * @return String representation of this token and its chain
+   * @brief (removed) Convert token chain to command string
+   * Previously declared here; removed per recent refactor.
    */
-  virtual std::string toString() const = 0;
+  /**
+   * @brief Short string representation for diagnostics
+   *
+   * This instance method is intentionally lightweight and used for
+   * diagnostic/error messages (e.g., in CommandDispatcher). Subclasses
+   * that represent concrete verb tokens (show/set/delete) override it to
+   * return the verb text.
+   */
+  virtual std::string toString() const { return std::string(); }
 
   /**
    * @brief Provide completion suggestions for partial input

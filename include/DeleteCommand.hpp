@@ -46,7 +46,7 @@ public:
   DeleteCommand() = default;
 
   /** @brief Convert to command string */
-  std::string toString() const override;
+  
 
   /** @brief Get autocomplete suggestions (none for delete command) */
   std::vector<std::string> autoComplete(std::string_view) const override;

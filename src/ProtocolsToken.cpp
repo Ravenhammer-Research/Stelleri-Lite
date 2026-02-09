@@ -29,13 +29,7 @@
 
 ProtocolsToken::ProtocolsToken(std::string proto) : proto_(std::move(proto)) {}
 
-std::string ProtocolsToken::toString() const {
-  std::string result = "protocols " + proto_;
-  if (next_) {
-    result += " " + next_->toString();
-  }
-  return result;
-}
+// toString(ConfigData*) removed — implementation deleted per request
 
 std::vector<std::string> ProtocolsToken::autoComplete(std::string_view) const {
   return {"static"};

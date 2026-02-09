@@ -91,8 +91,7 @@ public:
   GetStaticRoutes(const std::optional<VRFConfig> &vrf = std::nullopt) const = 0;
   virtual std::vector<RouteConfig>
   GetRoutes(const std::optional<VRFConfig> &vrf = std::nullopt) const = 0;
-  virtual std::vector<VRFConfig>
-  GetNetworkInstances(const std::optional<int> &table = std::nullopt) const = 0;
+    virtual std::vector<VRFConfig> GetVrfs() const = 0;
 
   // ARP/NDP neighbor cache management
   virtual std::vector<ArpConfig> GetArpEntries(
@@ -175,8 +174,8 @@ public:
   virtual void AddRoute(const RouteConfig &route) const = 0;
   virtual void DeleteRoute(const RouteConfig &route) const = 0;
 
-  // VRF / FIB helpers
-  virtual int GetFibs() const = 0;
+    // VRF helpers
+    // Use `GetVrfs(...)` for retrieving VRF definitions.
 
   // ── Convenience helpers ──────────────────────────────────────────────
 

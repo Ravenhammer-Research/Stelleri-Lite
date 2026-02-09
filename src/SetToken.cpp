@@ -27,13 +27,9 @@
 
 #include "SetToken.hpp"
 
-std::string SetToken::toString() const {
-  std::string result = "set";
-  if (next_) {
-    result += " " + next_->toString();
-  }
-  return result;
-}
+// toString(ConfigData*) removed — implementation deleted per request
+
+std::string SetToken::toString() const { return "set"; }
 
 std::vector<std::string> SetToken::autoComplete(std::string_view partial) const {
   std::vector<std::string> options = {"interface", "interfaces", "route", "arp", "ndp", "vrf", "protocols"};
