@@ -61,10 +61,10 @@ The prompt `net>` accepts commands with tab-completion and history navigation.
 
 ### Direct Command Mode
 
-Execute a single command:
+Execute a single command (pass command as positional arguments):
 
 ```bash
-./build/net -c "show interface"
+./build/net show interface
 ```
 
 ### Reading from STDIN
@@ -122,12 +122,12 @@ delete arp ip <address> [interface <name>]
 delete ndp ip <address> [interface <name>]
 ```
 
-## Examples
+### Examples
 
 ### Show All Interfaces
 
 ```bash
-./build/net -c "show interface"
+./build/net show interface
 ```
 
 Output:
@@ -157,7 +157,7 @@ Index Interface Group  Type          Address       Status   MTU VRF Flags
 Show only virtual (epair) interfaces:
 
 ```bash
-./build/net -c "show interface type virtual"
+./build/net show interface type virtual
 ```
 
 Output:
@@ -172,7 +172,7 @@ epair14a   0 1500   DOWN BRMs  epair14b   2 1500     UP UBRMs
 Show interfaces in a specific group:
 
 ```bash
-./build/net -c "show interface group epair"
+./build/net show interface group epair
 ```
 
 ### Managing Addresses
@@ -180,13 +180,13 @@ Show interfaces in a specific group:
 Add an IPv4 address to an interface (requires root):
 
 ```bash
-sudo ./build/net -c "set interface name epair14b inet address 192.0.0.8/31"
+sudo ./build/net set interface name epair14b inet address 192.0.0.8/31
 ```
 
 Add an IPv6 address:
 
 ```bash
-sudo ./build/net -c "set interface name lo1 inet6 address 2001:db8::1/64"
+sudo ./build/net set interface name lo1 inet6 address 2001:db8::1/64
 ```
 
 Delete an address from an interface (requires root):
@@ -208,7 +208,7 @@ delete interface: failed to remove address '192.0.0.4/31': Operation not permitt
 Show routes in default VRF:
 
 ```bash
-./build/net -c "show routes"
+./build/net show routes
 ```
 
 Output:
@@ -227,25 +227,25 @@ Destination       Gateway  Interface Flags Scope Expire
 Show routes in specific VRF:
 
 ```bash
-./build/net -c "show routes vrf 2"
+./build/net show routes vrf 2
 ```
 
 Add a static route (requires root):
 
 ```bash
-sudo ./build/net -c "set route protocol static dest 192.168.52.0/24 nexthop 10.1.0.1 interface re0.25"
+sudo ./build/net set route protocol static dest 192.168.52.0/24 nexthop 10.1.0.1 interface re0.25
 ```
 
 Add a blackhole/reject route (requires root):
 
 ```bash
-sudo ./build/net -c "set route protocol static dest 192.168.100.0/24 nexthop reject vrf 2"
+sudo ./build/net set route protocol static dest 192.168.100.0/24 nexthop reject vrf 2
 ```
 
 Delete a route (requires root):
 
 ```bash
-sudo ./build/net -c "delete route protocol static dest 192.168.52.0/24 nexthop 10.1.0.1"
+sudo ./build/net delete route protocol static dest 192.168.52.0/24 nexthop 10.1.0.1
 ```
 
 ### ARP and NDP Management
@@ -253,7 +253,7 @@ sudo ./build/net -c "delete route protocol static dest 192.168.52.0/24 nexthop 1
 Show ARP cache:
 
 ```bash
-./build/net -c "show arp"
+./build/net show arp
 ```
 
 Output:
@@ -267,25 +267,25 @@ IP Address    MAC Address       Interface Expire   Flags
 Show NDP (IPv6 neighbor discovery) cache:
 
 ```bash
-./build/net -c "show ndp"
+./build/net show ndp
 ```
 
 Add a static ARP entry (requires root):
 
 ```bash
-sudo ./build/net -c "set arp ip 10.1.0.50 mac 00:11:22:33:44:55 interface re0.25 permanent"
+sudo ./build/net set arp ip 10.1.0.50 mac 00:11:22:33:44:55 interface re0.25 permanent
 ```
 
 Add a static NDP entry (requires root):
 
 ```bash
-sudo ./build/net -c "set ndp ip fe80::1234 mac 00:11:22:33:44:55 interface re0 permanent"
+sudo ./build/net set ndp ip fe80::1234 mac 00:11:22:33:44:55 interface re0 permanent
 ```
 
 Delete an ARP entry (requires root):
 
 ```bash
-sudo ./build/net -c "delete arp ip 10.1.0.50"
+sudo ./build/net delete arp ip 10.1.0.50
 ```
 
 ## Configuration Generation
