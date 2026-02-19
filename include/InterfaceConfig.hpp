@@ -114,7 +114,6 @@ public:
   bool isBridge() const;
   bool isLagg() const;
   bool isVlan() const;
-  bool isTunnelish() const;
   bool isVirtual() const;
   bool isWlan() const;
   bool isSixToFour() const;

@@ -26,6 +26,7 @@
  */
 
 #include "VlanTableFormatter.hpp"
+#include "ConfigurationManager.hpp"
 #include "InterfaceConfig.hpp"
 #include "InterfaceFlags.hpp"
 #include "InterfaceType.hpp"
@@ -33,8 +34,6 @@
 #include "VlanFlags.hpp"
 #include "VlanProto.hpp"
 #include <algorithm>
-#include <iomanip>
-#include <sstream>
 
 static std::string vlanProtoToString(const std::optional<VLANProto> &p) {
   if (!p)
@@ -85,31 +84,46 @@ VlanTableFormatter::format(const std::vector<InterfaceConfig> &interfaces) {
     return "No VLAN interfaces found.\n";
   }
 
-  std::ostringstream oss;
+  // Re-query via the manager to get full VlanInterfaceConfig objects
+  // (the input vector is sliced to base InterfaceConfig).
+  std::vector<VlanInterfaceConfig> vlanIfaces;
+  if (mgr_)
+    vlanIfaces = mgr_->GetVLANInterfaces();
 
-  // Table header (VLAN-specific: include VLAN name and flags)
-  oss << std::left << std::setw(15) << "Interface" << std::setw(8) << "VLAN ID"
-      << std::setw(12) << "Name" << std::setw(15) << "Parent" << std::setw(6)
-      << "PCP" << std::setw(8) << "MTU" << std::setw(8) << "Flags"
-      << "\n";
-  oss << std::string(72, '-') << "\n";
+  // Define columns (key, title, priority, minWidth, leftAlign)
+  addColumn("Interface", "Interface", 10, 9, true);
+  addColumn("VLANID", "VLAN ID", 9, 7, true);
+  addColumn("Name", "Name", 6, 4, true);
+  addColumn("Parent", "Parent", 8, 6, true);
+  addColumn("PCP", "PCP", 4, 3, true);
+  addColumn("MTU", "MTU", 5, 3, true);
+  addColumn("Flags", "Flags", 3, 5, true);
+  addColumn("Proto", "Proto", 5, 5, true);
+  addColumn("Options", "Options", 2, 7, true);
 
   for (const auto &ic : interfaces) {
     if (ic.type != InterfaceType::VLAN)
       continue;
 
-    // Try to use explicit VLAN payload if present; otherwise derive from name
+    // Find matching VlanInterfaceConfig from the re-queried data
+    const VlanInterfaceConfig *vptr = nullptr;
+    for (const auto &v : vlanIfaces) {
+      if (v.name == ic.name) {
+        vptr = &v;
+        break;
+      }
+    }
+
     int vid = -1;
     std::string parent = "-";
     std::optional<int> pcp;
-    const VlanInterfaceConfig *vptr = dynamic_cast<const VlanInterfaceConfig *>(&ic);
     if (vptr) {
       vid = vptr->id;
       parent = vptr->parent ? *vptr->parent : std::string("-");
       if (vptr->pcp)
         pcp = static_cast<int>(*vptr->pcp);
     } else {
-      // Attempt to parse forms like "re0.25" (parent.name notation).
+      // Fallback: parse forms like "re0.25" (parent.name notation).
       auto pos = ic.name.find('.');
       if (pos != std::string::npos) {
         parent = ic.name.substr(0, pos);
@@ -127,9 +141,11 @@ VlanTableFormatter::format(const std::vector<InterfaceConfig> &interfaces) {
         pcp ? std::to_string(static_cast<int>(*pcp)) : std::string("-");
     std::string nameStr = vptr ? vptr->name : std::string("-");
     std::string protoStr =
-      (vptr ? vlanProtoToString(vptr->proto) : std::string("-"));
+        vptr ? vlanProtoToString(vptr->proto) : std::string("-");
     std::string flagsStr =
-        (ic.flags ? flagsToString(*ic.flags) : std::string("-"));
+        ic.flags ? flagsToString(*ic.flags) : std::string("-");
+    std::string mtuStr =
+        ic.mtu ? std::to_string(*ic.mtu) : std::string("-");
     std::string optionsStr = "-";
     if (vptr && vptr->options_bits) {
       auto s = vlanCapsToString(*vptr->options_bits);
@@ -137,15 +153,25 @@ VlanTableFormatter::format(const std::vector<InterfaceConfig> &interfaces) {
         optionsStr = s;
     }
 
-    // Add an Options column (capability flags from SIOCGIFCAP)
-    oss << std::left << std::setw(15) << ic.name << std::setw(8) << vidStr
-        << std::setw(12) << nameStr << std::setw(15) << parent << std::setw(6)
-        << pcpStr << std::setw(8)
-        << (ic.mtu ? std::to_string(*ic.mtu) : std::string("-")) << std::setw(8)
-        << flagsStr << std::setw(12) << protoStr << std::setw(20) << optionsStr
-        << "\n";
+    addRow({ic.name, vidStr, nameStr, parent, pcpStr, mtuStr, flagsStr,
+            protoStr, optionsStr});
   }
 
-  oss << "\n";
-  return oss.str();
+  // Sort by interface name
+  setSortColumn(0);
+
+  const std::string B = "\x1b[1m";
+  const std::string R = "\x1b[0m";
+  std::string legend;
+  legend += "Flags: ";
+  legend += B + "U" + R + "=UP, ";
+  legend += B + "B" + R + "=BROADCAST, ";
+  legend += B + "R" + R + "=RUNNING, ";
+  legend += B + "M" + R + "=MULTICAST, ";
+  legend += B + "s" + R + "=SIMPLEX";
+  legend += "\n\n";
+
+  auto out = renderTable(1000);
+  out = legend + out;
+  return out;
 }

@@ -37,6 +37,8 @@
 #include <string>
 #include <vector>
 
+class ConfigurationManager;
+
 /**
  * @brief Formats VLAN interface configuration as ASCII table
  *
@@ -44,7 +46,13 @@
  */
 class VlanTableFormatter : public TableFormatter<InterfaceConfig> {
 public:
-  VlanTableFormatter() = default;
+  explicit VlanTableFormatter(ConfigurationManager *mgr = nullptr)
+      : mgr_(mgr) {}
+
+private:
+  ConfigurationManager *mgr_ = nullptr;
+
+public:
 
   /**
    * @brief Format VLAN interfaces into a detailed table

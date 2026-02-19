@@ -97,6 +97,13 @@ public:
   std::optional<int> address_family; // AF_INET or AF_INET6 when inet/inet6 used
   std::optional<int> mtu;
   std::optional<bool> status; // true=up, false=down
+  std::optional<std::string> description; ///< Interface description text
+
+  // Tunnel source/destination (tun, gif, ovpn, ipsec, gre)
+  std::optional<std::string> source;
+  std::optional<std::string> destination;
+
+  // Sub-config blocks — type-specific data lives in the config objects
   std::optional<BridgeInterfaceConfig> bridge;
   std::optional<LaggInterfaceConfig> lagg;
   std::optional<VlanInterfaceConfig> vlan;
@@ -104,6 +111,11 @@ public:
   std::optional<GifInterfaceConfig> gif;
   std::optional<OvpnInterfaceConfig> ovpn;
   std::optional<IpsecInterfaceConfig> ipsec;
+  std::optional<VxlanInterfaceConfig> vxlan;
+  std::optional<WlanInterfaceConfig> wlan;
+  std::optional<GreInterfaceConfig> gre;
+  std::optional<CarpInterfaceConfig> carp;
+
   // (Rendering moved to execute handlers. Token is parse-only.)
 
   // Parse an `interfaces` sequence starting at index `start` in `tokens`.

@@ -30,34 +30,26 @@
 #include "InterfaceFlags.hpp"
 #include "InterfaceType.hpp"
 #include "EpairInterfaceConfig.hpp"
-#include <algorithm>
-#include <array>
-#include <iomanip>
 #include <map>
 #include <optional>
-#include <sstream>
 #include <string>
+#include <utility>
 
 std::string
 EpairTableFormatter::format(const std::vector<InterfaceConfig> &interfaces) {
   if (interfaces.empty())
     return "No epair interfaces found.\n";
 
-  // Columns: peer_a | VRF | MTU | Status | Flags | peer_b | VRF | MTU | Status
-  // | Flags
-  addColumn("peer_a", "peer_a", 12, 2, true);
-  addColumn("vrf_a", "VRF", 4, 1, false);
-  addColumn("mtu_a", "MTU", 5, 1, false);
-  addColumn("status_a", "Status", 6, 1, false);
-  addColumn("flags_a", "Flags", 6, 1, true);
-  addColumn("peer_b", "peer_b", 12, 2, true);
-  addColumn("vrf_b", "VRF", 4, 1, false);
-  addColumn("mtu_b", "MTU", 5, 1, false);
-  addColumn("status_b", "Status", 6, 1, false);
-  addColumn("flags_b", "Flags", 6, 1, true);
+  // Columns: Interface | Peer #1 | Peer #1 VRF | Peer #1 Status | Peer #2 | Peer #2 VRF | Peer #2 Status
+  addColumn("Interface", "Interface", 12, 9, true);
+  addColumn("peer1", "Peer #1", 10, 7, true);
+  addColumn("vrf1", "Peer #1 VRF", 6, 3, true);
+  addColumn("status1", "Peer #1 Status", 8, 6, true);
+  addColumn("peer2", "Peer #2", 10, 7, true);
+  addColumn("vrf2", "Peer #2 VRF", 6, 3, true);
+  addColumn("status2", "Peer #2 Status", 8, 6, true);
 
-  // Build a map of pairs keyed by base name (strip trailing a/b when
-  // applicable)
+  // Build a map of pairs keyed by base name (strip trailing a/b)
   struct PairInfo {
     std::optional<InterfaceConfig> a;
     std::optional<InterfaceConfig> b;
@@ -69,7 +61,6 @@ EpairTableFormatter::format(const std::vector<InterfaceConfig> &interfaces) {
     if (ic.type != InterfaceType::Virtual)
       continue;
     std::string nm = ic.name;
-    // detect trailing 'a' or 'b' (e.g., epair14a)
     if (!nm.empty()) {
       char last = nm.back();
       if ((last == 'a' || last == 'b')) {
@@ -89,36 +80,32 @@ EpairTableFormatter::format(const std::vector<InterfaceConfig> &interfaces) {
   for (const auto &kv : pairs) {
     const auto &pi = kv.second;
 
-    auto format_side = [&](const std::optional<InterfaceConfig> &opt) {
+    auto format_side =
+        [](const std::optional<InterfaceConfig> &opt)
+        -> std::pair<std::string, std::pair<std::string, std::string>> {
       if (!opt.has_value())
-        return std::array<std::string, 4>{"-", "-", "-", "-"};
+        return {"-", {"-", "-"}};
       const InterfaceConfig &ii = *opt;
       std::string vrf =
           ii.vrf ? std::to_string(ii.vrf->table) : std::string("-");
-      std::string mtu = ii.mtu ? std::to_string(*ii.mtu) : std::string("-");
       std::string status = "-";
       if (ii.flags) {
-        uint32_t f = *ii.flags;
-        if (f & static_cast<uint32_t>(InterfaceFlag::UP))
-          status = "UP";
+        if (hasFlag(*ii.flags, InterfaceFlag::RUNNING))
+          status = "active";
+        else if (hasFlag(*ii.flags, InterfaceFlag::UP))
+          status = "no-carrier";
         else
-          status = "DOWN";
+          status = "down";
       }
-      std::string flags =
-          ii.flags ? flagsToString(*ii.flags) : std::string("-");
-      return std::array<std::string, 4>{vrf, mtu, status, flags};
+      return {ii.name, {vrf, status}};
     };
 
-    std::string name_a = pi.a ? pi.a->name : std::string("-");
-    auto a_side = format_side(pi.a);
-    std::string name_b = pi.b ? pi.b->name : std::string("-");
-    auto b_side = format_side(pi.b);
+    auto [name_a, a_info] = format_side(pi.a);
+    auto [name_b, b_info] = format_side(pi.b);
 
-    addRow({name_a, a_side[0], a_side[1], a_side[2], a_side[3], name_b,
-            b_side[0], b_side[1], b_side[2], b_side[3]});
+    addRow({kv.first, name_a, a_info.first, a_info.second, name_b,
+            b_info.first, b_info.second});
   }
 
-  auto out = renderTable(80);
-  out += "\n";
-  return out;
+  return renderTable(1000) + "\n";
 }

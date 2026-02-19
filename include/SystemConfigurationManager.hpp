@@ -74,8 +74,8 @@ public:
   std::vector<VxlanInterfaceConfig> GetVxlanInterfaces(
 	  const std::optional<VRFConfig> &vrf = std::nullopt) const override;
   std::vector<EpairInterfaceConfig> GetEpairInterfaces(
-	  const std::optional<VRFConfig> &vrf = std::nullopt) const override;
-  std::vector<RouteConfig>
+	  const std::optional<VRFConfig> &vrf = std::nullopt) const override;  std::vector<WlanInterfaceConfig> GetWlanInterfaces(
+	const std::optional<VRFConfig> &vrf = std::nullopt) const override;  std::vector<RouteConfig>
   GetStaticRoutes(const std::optional<VRFConfig> &vrf = std::nullopt) const override;
   std::vector<RouteConfig>
   GetRoutes(const std::optional<VRFConfig> &vrf = std::nullopt) const override;

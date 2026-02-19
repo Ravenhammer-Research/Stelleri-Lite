@@ -119,9 +119,7 @@ inline std::string flagsToString(uint32_t flags) {
   if (flags & static_cast<uint32_t>(InterfaceFlag::LINK1))
     result += "1"; // LINK1
   if (flags & static_cast<uint32_t>(InterfaceFlag::LINK2))
-    result += "2"; // LINK2
-  if (flags & static_cast<uint32_t>(InterfaceFlag::ALTPHYS))
-    result += "y"; // ALTPHYS (alternate phys)
+    result += "2"; // LINK2 (also ALTPHYS)
   if (flags & static_cast<uint32_t>(InterfaceFlag::CANTCONFIG))
     result += "C"; // CANTCONFIG
   if (flags & static_cast<uint32_t>(InterfaceFlag::PPROMISC))

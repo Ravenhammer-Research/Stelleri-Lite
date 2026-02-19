@@ -36,6 +36,7 @@
 #pragma once
 
 #include "ConfigurationManager.hpp"
+#include "WlanInterfaceConfig.hpp"
 #include <stdexcept>
 
 class NetconfConfigurationManager : public ConfigurationManager {
@@ -86,6 +87,11 @@ public:
   }
 
   std::vector<VirtualInterfaceConfig> GetVirtualInterfaces(
+      const std::optional<VRFConfig> & /*vrf*/ = std::nullopt) const override {
+    return {};
+  }
+
+  std::vector<WlanInterfaceConfig> GetWlanInterfaces(
       const std::optional<VRFConfig> & /*vrf*/ = std::nullopt) const override {
     return {};
   }

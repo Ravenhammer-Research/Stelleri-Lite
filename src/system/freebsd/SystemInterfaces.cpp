@@ -28,7 +28,6 @@
 #include "InterfaceConfig.hpp"
 #include "Socket.hpp"
 #include "SystemConfigurationManager.hpp"
-#include "WlanAuthMode.hpp"
 #include "WlanInterfaceConfig.hpp"
 
 #include <algorithm>
@@ -39,7 +38,6 @@
 #include <net/if_dl.h>
 #include <net/if_media.h>
 #include <net/if_types.h>
-#include <net80211/ieee80211_ioctl.h>
 #include <netinet/in.h>
 #include <netinet6/in6_var.h>
 #include <string>
@@ -307,92 +305,6 @@ namespace {
     }
   }
 
-  // Populate wireless-specific metadata on a WlanInterfaceConfig.
-  void populateWlanMetadata(WlanInterfaceConfig &w, const std::string &ifname,
-                            std::optional<uint32_t> flags) {
-    try {
-      Socket s(AF_INET, SOCK_DGRAM);
-      struct ieee80211req req{};
-      std::strncpy(req.i_name, ifname.c_str(), IFNAMSIZ - 1);
-
-      // SSID
-      {
-        std::vector<char> buf(256);
-        req.i_type = IEEE80211_IOC_SSID;
-        req.i_len = static_cast<int>(buf.size());
-        req.i_data = buf.data();
-        if (ioctl(s, SIOCG80211, &req) == 0 && req.i_len > 0)
-          w.ssid = std::string(buf.data(), static_cast<size_t>(req.i_len));
-      }
-
-      // Channel
-      {
-        int ch = 0;
-        req.i_type = IEEE80211_IOC_CURCHAN;
-        req.i_data = &ch;
-        req.i_len = sizeof(ch);
-        if (ioctl(s, SIOCG80211, &req) == 0) {
-          w.channel = ch;
-        } else {
-          ch = 0;
-          req.i_type = IEEE80211_IOC_CHANNEL;
-          req.i_data = &ch;
-          req.i_len = sizeof(ch);
-          if (ioctl(s, SIOCG80211, &req) == 0)
-            w.channel = ch;
-        }
-      }
-
-      // BSSID
-      {
-        std::vector<unsigned char> mac(8);
-        req.i_type = IEEE80211_IOC_BSSID;
-        req.i_len = static_cast<int>(mac.size());
-        req.i_data = mac.data();
-        if (ioctl(s, SIOCG80211, &req) == 0 && req.i_len >= 6) {
-          char macbuf[32];
-          std::snprintf(macbuf, sizeof(macbuf), "%02x:%02x:%02x:%02x:%02x:%02x",
-                        mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-          w.bssid = std::string(macbuf);
-        }
-      }
-
-      // Parent device
-      {
-        std::vector<char> pbuf(64);
-        req.i_type = IEEE80211_IOC_IC_NAME;
-        req.i_len = static_cast<int>(pbuf.size());
-        req.i_data = pbuf.data();
-        if (ioctl(s, SIOCG80211, &req) == 0 && req.i_len > 0)
-          w.parent = std::string(pbuf.data(), static_cast<size_t>(req.i_len));
-      }
-
-      // Auth mode
-      {
-        int am = 0;
-        req.i_type = IEEE80211_IOC_AUTHMODE;
-        req.i_data = &am;
-        req.i_len = sizeof(am);
-        if (ioctl(s, SIOCG80211, &req) == 0) {
-          constexpr WlanAuthMode modes[] = {
-              WlanAuthMode::OPEN, WlanAuthMode::SHARED, WlanAuthMode::WPA,
-              WlanAuthMode::WPA2};
-          w.authmode = (am >= 0 && am < 4) ? modes[am] : WlanAuthMode::UNKNOWN;
-        }
-      }
-
-      // Status / media
-      if (flags && (*flags & IFF_RUNNING))
-        w.status = w.ssid ? "associated" : "up";
-      else
-        w.status = "down";
-
-      if (w.channel)
-        w.media = "IEEE 802.11 channel " + std::to_string(*w.channel);
-    } catch (...) {
-    }
-  }
-
 } // anonymous namespace
 
 void SystemConfigurationManager::populateInterfaceMetadata(
@@ -506,11 +418,6 @@ void SystemConfigurationManager::populateInterfaceMetadata(
     if (ioctl(s, SIOCGIFPHYS, &ifr) == 0)
       ic.phys = ifr.ifr_phys;
   } catch (...) {
-  }
-
-    if (ic.type == InterfaceType::Wireless) {
-    if (auto *w = dynamic_cast<WlanInterfaceConfig *>(&ic))
-      populateWlanMetadata(*w, ic.name, ic.flags);
   }
 }
 
@@ -852,6 +759,8 @@ std::vector<InterfaceConfig> SystemConfigurationManager::GetInterfaces(
       kv.second->type = InterfaceType::VXLAN;
     } else if (kv.second->name.rfind("ipsec", 0) == 0) {
       kv.second->type = InterfaceType::IPsec;
+    } else if (kv.second->name.rfind("wlan", 0) == 0) {
+      kv.second->type = InterfaceType::Wireless;
     }
     if (matches_vrf(*kv.second, vrf))
       out.emplace_back(std::move(*kv.second));

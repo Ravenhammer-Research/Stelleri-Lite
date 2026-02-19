@@ -101,7 +101,7 @@ namespace netcli {
     }
 
     if (interfaces.size() == 1 && !tok.name().empty()) {
-      SingleInterfaceSummaryFormatter formatter;
+      SingleInterfaceSummaryFormatter formatter(mgr);
       std::cout << formatter.format(interfaces[0]);
       return;
     }

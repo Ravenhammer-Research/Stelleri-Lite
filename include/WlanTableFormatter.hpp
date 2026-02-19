@@ -36,8 +36,14 @@
 #include "TableFormatter.hpp"
 #include <vector>
 
+class ConfigurationManager;
+
 class WlanTableFormatter : public TableFormatter<InterfaceConfig> {
 public:
-  WlanTableFormatter() = default;
+  explicit WlanTableFormatter(ConfigurationManager *mgr = nullptr)
+      : mgr_(mgr) {}
   std::string format(const std::vector<InterfaceConfig> &items) override;
+
+private:
+  ConfigurationManager *mgr_ = nullptr;
 };

@@ -151,7 +151,11 @@ std::string InterfaceTableFormatter::format(
   legend += B + "C" + R + "=CANTCONFIG, ";
   legend += B + "m" + R + "=MONITOR, ";
   legend += B + "x" + R + "=DYING, ";
-  legend += B + "z" + R + "=RENAMING";
+  legend += B + "z" + R + "=RENAMING,";
+  legend += "\n       ";
+  legend += B + "t" + R + "=STATICARP, ";
+  legend += B + "k" + R + "=STICKYARP, ";
+  legend += B + "l" + R + "=NETLINK_1";
   legend += "\n\n";
 
   // Bold index numbers in rows: wrap when adding rows above. Call format

@@ -99,6 +99,8 @@ public:
       const std::optional<VRFConfig> &vrf = std::nullopt) const = 0;
   virtual std::vector<EpairInterfaceConfig> GetEpairInterfaces(
       const std::optional<VRFConfig> &vrf = std::nullopt) const = 0;
+  virtual std::vector<WlanInterfaceConfig> GetWlanInterfaces(
+      const std::optional<VRFConfig> &vrf = std::nullopt) const = 0;
   virtual std::vector<RouteConfig>
   GetStaticRoutes(const std::optional<VRFConfig> &vrf = std::nullopt) const = 0;
   virtual std::vector<RouteConfig>

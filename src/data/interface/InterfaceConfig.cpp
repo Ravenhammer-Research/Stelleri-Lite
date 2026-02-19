@@ -135,11 +135,6 @@ bool InterfaceConfig::isLagg() const { return type == InterfaceType::Lagg; }
 
 bool InterfaceConfig::isVlan() const { return type == InterfaceType::VLAN; }
 
-bool InterfaceConfig::isTunnelish() const {
-  return type == InterfaceType::Tunnel || type == InterfaceType::Gif ||
-         type == InterfaceType::Tun;
-}
-
 bool InterfaceConfig::isVirtual() const {
   return type == InterfaceType::Virtual;
 }
@@ -147,14 +142,11 @@ bool InterfaceConfig::isVirtual() const {
 bool InterfaceConfig::isWlan() const { return type == InterfaceType::Wireless; }
 
 bool InterfaceConfig::isSixToFour() const {
-  if (!isTunnelish())
-    return false;
-  return name.rfind("gif", 0) == 0 || name.rfind("stf", 0) == 0 ||
-         name.rfind("sit", 0) == 0;
+  return name.rfind("stf", 0) == 0 || name.rfind("sit", 0) == 0;
 }
 
 bool InterfaceConfig::isTap() const {
-  return isVirtual() || name.rfind("tap", 0) == 0;
+  return name.rfind("tap", 0) == 0;
 }
 
 bool InterfaceConfig::isCarp() const {
@@ -176,12 +168,6 @@ bool InterfaceConfig::isIpsec() const {
 // Check if this interface matches a requested type (handles tunnel special
 // cases)
 bool InterfaceConfig::matchesType(InterfaceType requestedType) const {
-  // Special handling for tunnel-ish types: they all match each other
-  if (requestedType == InterfaceType::Tunnel ||
-      requestedType == InterfaceType::Gif ||
-      requestedType == InterfaceType::Tun) {
-    return isTunnelish();
-  }
   return type == requestedType;
 }
 
@@ -219,38 +205,35 @@ InterfaceConfig::formatInterfaces(const std::vector<InterfaceConfig> &ifaces,
     return formatter.format(ifaces);
   }
   if (ifaces[0].isVlan()) {
-    VlanTableFormatter formatter;
+    VlanTableFormatter formatter(mgr);
     return formatter.format(ifaces);
   }
   if (ifaces[0].isWlan()) {
-    WlanTableFormatter formatter;
+    WlanTableFormatter formatter(mgr);
     return formatter.format(ifaces);
   }
   if (ifaces[0].isSixToFour()) {
     SixToFourTableFormatter formatter;
     return formatter.format(ifaces);
   }
-  if (ifaces[0].isTunnelish()) {
-    // Choose specific tunnel formatter by concrete type or name heuristics
-    auto t = ifaces[0].type;
-    if (t == InterfaceType::Gif) {
-      GifTableFormatter formatter;
-      return formatter.format(ifaces);
-    }
-    if (t == InterfaceType::Tun) {
-      TunTableFormatter formatter;
-      return formatter.format(ifaces);
-    }
-    if (t == InterfaceType::IPsec) {
-      IpsecTableFormatter formatter;
-      return formatter.format(ifaces);
-    }
-    // Heuristic: if name prefix 'ovpn' use Ovpn formatter
+  if (checkType == InterfaceType::Gif) {
+    GifTableFormatter formatter;
+    return formatter.format(ifaces);
+  }
+  if (checkType == InterfaceType::Tun) {
+    TunTableFormatter formatter;
+    return formatter.format(ifaces);
+  }
+  if (checkType == InterfaceType::IPsec) {
+    IpsecTableFormatter formatter;
+    return formatter.format(ifaces);
+  }
+  if (checkType == InterfaceType::Tunnel) {
+    // Generic tunnel — use name heuristic for ovpn, else default Tun
     if (ifaces[0].name.rfind("ovpn", 0) == 0) {
       OvpnTableFormatter formatter;
       return formatter.format(ifaces);
     }
-    // Default to Tun formatter for generic tunnel type
     TunTableFormatter formatter;
     return formatter.format(ifaces);
   }
