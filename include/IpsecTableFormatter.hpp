@@ -12,5 +12,6 @@
 class IpsecTableFormatter : public TableFormatter<IpsecInterfaceConfig> {
 public:
   IpsecTableFormatter() = default;
-  std::string format(const std::vector<IpsecInterfaceConfig> &interfaces) override;
+  std::string
+  format(const std::vector<IpsecInterfaceConfig> &interfaces) override;
 };

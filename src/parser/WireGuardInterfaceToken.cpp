@@ -3,11 +3,10 @@
  * All rights reserved.
  */
 
+#include "ConfigurationManager.hpp"
 #include "InterfaceToken.hpp"
 #include "WireGuardInterfaceConfig.hpp"
-#include "ConfigurationManager.hpp"
 #include "WireGuardTableFormatter.hpp"
-#include <iostream>
 #include <iostream>
 
 class WireGuardInterfaceToken : public InterfaceToken {
@@ -24,14 +23,13 @@ std::string InterfaceToken::toString(WireGuardInterfaceConfig *cfg) {
   return s;
 }
 
-bool InterfaceToken::parseWireGuardKeywords(std::shared_ptr<InterfaceToken> &tok,
-                                            const std::vector<std::string> &tokens,
-                                            size_t &cur) {
+bool InterfaceToken::parseWireGuardKeywords(
+    std::shared_ptr<InterfaceToken> &tok,
+    const std::vector<std::string> &tokens, size_t &cur) {
   const std::string &kw = tokens[cur];
 
   if (kw == "listen-port" && cur + 1 < tokens.size()) {
-    tok->wg_listen_port =
-        static_cast<uint16_t>(std::stoi(tokens[cur + 1]));
+    tok->wg_listen_port = static_cast<uint16_t>(std::stoi(tokens[cur + 1]));
     cur += 2;
     return true;
   }

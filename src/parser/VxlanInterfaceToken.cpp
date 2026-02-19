@@ -3,10 +3,10 @@
  * All rights reserved.
  */
 
-#include "InterfaceToken.hpp"
-#include "VxlanInterfaceConfig.hpp"
 #include "ConfigurationManager.hpp"
+#include "InterfaceToken.hpp"
 #include "SingleVxlanSummaryFormatter.hpp"
+#include "VxlanInterfaceConfig.hpp"
 #include "VxlanTableFormatter.hpp"
 #include <iostream>
 
@@ -59,8 +59,7 @@ bool InterfaceToken::parseVxlanKeywords(std::shared_ptr<InterfaceToken> &tok,
   if (kw == "port" && cur + 1 < tokens.size()) {
     if (!tok->vxlan)
       tok->vxlan.emplace(InterfaceConfig{});
-    tok->vxlan->localPort =
-        static_cast<uint16_t>(std::stoi(tokens[cur + 1]));
+    tok->vxlan->localPort = static_cast<uint16_t>(std::stoi(tokens[cur + 1]));
     cur += 2;
     return true;
   }
@@ -75,8 +74,8 @@ InterfaceToken::vxlanCompletions(const std::string &prev) {
 }
 
 void InterfaceToken::setVxlanInterface(const InterfaceToken &tok,
-                                      ConfigurationManager *mgr,
-                                      InterfaceConfig &base, bool exists) {
+                                       ConfigurationManager *mgr,
+                                       InterfaceConfig &base, bool exists) {
   VxlanInterfaceConfig vxc(base);
   if (tok.vxlan) {
     if (tok.vxlan->vni)
@@ -94,7 +93,7 @@ void InterfaceToken::setVxlanInterface(const InterfaceToken &tok,
 }
 
 bool InterfaceToken::showVxlanInterface(const InterfaceConfig &ic,
-                                       ConfigurationManager *mgr) {
+                                        ConfigurationManager *mgr) {
   std::vector<InterfaceConfig> v = {ic};
   auto vxlans = mgr->GetVxlanInterfaces(v);
   if (!vxlans.empty()) {
@@ -105,8 +104,9 @@ bool InterfaceToken::showVxlanInterface(const InterfaceConfig &ic,
   return false;
 }
 
-std::string InterfaceToken::showVxlanInterfaces(
-    const std::vector<InterfaceConfig> &ifaces, ConfigurationManager *mgr) {
+std::string
+InterfaceToken::showVxlanInterfaces(const std::vector<InterfaceConfig> &ifaces,
+                                    ConfigurationManager *mgr) {
   VxlanTableFormatter f;
   return f.format(mgr->GetVxlanInterfaces(ifaces));
 }

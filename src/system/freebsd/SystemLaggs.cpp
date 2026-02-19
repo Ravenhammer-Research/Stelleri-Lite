@@ -25,8 +25,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "LaggInterfaceConfig.hpp"
 #include "LaggFlags.hpp"
+#include "LaggInterfaceConfig.hpp"
 #include "Socket.hpp"
 #include "SystemConfigurationManager.hpp"
 
@@ -159,7 +159,8 @@ std::vector<LaggInterfaceConfig> SystemConfigurationManager::GetLaggInterfaces(
   return out;
 }
 
-void SystemConfigurationManager::SaveLagg(const LaggInterfaceConfig &lac) const {
+void SystemConfigurationManager::SaveLagg(
+    const LaggInterfaceConfig &lac) const {
   if (lac.name.empty())
     throw std::runtime_error("LaggInterfaceConfig has no interface name set");
 
@@ -216,7 +217,7 @@ void SystemConfigurationManager::SaveLagg(const LaggInterfaceConfig &lac) const 
 
     if (ioctl(sock, SIOCSLAGGPORT, &ifr) < 0) {
       throw std::runtime_error("Failed to add port '" + member + "' to LAGG '" +
-                     lac.name + "': " + std::string(strerror(errno)));
+                               lac.name + "': " + std::string(strerror(errno)));
     }
   }
 

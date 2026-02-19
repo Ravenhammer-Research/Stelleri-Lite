@@ -25,9 +25,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "EpairInterfaceConfig.hpp"
 #include "Socket.hpp"
 #include "SystemConfigurationManager.hpp"
-#include "EpairInterfaceConfig.hpp"
 
 #include <cerrno>
 #include <cstring>
@@ -138,7 +138,7 @@ void SystemConfigurationManager::CreateEpair(const std::string &nm) const {
 }
 
 void SystemConfigurationManager::SaveEpair(
-  const EpairInterfaceConfig &vic) const {
+    const EpairInterfaceConfig &vic) const {
   // Create virtual interface if it doesn't exist, then apply all settings
   // For epair interfaces, check if the 'a' side exists since epairs come in
   // pairs

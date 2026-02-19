@@ -32,8 +32,8 @@ std::string ShowToken::toString() const { return "show"; }
 std::vector<std::string>
 ShowToken::autoComplete(std::string_view partial) const {
   // Suggest the canonical nouns that follow 'show'
-  std::vector<std::string> options = {"interface", "route", "arp", "ndp",
-                                      "vrf", "policy"};
+  std::vector<std::string> options = {"interface", "route", "arp",
+                                      "ndp",       "vrf",   "policy"};
   std::vector<std::string> matches;
   for (const auto &opt : options) {
     if (opt.rfind(partial, 0) == 0)

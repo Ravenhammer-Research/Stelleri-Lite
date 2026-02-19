@@ -46,18 +46,17 @@ SingleIpsecSummaryFormatter::format(const IpsecInterfaceConfig &ipsec) const {
     oss << "Reqid: " << *ipsec.reqid << "\n";
 
   for (const auto &sa : ipsec.security_associations) {
-    oss << "SA: protocol " << sa.protocol
-        << " spi 0x" << std::hex << sa.spi << std::dec
-        << " " << sa.src << " -> " << sa.dst
-        << " auth " << sa.algorithm;
+    oss << "SA: protocol " << sa.protocol << " spi 0x" << std::hex << sa.spi
+        << std::dec << " " << sa.src << " -> " << sa.dst << " auth "
+        << sa.algorithm;
     if (sa.enc_algorithm)
       oss << " enc " << *sa.enc_algorithm;
     oss << "\n";
   }
 
   for (const auto &sp : ipsec.security_policies) {
-    oss << "SP: direction " << sp.direction
-        << " policy \"" << sp.policy << "\"";
+    oss << "SP: direction " << sp.direction << " policy \"" << sp.policy
+        << "\"";
     if (sp.reqid)
       oss << " reqid " << *sp.reqid;
     oss << "\n";

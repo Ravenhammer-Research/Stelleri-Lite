@@ -2,11 +2,17 @@
 #include "ConfigurationManager.hpp"
 #include "InterfaceType.hpp"
 
-void PflogInterfaceConfig::save(ConfigurationManager &mgr) const { mgr.SaveInterface(*this); }
+void PflogInterfaceConfig::save(ConfigurationManager &mgr) const {
+  mgr.SaveInterface(*this);
+}
 
-void PflogInterfaceConfig::create(ConfigurationManager &mgr) const { mgr.CreateInterface(name); }
+void PflogInterfaceConfig::create(ConfigurationManager &mgr) const {
+  mgr.CreateInterface(name);
+}
 
-void PflogInterfaceConfig::destroy(ConfigurationManager &mgr) const { mgr.DestroyInterface(name); }
+void PflogInterfaceConfig::destroy(ConfigurationManager &mgr) const {
+  mgr.DestroyInterface(name);
+}
 
 PflogInterfaceConfig::PflogInterfaceConfig(const InterfaceConfig &base) {
   name = base.name;

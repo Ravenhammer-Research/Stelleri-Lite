@@ -37,16 +37,19 @@
 VlanInterfaceConfig::VlanInterfaceConfig(const InterfaceConfig &base)
     : InterfaceConfig(base) {}
 
-VlanInterfaceConfig::VlanInterfaceConfig(const InterfaceConfig &base, uint16_t id_,
-                       std::optional<std::string> parent_,
-                       std::optional<PriorityCodePoint> pcp_)
+VlanInterfaceConfig::VlanInterfaceConfig(const InterfaceConfig &base,
+                                         uint16_t id_,
+                                         std::optional<std::string> parent_,
+                                         std::optional<PriorityCodePoint> pcp_)
     : VlanInterfaceConfig(base) {
   id = id_;
   parent = parent_;
   pcp = pcp_;
 }
 
-void VlanInterfaceConfig::save(ConfigurationManager &mgr) const { mgr.SaveVlan(*this); }
+void VlanInterfaceConfig::save(ConfigurationManager &mgr) const {
+  mgr.SaveVlan(*this);
+}
 
 void VlanInterfaceConfig::create(ConfigurationManager &mgr) const {
   mgr.CreateInterface(name);

@@ -38,7 +38,8 @@
 
 class TapInterfaceConfig : public InterfaceConfig {
 public:
-  explicit TapInterfaceConfig(const InterfaceConfig &base) : InterfaceConfig(base) {}
+  explicit TapInterfaceConfig(const InterfaceConfig &base)
+      : InterfaceConfig(base) {}
   void save(ConfigurationManager &mgr) const override;
   void create(ConfigurationManager &mgr) const;
   void destroy(ConfigurationManager &mgr) const override;

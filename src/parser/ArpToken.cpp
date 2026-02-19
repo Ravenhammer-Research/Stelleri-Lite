@@ -34,8 +34,8 @@ ArpToken::ArpToken(std::string ip) : ip_(std::move(ip)) {}
 
 std::vector<std::string>
 ArpToken::autoComplete(std::string_view partial) const {
-  std::vector<std::string> options = {"ip", "mac", "interface", "permanent",
-                                      "temp", "pub"};
+  std::vector<std::string> options = {"ip",        "mac",  "interface",
+                                      "permanent", "temp", "pub"};
   std::vector<std::string> matches;
   for (const auto &opt : options) {
     if (opt.rfind(partial, 0) == 0)

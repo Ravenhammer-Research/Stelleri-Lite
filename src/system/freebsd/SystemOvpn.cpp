@@ -2,9 +2,9 @@
  * OVPN system helper implementations
  */
 
+#include "OvpnInterfaceConfig.hpp"
 #include "Socket.hpp"
 #include "SystemConfigurationManager.hpp"
-#include "OvpnInterfaceConfig.hpp"
 
 #include "IPAddress.hpp"
 

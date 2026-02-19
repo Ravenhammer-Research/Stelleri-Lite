@@ -3,11 +3,11 @@
  * All rights reserved.
  */
 
-#include "InterfaceToken.hpp"
-#include "WlanInterfaceConfig.hpp"
-#include "WlanAuthMode.hpp"
 #include "ConfigurationManager.hpp"
+#include "InterfaceToken.hpp"
 #include "SingleWlanSummaryFormatter.hpp"
+#include "WlanAuthMode.hpp"
+#include "WlanInterfaceConfig.hpp"
 #include "WlanTableFormatter.hpp"
 #include <iostream>
 
@@ -28,10 +28,17 @@ std::string InterfaceToken::toString(WlanInterfaceConfig *cfg) {
     s += " parent " + *cfg->parent;
   if (cfg->authmode) {
     switch (*cfg->authmode) {
-    case WlanAuthMode::OPEN:   s += " authmode open";   break;
-    case WlanAuthMode::SHARED: s += " authmode shared"; break;
-    case WlanAuthMode::WPA:    s += " authmode wpa";    break;
-    default: break;
+    case WlanAuthMode::OPEN:
+      s += " authmode open";
+      break;
+    case WlanAuthMode::SHARED:
+      s += " authmode shared";
+      break;
+    case WlanAuthMode::WPA:
+      s += " authmode wpa";
+      break;
+    default:
+      break;
     }
   }
   return s;
@@ -89,8 +96,8 @@ InterfaceToken::wlanCompletions(const std::string &prev) {
 }
 
 void InterfaceToken::setWlanInterface(const InterfaceToken &tok,
-                                     ConfigurationManager *mgr,
-                                     InterfaceConfig &base, bool exists) {
+                                      ConfigurationManager *mgr,
+                                      InterfaceConfig &base, bool exists) {
   WlanInterfaceConfig wc(base);
   if (tok.wlan) {
     if (tok.wlan->ssid)
@@ -108,7 +115,7 @@ void InterfaceToken::setWlanInterface(const InterfaceToken &tok,
 }
 
 bool InterfaceToken::showWlanInterface(const InterfaceConfig &ic,
-                                      ConfigurationManager *mgr) {
+                                       ConfigurationManager *mgr) {
   std::vector<InterfaceConfig> v = {ic};
   auto wlans = mgr->GetWlanInterfaces(v);
   if (!wlans.empty()) {
@@ -119,8 +126,9 @@ bool InterfaceToken::showWlanInterface(const InterfaceConfig &ic,
   return false;
 }
 
-std::string InterfaceToken::showWlanInterfaces(
-    const std::vector<InterfaceConfig> &ifaces, ConfigurationManager *mgr) {
+std::string
+InterfaceToken::showWlanInterfaces(const std::vector<InterfaceConfig> &ifaces,
+                                   ConfigurationManager *mgr) {
   WlanTableFormatter f;
   return f.format(mgr->GetWlanInterfaces(ifaces));
 }

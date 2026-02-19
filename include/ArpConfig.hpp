@@ -37,7 +37,7 @@
 #include <string>
 
 class ArpConfig : public ConfigData {
-  public:
+public:
   std::string ip;                   // IP address
   std::string mac;                  // MAC address
   std::optional<std::string> iface; // Interface name

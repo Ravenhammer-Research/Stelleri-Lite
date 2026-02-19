@@ -3,12 +3,12 @@
  * All rights reserved.
  */
 
+#include "ConfigurationManager.hpp"
 #include "InterfaceToken.hpp"
 #include "LaggInterfaceConfig.hpp"
 #include "LaggProtocol.hpp"
-#include "ConfigurationManager.hpp"
-#include "SingleLaggSummaryFormatter.hpp"
 #include "LaggTableFormatter.hpp"
+#include "SingleLaggSummaryFormatter.hpp"
 #include <iostream>
 
 class LaggInterfaceToken : public InterfaceToken {
@@ -23,12 +23,23 @@ std::string InterfaceToken::toString(LaggInterfaceConfig *cfg) {
   for (const auto &m : cfg->members)
     s += " member " + m;
   switch (cfg->protocol) {
-  case LaggProtocol::LACP:        s += " protocol lacp";        break;
-  case LaggProtocol::FAILOVER:    s += " protocol failover";    break;
-  case LaggProtocol::LOADBALANCE: s += " protocol loadbalance"; break;
-  case LaggProtocol::ROUNDROBIN:  s += " protocol roundrobin";  break;
-  case LaggProtocol::BROADCAST:   s += " protocol broadcast";   break;
-  case LaggProtocol::NONE:        break;
+  case LaggProtocol::LACP:
+    s += " protocol lacp";
+    break;
+  case LaggProtocol::FAILOVER:
+    s += " protocol failover";
+    break;
+  case LaggProtocol::LOADBALANCE:
+    s += " protocol loadbalance";
+    break;
+  case LaggProtocol::ROUNDROBIN:
+    s += " protocol roundrobin";
+    break;
+  case LaggProtocol::BROADCAST:
+    s += " protocol broadcast";
+    break;
+  case LaggProtocol::NONE:
+    break;
   }
   return s;
 }
@@ -114,14 +125,14 @@ InterfaceToken::laggCompletions(const std::string &prev) {
   if (prev.empty())
     return {"lagg", "members", "protocol"};
   if (prev == "protocol")
-    return {"lacp", "failover", "loadbalance", "roundrobin", "broadcast",
-            "none"};
+    return {"lacp",       "failover",  "loadbalance",
+            "roundrobin", "broadcast", "none"};
   return {};
 }
 
 void InterfaceToken::setLaggInterface(const InterfaceToken &tok,
-                                     ConfigurationManager *mgr,
-                                     InterfaceConfig &base, bool exists) {
+                                      ConfigurationManager *mgr,
+                                      InterfaceConfig &base, bool exists) {
   if (!tok.lagg || tok.lagg->members.empty()) {
     std::cerr << "set interface: LAGG creation typically requires member "
                  "interfaces.\n"
@@ -138,7 +149,7 @@ void InterfaceToken::setLaggInterface(const InterfaceToken &tok,
 }
 
 bool InterfaceToken::showLaggInterface(const InterfaceConfig &ic,
-                                      ConfigurationManager *mgr) {
+                                       ConfigurationManager *mgr) {
   std::vector<InterfaceConfig> v = {ic};
   auto laggs = mgr->GetLaggInterfaces(v);
   if (!laggs.empty()) {
@@ -149,8 +160,9 @@ bool InterfaceToken::showLaggInterface(const InterfaceConfig &ic,
   return false;
 }
 
-std::string InterfaceToken::showLaggInterfaces(
-    const std::vector<InterfaceConfig> &ifaces, ConfigurationManager *mgr) {
+std::string
+InterfaceToken::showLaggInterfaces(const std::vector<InterfaceConfig> &ifaces,
+                                   ConfigurationManager *mgr) {
   LaggTableFormatter f;
   return f.format(mgr->GetLaggInterfaces(ifaces));
 }

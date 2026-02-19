@@ -12,5 +12,6 @@
 class OvpnTableFormatter : public TableFormatter<OvpnInterfaceConfig> {
 public:
   OvpnTableFormatter() = default;
-  std::string format(const std::vector<OvpnInterfaceConfig> &interfaces) override;
+  std::string
+  format(const std::vector<OvpnInterfaceConfig> &interfaces) override;
 };

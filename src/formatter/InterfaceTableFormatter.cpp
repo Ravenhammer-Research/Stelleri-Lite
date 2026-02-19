@@ -98,8 +98,8 @@ std::string InterfaceTableFormatter::format(
     if (ic.index)
       indexCell = B + std::to_string(*ic.index) + R;
 
-    addRow({indexCell, ic.name, interfaceTypeToString(ic.type),
-            addrCell, status, mtuCell, vrfCell, flagsCell});
+    addRow({indexCell, ic.name, interfaceTypeToString(ic.type), addrCell,
+            status, mtuCell, vrfCell, flagsCell});
   }
 
   // Sort by index numeric ascending by default

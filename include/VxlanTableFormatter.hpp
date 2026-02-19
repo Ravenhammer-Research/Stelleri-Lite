@@ -32,8 +32,8 @@
 
 #pragma once
 
-#include "VxlanInterfaceConfig.hpp"
 #include "TableFormatter.hpp"
+#include "VxlanInterfaceConfig.hpp"
 #include <vector>
 
 class VxlanTableFormatter : public TableFormatter<VxlanInterfaceConfig> {

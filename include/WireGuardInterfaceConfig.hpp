@@ -20,10 +20,10 @@
 
 #pragma once
 
-#include "InterfaceConfig.hpp"
 #include "ConfigurationManager.hpp"
-#include <optional>
+#include "InterfaceConfig.hpp"
 #include <cstdint>
+#include <optional>
 
 class WireGuardInterfaceConfig : public InterfaceConfig {
 public:

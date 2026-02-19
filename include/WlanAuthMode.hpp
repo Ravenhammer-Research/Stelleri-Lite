@@ -35,18 +35,19 @@
 
 /// Auth mode values match FreeBSD IEEE80211_AUTH_* from <net80211/_ieee80211.h>
 enum class WlanAuthMode {
-  NONE    = 0,  // IEEE80211_AUTH_NONE
-  OPEN    = 1,  // IEEE80211_AUTH_OPEN
-  SHARED  = 2,  // IEEE80211_AUTH_SHARED
-  X8021   = 3,  // IEEE80211_AUTH_8021X
-  AUTO    = 4,  // IEEE80211_AUTH_AUTO
-  WPA     = 5,  // IEEE80211_AUTH_WPA (covers WPA, WPA2, WPA1+2)
+  NONE = 0,   // IEEE80211_AUTH_NONE
+  OPEN = 1,   // IEEE80211_AUTH_OPEN
+  SHARED = 2, // IEEE80211_AUTH_SHARED
+  X8021 = 3,  // IEEE80211_AUTH_8021X
+  AUTO = 4,   // IEEE80211_AUTH_AUTO
+  WPA = 5,    // IEEE80211_AUTH_WPA (covers WPA, WPA2, WPA1+2)
   UNKNOWN = 99
 };
 
 /// Render auth mode + WPA version as a human-readable string.
 /// @param m    Auth mode from IEEE80211_IOC_AUTHMODE
-/// @param wpa  WPA version from IEEE80211_IOC_WPA (0=none, 1=WPA, 2=WPA2, 3=both)
+/// @param wpa  WPA version from IEEE80211_IOC_WPA (0=none, 1=WPA, 2=WPA2,
+/// 3=both)
 static inline std::string WlanAuthModeToString(WlanAuthMode m, int wpa = 0) {
   switch (m) {
   case WlanAuthMode::NONE:

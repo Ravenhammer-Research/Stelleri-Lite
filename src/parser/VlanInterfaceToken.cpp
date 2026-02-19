@@ -3,11 +3,11 @@
  * All rights reserved.
  */
 
-#include "InterfaceToken.hpp"
-#include "VlanInterfaceConfig.hpp"
-#include "PriorityCodePoint.hpp"
 #include "ConfigurationManager.hpp"
+#include "InterfaceToken.hpp"
+#include "PriorityCodePoint.hpp"
 #include "SingleVlanSummaryFormatter.hpp"
+#include "VlanInterfaceConfig.hpp"
 #include "VlanTableFormatter.hpp"
 #include <iostream>
 
@@ -86,8 +86,7 @@ bool InterfaceToken::parseVlanKeywords(std::shared_ptr<InterfaceToken> &tok,
       tok->vlan.emplace();
       tok->vlan->name = tok->name();
     }
-    tok->vlan->pcp =
-        static_cast<PriorityCodePoint>(std::stoi(tokens[cur + 1]));
+    tok->vlan->pcp = static_cast<PriorityCodePoint>(std::stoi(tokens[cur + 1]));
     cur += 2;
     return true;
   }
@@ -103,8 +102,8 @@ InterfaceToken::vlanCompletions(const std::string &prev) {
 }
 
 void InterfaceToken::setVlanInterface(const InterfaceToken &tok,
-                                     ConfigurationManager *mgr,
-                                     InterfaceConfig &base, bool exists) {
+                                      ConfigurationManager *mgr,
+                                      InterfaceConfig &base, bool exists) {
   if (!tok.vlan || tok.vlan->id == 0 || !tok.vlan->parent) {
     std::cerr << "set interface: VLAN creation requires VLAN id and parent "
                  "interface.\n"
@@ -120,7 +119,7 @@ void InterfaceToken::setVlanInterface(const InterfaceToken &tok,
 }
 
 bool InterfaceToken::showVlanInterface(const InterfaceConfig &ic,
-                                      ConfigurationManager *mgr) {
+                                       ConfigurationManager *mgr) {
   std::vector<InterfaceConfig> v = {ic};
   auto vlans = mgr->GetVLANInterfaces(v);
   if (!vlans.empty()) {
@@ -131,8 +130,9 @@ bool InterfaceToken::showVlanInterface(const InterfaceConfig &ic,
   return false;
 }
 
-std::string InterfaceToken::showVlanInterfaces(
-    const std::vector<InterfaceConfig> &ifaces, ConfigurationManager *mgr) {
+std::string
+InterfaceToken::showVlanInterfaces(const std::vector<InterfaceConfig> &ifaces,
+                                   ConfigurationManager *mgr) {
   VlanTableFormatter f;
   return f.format(mgr->GetVLANInterfaces(ifaces));
 }

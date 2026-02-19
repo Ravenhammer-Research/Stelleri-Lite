@@ -4,6 +4,6 @@
 #include <set>
 
 namespace netcli {
-void generateGifCommands(ConfigurationManager &mgr,
-                         std::set<std::string> &processedInterfaces);
+  void generateGifCommands(ConfigurationManager &mgr,
+                           std::set<std::string> &processedInterfaces);
 }

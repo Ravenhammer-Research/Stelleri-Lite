@@ -66,8 +66,8 @@ std::string PolicyToken::toString(const PolicyConfig *cfg) {
   case PolicyConfig::Type::AccessList: {
     const auto &acl = cfg->access_list;
     for (const auto &rule : acl.rules) {
-      result += "policy access-list " + std::to_string(acl.id) +
-                " rule " + std::to_string(rule.seq);
+      result += "policy access-list " + std::to_string(acl.id) + " rule " +
+                std::to_string(rule.seq);
       if (!rule.action.empty())
         result += " action " + rule.action;
       if (rule.source)

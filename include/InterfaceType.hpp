@@ -182,35 +182,3 @@ inline InterfaceType interfaceTypeFromString(const std::string &s) {
     return InterfaceType::Wireless;
   return InterfaceType::Unknown;
 }
-
-// ---------------------------------------------------------------------------
-// dispatch — central InterfaceType → handler lookup table
-// ---------------------------------------------------------------------------
-const InterfaceTypeDispatch *InterfaceToken::dispatch(InterfaceType t) {
-  struct Entry { InterfaceType type; InterfaceTypeDispatch info; };
-  static const Entry table[] = {
-    {InterfaceType::Bridge,    {"bridge",   "bridge",  bridgeCompletions,    parseBridgeKeywords,    setBridgeInterface,    showBridgeInterface,    showBridgeInterfaces}},
-    {InterfaceType::VLAN,      {"vlan",     "vlan",    vlanCompletions,      parseVlanKeywords,      setVlanInterface,      showVlanInterface,      showVlanInterfaces}},
-    {InterfaceType::Lagg,      {"lagg",     "lagg",    laggCompletions,      parseLaggKeywords,      setLaggInterface,      showLaggInterface,      showLaggInterfaces}},
-    {InterfaceType::Tunnel,    {"tunnel",   nullptr,   tunCompletions,       parseTunKeywords,       setTunInterface,       showTunInterface,       showTunInterfaces}},
-    {InterfaceType::Tun,       {"tun",      "tun",     tunCompletions,       parseTunKeywords,       setTunInterface,       showTunInterface,       showTunInterfaces}},
-    {InterfaceType::Gif,       {"gif",      "gif",     gifCompletions,       parseGifKeywords,       setGifInterface,       showGifInterface,       showGifInterfaces}},
-    {InterfaceType::GRE,       {"gre",      "gre",     greCompletions,       parseGreKeywords,       setGreInterface,       showGreInterface,       showGreInterfaces}},
-    {InterfaceType::VXLAN,     {"vxlan",    "vxlan",   vxlanCompletions,     parseVxlanKeywords,     setVxlanInterface,     showVxlanInterface,     showVxlanInterfaces}},
-    {InterfaceType::IPsec,     {"ipsec",    "ipsec",   ipsecCompletions,     parseIpsecKeywords,     setIpsecInterface,     showIpsecInterface,     showIpsecInterfaces}},
-    {InterfaceType::Ovpn,      {"ovpn",     "ovpn",    ovpnCompletions,      parseOvpnKeywords,      setOvpnInterface,      showOvpnInterface,      showOvpnInterfaces}},
-    {InterfaceType::Carp,      {"carp",     "carp",    carpCompletions,      parseCarpKeywords,      setCarpInterface,      showCarpInterface,      showCarpInterfaces}},
-    {InterfaceType::Wireless,  {"wireless", nullptr,   wlanCompletions,      parseWlanKeywords,      setWlanInterface,      showWlanInterface,      showWlanInterfaces}},
-    {InterfaceType::WireGuard, {"wg",       "wg",      wireGuardCompletions, parseWireGuardKeywords, setWireGuardInterface, nullptr,                showWireGuardInterfaces}},
-    {InterfaceType::Tap,       {"tap",      "tap",     tapCompletions,       parseTapKeywords,       setTapInterface,       nullptr,                showTapInterfaces}},
-    {InterfaceType::SixToFour, {"stf",      "stf",     sixToFourCompletions, parseSixToFourKeywords, setSixToFourInterface, nullptr,                showSixToFourInterfaces}},
-    {InterfaceType::Pflog,     {"pflog",    "pflog",   pflogCompletions,     parsePflogKeywords,     setPflogInterface,     nullptr,                showPflogInterfaces}},
-    {InterfaceType::Pfsync,    {"pfsync",   "pfsync",  pfsyncCompletions,    parsePfsyncKeywords,    setPfsyncInterface,    nullptr,                showPfsyncInterfaces}},
-    {InterfaceType::Epair,     {"epair",    "epair",   epairCompletions,     parseEpairKeywords,     setEpairInterface,     showEpairInterface,     showEpairInterfaces}},
-    {InterfaceType::Loopback,  {"loopback", "lo",      loopbackCompletions,  parseLoopbackKeywords,  setLoopbackInterface,  nullptr,                showLoopbackInterfaces}},
-  };
-  for (const auto &e : table)
-    if (e.type == t)
-      return &e.info;
-  return nullptr;
-}

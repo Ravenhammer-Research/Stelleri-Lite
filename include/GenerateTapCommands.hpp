@@ -4,6 +4,6 @@
 #include <set>
 
 namespace netcli {
-void generateTapCommands(ConfigurationManager &mgr,
-                         std::set<std::string> &processedInterfaces);
+  void generateTapCommands(ConfigurationManager &mgr,
+                           std::set<std::string> &processedInterfaces);
 }

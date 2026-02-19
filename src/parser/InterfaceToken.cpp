@@ -26,12 +26,12 @@
  */
 
 #include "InterfaceToken.hpp"
-#include "InterfaceConfig.hpp"
-#include "InterfaceFlags.hpp"
-#include "InterfaceType.hpp"
 #include "IPAddress.hpp"
 #include "IPNetwork.hpp"
+#include "InterfaceConfig.hpp"
+#include "InterfaceFlags.hpp"
 #include "InterfaceTableFormatter.hpp"
+#include "InterfaceType.hpp"
 #include "SingleInterfaceSummaryFormatter.hpp"
 #include <iostream>
 #include <netinet/in.h>
@@ -41,42 +41,113 @@ InterfaceToken::InterfaceToken(InterfaceType t, std::string name)
     : type_(t), name_(std::move(name)) {}
 
 // ---------------------------------------------------------------------------
+// dispatch — central InterfaceType → handler lookup table
+// ---------------------------------------------------------------------------
+const InterfaceTypeDispatch *InterfaceToken::dispatch(InterfaceType t) {
+  struct Entry {
+    InterfaceType type;
+    InterfaceTypeDispatch info;
+  };
+  static const Entry table[] = {
+      {InterfaceType::Bridge,
+       {"bridge", "bridge", bridgeCompletions, parseBridgeKeywords,
+        setBridgeInterface, showBridgeInterface, showBridgeInterfaces}},
+      {InterfaceType::VLAN,
+       {"vlan", "vlan", vlanCompletions, parseVlanKeywords, setVlanInterface,
+        showVlanInterface, showVlanInterfaces}},
+      {InterfaceType::Lagg,
+       {"lagg", "lagg", laggCompletions, parseLaggKeywords, setLaggInterface,
+        showLaggInterface, showLaggInterfaces}},
+      {InterfaceType::Tunnel,
+       {"tunnel", nullptr, tunCompletions, parseTunKeywords, setTunInterface,
+        showTunInterface, showTunInterfaces}},
+      {InterfaceType::Tun,
+       {"tun", "tun", tunCompletions, parseTunKeywords, setTunInterface,
+        showTunInterface, showTunInterfaces}},
+      {InterfaceType::Gif,
+       {"gif", "gif", gifCompletions, parseGifKeywords, setGifInterface,
+        showGifInterface, showGifInterfaces}},
+      {InterfaceType::GRE,
+       {"gre", "gre", greCompletions, parseGreKeywords, setGreInterface,
+        showGreInterface, showGreInterfaces}},
+      {InterfaceType::VXLAN,
+       {"vxlan", "vxlan", vxlanCompletions, parseVxlanKeywords,
+        setVxlanInterface, showVxlanInterface, showVxlanInterfaces}},
+      {InterfaceType::IPsec,
+       {"ipsec", "ipsec", ipsecCompletions, parseIpsecKeywords,
+        setIpsecInterface, showIpsecInterface, showIpsecInterfaces}},
+      {InterfaceType::Ovpn,
+       {"ovpn", "ovpn", ovpnCompletions, parseOvpnKeywords, setOvpnInterface,
+        showOvpnInterface, showOvpnInterfaces}},
+      {InterfaceType::Carp,
+       {"carp", "carp", carpCompletions, parseCarpKeywords, setCarpInterface,
+        showCarpInterface, showCarpInterfaces}},
+      {InterfaceType::Wireless,
+       {"wireless", nullptr, wlanCompletions, parseWlanKeywords,
+        setWlanInterface, showWlanInterface, showWlanInterfaces}},
+      {InterfaceType::WireGuard,
+       {"wg", "wg", wireGuardCompletions, parseWireGuardKeywords,
+        setWireGuardInterface, nullptr, showWireGuardInterfaces}},
+      {InterfaceType::Tap,
+       {"tap", "tap", tapCompletions, parseTapKeywords, setTapInterface,
+        nullptr, showTapInterfaces}},
+      {InterfaceType::SixToFour,
+       {"stf", "stf", sixToFourCompletions, parseSixToFourKeywords,
+        setSixToFourInterface, nullptr, showSixToFourInterfaces}},
+      {InterfaceType::Pflog,
+       {"pflog", "pflog", pflogCompletions, parsePflogKeywords,
+        setPflogInterface, nullptr, showPflogInterfaces}},
+      {InterfaceType::Pfsync,
+       {"pfsync", "pfsync", pfsyncCompletions, parsePfsyncKeywords,
+        setPfsyncInterface, nullptr, showPfsyncInterfaces}},
+      {InterfaceType::Epair,
+       {"epair", "epair", epairCompletions, parseEpairKeywords,
+        setEpairInterface, showEpairInterface, showEpairInterfaces}},
+      {InterfaceType::Loopback,
+       {"loopback", "lo", loopbackCompletions, parseLoopbackKeywords,
+        setLoopbackInterface, nullptr, showLoopbackInterfaces}},
+  };
+  for (const auto &e : table)
+    if (e.type == t)
+      return &e.info;
+  return nullptr;
+}
+
+// ---------------------------------------------------------------------------
 // Helpers: keyword sets for context-aware autocompletion
 // ---------------------------------------------------------------------------
 namespace {
-
-/// Keywords applicable to every interface type.
-std::vector<std::string> generalKeywords() {
-  return {"inet",    "inet6",  "address",     "mtu",  "vrf",
-          "group",   "up",     "down",        "status",
-          "description"};
-}
-
-/// Value suggestions for a keyword that expects a fixed set of values.
-std::vector<std::string> valuesForKeyword(const std::string &kw) {
-  if (kw == "type") {
-    return {"ethernet", "loopback", "bridge", "lagg",  "vlan",
-            "tunnel",   "tun",      "gif",    "gre",   "vxlan",
-            "ipsec",    "epair",    "virtual","wireless","tap",
-            "ppp",      "stf",      "ovpn",   "carp",  "pflog",
-            "pfsync",   "wg"};
+  /// Keywords applicable to every interface type.
+  std::vector<std::string> generalKeywords() {
+    return {"inet",  "inet6", "address", "mtu",    "vrf",
+            "group", "up",    "down",    "status", "description"};
   }
-  if (kw == "status") {
-    return {"up", "down"};
-  }
-  return {};
-}
 
-/// Filter a candidate list by prefix match.
-std::vector<std::string> filterPrefix(const std::vector<std::string> &candidates,
-                                      std::string_view partial) {
-  std::vector<std::string> matches;
-  for (const auto &c : candidates) {
-    if (c.rfind(partial, 0) == 0)
-      matches.push_back(c);
+  /// Value suggestions for a keyword that expects a fixed set of values.
+  std::vector<std::string> valuesForKeyword(const std::string &kw) {
+    if (kw == "type") {
+      return {"ethernet", "loopback", "bridge", "lagg",  "vlan",  "tunnel",
+              "tun",      "gif",      "gre",    "vxlan", "ipsec", "epair",
+              "virtual",  "wireless", "tap",    "ppp",   "stf",   "ovpn",
+              "carp",     "pflog",    "pfsync", "wg"};
+    }
+    if (kw == "status") {
+      return {"up", "down"};
+    }
+    return {};
   }
-  return matches;
-}
+
+  /// Filter a candidate list by prefix match.
+  std::vector<std::string>
+  filterPrefix(const std::vector<std::string> &candidates,
+               std::string_view partial) {
+    std::vector<std::string> matches;
+    for (const auto &c : candidates) {
+      if (c.rfind(partial, 0) == 0)
+        matches.push_back(c);
+    }
+    return matches;
+  }
 
 } // anonymous namespace
 
@@ -106,8 +177,7 @@ InterfaceToken::autoComplete(const std::vector<std::string> &tokens,
   if (expect_type_value_)
     return filterPrefix(valuesForKeyword("type"), partial);
 
-  const std::string prev =
-      tokens.empty() ? std::string() : tokens.back();
+  const std::string prev = tokens.empty() ? std::string() : tokens.back();
 
   // --- Value completions for keywords that expect a fixed set of values ---
 
@@ -216,8 +286,8 @@ InterfaceToken::autoComplete(const std::vector<std::string> &tokens,
 
   // Top-level: no name, no type, nothing set yet → primary keywords
   if (name_.empty() && type_ == InterfaceType::Unknown && !vrf && !mtu &&
-      !status && !vlan && !lagg && !bridge && !tun && !gif && !ovpn &&
-      !ipsec && !vxlan && !wlan && !gre && !carp) {
+      !status && !vlan && !lagg && !bridge && !tun && !gif && !ovpn && !ipsec &&
+      !vxlan && !wlan && !gre && !carp) {
     return filterPrefix({"name", "group", "type"}, partial);
   }
 
@@ -478,7 +548,10 @@ void InterfaceToken::executeSet(ConfigurationManager *mgr) const {
     if (group) {
       bool has_group = false;
       for (const auto &g : base.groups) {
-        if (g == *group) { has_group = true; break; }
+        if (g == *group) {
+          has_group = true;
+          break;
+        }
       }
       if (!has_group)
         base.groups.push_back(*group);
@@ -550,9 +623,13 @@ void InterfaceToken::executeShow(ConfigurationManager *mgr) const {
       if (group) {
         bool has = false;
         for (const auto &g : iface.groups) {
-          if (g == *group) { has = true; break; }
+          if (g == *group) {
+            has = true;
+            break;
+          }
         }
-        if (!has) continue;
+        if (!has)
+          continue;
       }
       if (iface.matchesType(type_))
         interfaces.push_back(std::move(iface));
@@ -575,7 +652,8 @@ void InterfaceToken::executeShow(ConfigurationManager *mgr) const {
     bool handled = false;
     if (auto *d = dispatch(ic.type); d && d->showInterface)
       handled = d->showInterface(ic, mgr);
-    if (handled) return;
+    if (handled)
+      return;
     SingleInterfaceSummaryFormatter f;
     std::cout << f.format(ic);
     return;
@@ -609,8 +687,8 @@ void InterfaceToken::executeDelete(ConfigurationManager *mgr) const {
   try {
     if (group) {
       mgr->RemoveInterfaceGroup(name_, *group);
-      std::cout << "delete interface: removed group '" << *group
-                << "' from '" << name_ << "'\n";
+      std::cout << "delete interface: removed group '" << *group << "' from '"
+                << name_ << "'\n";
       return;
     }
 
@@ -627,8 +705,8 @@ void InterfaceToken::executeDelete(ConfigurationManager *mgr) const {
       for (const auto &a : to_remove) {
         try {
           ic.removeAddress(*mgr, a);
-          std::cout << "delete interface: removed address '" << a
-                    << "' from '" << name_ << "'\n";
+          std::cout << "delete interface: removed address '" << a << "' from '"
+                    << name_ << "'\n";
         } catch (const std::exception &e) {
           std::cerr << "delete interface: failed to remove address '" << a
                     << "': " << e.what() << "\n";

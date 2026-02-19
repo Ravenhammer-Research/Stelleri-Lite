@@ -3,7 +3,8 @@
 #include <string>
 #include <vector>
 
-std::string IpsecTableFormatter::format(const std::vector<IpsecInterfaceConfig> &interfaces) {
+std::string IpsecTableFormatter::format(
+    const std::vector<IpsecInterfaceConfig> &interfaces) {
   if (interfaces.empty()) {
     return "No ipsec interfaces found.\n";
   }
@@ -16,9 +17,11 @@ std::string IpsecTableFormatter::format(const std::vector<IpsecInterfaceConfig> 
 
   for (const auto &ipsec : interfaces) {
     std::string source = ipsec.source ? ipsec.source->toString() : "-";
-    std::string destination = ipsec.destination ? ipsec.destination->toString() : "-";
+    std::string destination =
+        ipsec.destination ? ipsec.destination->toString() : "-";
     std::string vrfStr = ipsec.vrf ? std::to_string(ipsec.vrf->table) : "-";
-    std::string tunnelVrfStr = ipsec.tunnel_vrf ? std::to_string(*ipsec.tunnel_vrf) : "-";
+    std::string tunnelVrfStr =
+        ipsec.tunnel_vrf ? std::to_string(*ipsec.tunnel_vrf) : "-";
 
     addRow({ipsec.name, source, destination, vrfStr, tunnelVrfStr});
   }

@@ -26,10 +26,10 @@
  */
 
 #include "EpairTableFormatter.hpp"
+#include "EpairInterfaceConfig.hpp"
 #include "InterfaceConfig.hpp"
 #include "InterfaceFlags.hpp"
 #include "InterfaceType.hpp"
-#include "EpairInterfaceConfig.hpp"
 #include <map>
 #include <optional>
 #include <string>
@@ -40,7 +40,8 @@ EpairTableFormatter::format(const std::vector<InterfaceConfig> &interfaces) {
   if (interfaces.empty())
     return "No epair interfaces found.\n";
 
-  // Columns: Interface | Peer #1 | Peer #1 VRF | Peer #1 Status | Peer #2 | Peer #2 VRF | Peer #2 Status
+  // Columns: Interface | Peer #1 | Peer #1 VRF | Peer #1 Status | Peer #2 |
+  // Peer #2 VRF | Peer #2 Status
   addColumn("Interface", "Interface", 12, 9, true);
   addColumn("peer1", "Peer #1", 10, 7, true);
   addColumn("vrf1", "Peer #1 VRF", 6, 3, true);
@@ -80,8 +81,7 @@ EpairTableFormatter::format(const std::vector<InterfaceConfig> &interfaces) {
   for (const auto &kv : pairs) {
     const auto &pi = kv.second;
 
-    auto format_side =
-        [](const std::optional<InterfaceConfig> &opt)
+    auto format_side = [](const std::optional<InterfaceConfig> &opt)
         -> std::pair<std::string, std::pair<std::string, std::string>> {
       if (!opt.has_value())
         return {"-", {"-", "-"}};
@@ -103,8 +103,8 @@ EpairTableFormatter::format(const std::vector<InterfaceConfig> &interfaces) {
     auto [name_a, a_info] = format_side(pi.a);
     auto [name_b, b_info] = format_side(pi.b);
 
-    addRow({kv.first, name_a, a_info.first, a_info.second, name_b,
-            b_info.first, b_info.second});
+    addRow({kv.first, name_a, a_info.first, a_info.second, name_b, b_info.first,
+            b_info.second});
   }
 
   return renderTable(1000) + "\n";

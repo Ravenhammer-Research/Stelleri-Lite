@@ -3,11 +3,11 @@
  * All rights reserved.
  */
 
-#include "InterfaceToken.hpp"
-#include "TunInterfaceConfig.hpp"
 #include "ConfigurationManager.hpp"
 #include "IPAddress.hpp"
+#include "InterfaceToken.hpp"
 #include "SingleTunSummaryFormatter.hpp"
+#include "TunInterfaceConfig.hpp"
 #include "TunTableFormatter.hpp"
 #include <iostream>
 
@@ -60,8 +60,8 @@ InterfaceToken::tunCompletions(const std::string &prev) {
 }
 
 void InterfaceToken::setTunInterface(const InterfaceToken &tok,
-                                    ConfigurationManager *mgr,
-                                    InterfaceConfig &base, bool exists) {
+                                     ConfigurationManager *mgr,
+                                     InterfaceConfig &base, bool exists) {
   TunInterfaceConfig tc(base);
   if (tok.source)
     tc.source = IPAddress::fromString(*tok.source);
@@ -70,12 +70,12 @@ void InterfaceToken::setTunInterface(const InterfaceToken &tok,
   if (tok.tunnel_vrf)
     tc.tunnel_vrf = *tok.tunnel_vrf;
   tc.save(*mgr);
-  std::cout << "set interface: " << (exists ? "updated" : "created")
-            << " tun '" << tok.name() << "'\n";
+  std::cout << "set interface: " << (exists ? "updated" : "created") << " tun '"
+            << tok.name() << "'\n";
 }
 
 bool InterfaceToken::showTunInterface(const InterfaceConfig &ic,
-                                     ConfigurationManager *mgr) {
+                                      ConfigurationManager *mgr) {
   std::vector<InterfaceConfig> v = {ic};
   auto tuns = mgr->GetTunInterfaces(v);
   if (!tuns.empty()) {
@@ -86,8 +86,9 @@ bool InterfaceToken::showTunInterface(const InterfaceConfig &ic,
   return false;
 }
 
-std::string InterfaceToken::showTunInterfaces(
-    const std::vector<InterfaceConfig> &ifaces, ConfigurationManager *mgr) {
+std::string
+InterfaceToken::showTunInterfaces(const std::vector<InterfaceConfig> &ifaces,
+                                  ConfigurationManager *mgr) {
   TunTableFormatter f;
   return f.format(mgr->GetTunInterfaces(ifaces));
 }

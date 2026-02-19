@@ -2,9 +2,9 @@
  * GIF system helper implementations
  */
 
+#include "GifInterfaceConfig.hpp"
 #include "Socket.hpp"
 #include "SystemConfigurationManager.hpp"
-#include "GifInterfaceConfig.hpp"
 
 #include "IPAddress.hpp"
 

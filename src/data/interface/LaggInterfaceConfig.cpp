@@ -44,11 +44,12 @@ LaggInterfaceConfig::LaggInterfaceConfig(const InterfaceConfig &base)
   type = InterfaceType::Lagg;
 }
 
-LaggInterfaceConfig::LaggInterfaceConfig(const InterfaceConfig &base, LaggProtocol protocol_,
-                       std::vector<std::string> members_,
-                       std::optional<uint32_t> hash_policy_,
-                       std::optional<int> lacp_rate_,
-                       std::optional<int> min_links_)
+LaggInterfaceConfig::LaggInterfaceConfig(const InterfaceConfig &base,
+                                         LaggProtocol protocol_,
+                                         std::vector<std::string> members_,
+                                         std::optional<uint32_t> hash_policy_,
+                                         std::optional<int> lacp_rate_,
+                                         std::optional<int> min_links_)
     : LaggInterfaceConfig(base) {
   protocol = protocol_;
   members = std::move(members_);
@@ -57,7 +58,9 @@ LaggInterfaceConfig::LaggInterfaceConfig(const InterfaceConfig &base, LaggProtoc
   min_links = min_links_;
 }
 
-void LaggInterfaceConfig::save(ConfigurationManager &mgr) const { mgr.SaveLagg(*this); }
+void LaggInterfaceConfig::save(ConfigurationManager &mgr) const {
+  mgr.SaveLagg(*this);
+}
 
 void LaggInterfaceConfig::create(ConfigurationManager &mgr) const {
   mgr.CreateLagg(name);

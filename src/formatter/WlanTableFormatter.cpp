@@ -32,43 +32,68 @@
 
 namespace {
 
-// Build a condensed capability string from the three caps bitmasks.
-std::string buildCapsString(uint32_t dc, uint32_t ht, uint32_t vht) {
-  std::string s;
+  // Build a condensed capability string from the three caps bitmasks.
+  std::string buildCapsString(uint32_t dc, uint32_t ht, uint32_t vht) {
+    std::string s;
 
-  // Driver caps (WlanDriverCap)
-  if (hasWlanDriverCap(dc, WlanDriverCap::STA))        s += 'S';
-  if (hasWlanDriverCap(dc, WlanDriverCap::IBSS))       s += 'I';
-  if (hasWlanDriverCap(dc, WlanDriverCap::HOSTAP))     s += 'H';
-  if (hasWlanDriverCap(dc, WlanDriverCap::MONITOR))    s += 'M';
-  if (hasWlanDriverCap(dc, WlanDriverCap::PMGT))       s += 'P';
-  if (hasWlanDriverCap(dc, WlanDriverCap::SHSLOT))     s += 's';
-  if (hasWlanDriverCap(dc, WlanDriverCap::SHPREAMBLE)) s += 'p';
-  if (hasWlanDriverCap(dc, WlanDriverCap::DFS))        s += 'D';
-  if (hasWlanDriverCap(dc, WlanDriverCap::MBSS))       s += 'm';
-  if (hasWlanDriverCap(dc, WlanDriverCap::BGSCAN))     s += 'b';
-  if (hasWlanDriverCap(dc, WlanDriverCap::BURST))      s += 'B';
-  if (hasWlanDriverCap(dc, WlanDriverCap::WME))        s += 'W';
-  if (hasWlanDriverCap(dc, WlanDriverCap::WDS))        s += 'w';
-  if (hasWlanDriverCap(dc, WlanDriverCap::TXFRAG))     s += 'F';
-  if (hasWlanDriverCap(dc, WlanDriverCap::TDMA))       s += 'T';
-  if (hasWlanDriverCap(dc, WlanDriverCap::WPA1))       s += '1';
-  if (hasWlanDriverCap(dc, WlanDriverCap::WPA2))       s += '2';
-  if (hasWlanDriverCap(dc, WlanDriverCap::TXPMGT))     s += 't';
-  if (hasWlanDriverCap(dc, WlanDriverCap::SWRETRY))    s += 'r';
+    // Driver caps (WlanDriverCap)
+    if (hasWlanDriverCap(dc, WlanDriverCap::STA))
+      s += 'S';
+    if (hasWlanDriverCap(dc, WlanDriverCap::IBSS))
+      s += 'I';
+    if (hasWlanDriverCap(dc, WlanDriverCap::HOSTAP))
+      s += 'H';
+    if (hasWlanDriverCap(dc, WlanDriverCap::MONITOR))
+      s += 'M';
+    if (hasWlanDriverCap(dc, WlanDriverCap::PMGT))
+      s += 'P';
+    if (hasWlanDriverCap(dc, WlanDriverCap::SHSLOT))
+      s += 's';
+    if (hasWlanDriverCap(dc, WlanDriverCap::SHPREAMBLE))
+      s += 'p';
+    if (hasWlanDriverCap(dc, WlanDriverCap::DFS))
+      s += 'D';
+    if (hasWlanDriverCap(dc, WlanDriverCap::MBSS))
+      s += 'm';
+    if (hasWlanDriverCap(dc, WlanDriverCap::BGSCAN))
+      s += 'b';
+    if (hasWlanDriverCap(dc, WlanDriverCap::BURST))
+      s += 'B';
+    if (hasWlanDriverCap(dc, WlanDriverCap::WME))
+      s += 'W';
+    if (hasWlanDriverCap(dc, WlanDriverCap::WDS))
+      s += 'w';
+    if (hasWlanDriverCap(dc, WlanDriverCap::TXFRAG))
+      s += 'F';
+    if (hasWlanDriverCap(dc, WlanDriverCap::TDMA))
+      s += 'T';
+    if (hasWlanDriverCap(dc, WlanDriverCap::WPA1))
+      s += '1';
+    if (hasWlanDriverCap(dc, WlanDriverCap::WPA2))
+      s += '2';
+    if (hasWlanDriverCap(dc, WlanDriverCap::TXPMGT))
+      s += 't';
+    if (hasWlanDriverCap(dc, WlanDriverCap::SWRETRY))
+      s += 'r';
 
-  // HT caps (WlanHTCap)
-  if (hasWlanHTCap(ht, WlanHTCap::HT))       s += 'h';
-  if (hasWlanHTCap(ht, WlanHTCap::AMPDU))    s += 'A';
-  if (hasWlanHTCap(ht, WlanHTCap::AMSDU))    s += 'a';
-  if (hasWlanHTCap(ht, WlanHTCap::TXLDPC))   s += 'L';
-  if (hasWlanHTCap(ht, WlanHTCap::SMPS))     s += 'x';
+    // HT caps (WlanHTCap)
+    if (hasWlanHTCap(ht, WlanHTCap::HT))
+      s += 'h';
+    if (hasWlanHTCap(ht, WlanHTCap::AMPDU))
+      s += 'A';
+    if (hasWlanHTCap(ht, WlanHTCap::AMSDU))
+      s += 'a';
+    if (hasWlanHTCap(ht, WlanHTCap::TXLDPC))
+      s += 'L';
+    if (hasWlanHTCap(ht, WlanHTCap::SMPS))
+      s += 'x';
 
-  // VHT caps
-  if (vht)                                   s += 'V';
+    // VHT caps
+    if (vht)
+      s += 'V';
 
-  return s.empty() ? "-" : s;
-}
+    return s.empty() ? "-" : s;
+  }
 
 } // anonymous namespace
 
@@ -112,9 +137,7 @@ WlanTableFormatter::format(const std::vector<WlanInterfaceConfig> &items) {
       auth = WlanAuthModeToString(*w.authmode, wpa);
     }
     std::string caps = buildCapsString(
-        w.drivercaps.value_or(0),
-        w.htcaps.value_or(0),
-        w.vhtcaps.value_or(0));
+        w.drivercaps.value_or(0), w.htcaps.value_or(0), w.vhtcaps.value_or(0));
 
     addRow({w.name, ssid, channel, parent, status, auth, caps});
   }

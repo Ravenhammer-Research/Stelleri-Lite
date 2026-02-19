@@ -3,11 +3,11 @@
  * All rights reserved.
  */
 
-#include "InterfaceToken.hpp"
-#include "GreInterfaceConfig.hpp"
 #include "ConfigurationManager.hpp"
-#include "SingleGreSummaryFormatter.hpp"
+#include "GreInterfaceConfig.hpp"
 #include "GreTableFormatter.hpp"
+#include "InterfaceToken.hpp"
+#include "SingleGreSummaryFormatter.hpp"
 #include <iostream>
 
 class GreInterfaceToken : public InterfaceToken {
@@ -46,8 +46,7 @@ bool InterfaceToken::parseGreKeywords(std::shared_ptr<InterfaceToken> &tok,
   if (kw == "key" && cur + 1 < tokens.size()) {
     if (!tok->gre)
       tok->gre.emplace(InterfaceConfig{});
-    tok->gre->greKey =
-        static_cast<uint32_t>(std::stoul(tokens[cur + 1]));
+    tok->gre->greKey = static_cast<uint32_t>(std::stoul(tokens[cur + 1]));
     cur += 2;
     return true;
   }
@@ -62,8 +61,8 @@ InterfaceToken::greCompletions(const std::string &prev) {
 }
 
 void InterfaceToken::setGreInterface(const InterfaceToken &tok,
-                                    ConfigurationManager *mgr,
-                                    InterfaceConfig &base, bool exists) {
+                                     ConfigurationManager *mgr,
+                                     InterfaceConfig &base, bool exists) {
   GreInterfaceConfig gc(base);
   if (tok.source)
     gc.greSource = *tok.source;
@@ -72,12 +71,12 @@ void InterfaceToken::setGreInterface(const InterfaceToken &tok,
   if (tok.gre && tok.gre->greKey)
     gc.greKey = tok.gre->greKey;
   gc.save(*mgr);
-  std::cout << "set interface: " << (exists ? "updated" : "created")
-            << " gre '" << tok.name() << "'\n";
+  std::cout << "set interface: " << (exists ? "updated" : "created") << " gre '"
+            << tok.name() << "'\n";
 }
 
 bool InterfaceToken::showGreInterface(const InterfaceConfig &ic,
-                                     ConfigurationManager *mgr) {
+                                      ConfigurationManager *mgr) {
   std::vector<InterfaceConfig> v = {ic};
   auto gres = mgr->GetGreInterfaces(v);
   if (!gres.empty()) {
@@ -88,8 +87,9 @@ bool InterfaceToken::showGreInterface(const InterfaceConfig &ic,
   return false;
 }
 
-std::string InterfaceToken::showGreInterfaces(
-    const std::vector<InterfaceConfig> &ifaces, ConfigurationManager *mgr) {
+std::string
+InterfaceToken::showGreInterfaces(const std::vector<InterfaceConfig> &ifaces,
+                                  ConfigurationManager *mgr) {
   GRETableFormatter f;
   return f.format(mgr->GetGreInterfaces(ifaces));
 }

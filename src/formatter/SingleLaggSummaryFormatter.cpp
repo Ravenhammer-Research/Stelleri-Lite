@@ -26,8 +26,8 @@
  */
 
 #include "SingleLaggSummaryFormatter.hpp"
-#include "SingleInterfaceSummaryFormatter.hpp"
 #include "LaggHash.hpp"
+#include "SingleInterfaceSummaryFormatter.hpp"
 #include <sstream>
 
 static std::string protocolToString(LaggProtocol proto) {

@@ -39,12 +39,12 @@
 #include <net/if_media.h>
 #include <net/if_types.h>
 #include <netinet/in.h>
-#include <sys/types.h>
 #include <netinet6/in6_var.h>
 #include <string>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 #include <sys/sockio.h>
+#include <sys/types.h>
 #include <unistd.h>
 #include <unordered_map>
 
@@ -794,7 +794,8 @@ std::vector<InterfaceConfig> SystemConfigurationManager::GetInterfaces(
           new InterfaceConfig(name, t, std::move(addr), std::move(aliases),
                               nullptr, flags, {}, std::nullopt));
       if (ic->type == InterfaceType::Wireless) {
-        auto w = std::shared_ptr<WlanInterfaceConfig>(new WlanInterfaceConfig(*ic));
+        auto w =
+            std::shared_ptr<WlanInterfaceConfig>(new WlanInterfaceConfig(*ic));
         map.emplace(name, std::move(w));
       } else {
         map.emplace(name, std::move(ic));

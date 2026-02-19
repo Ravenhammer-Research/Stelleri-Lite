@@ -3,9 +3,9 @@
  * All rights reserved.
  */
 
+#include "ConfigurationManager.hpp"
 #include "InterfaceToken.hpp"
 #include "LoopBackInterfaceConfig.hpp"
-#include "ConfigurationManager.hpp"
 #include "LoopBackTableFormatter.hpp"
 #include <iostream>
 
@@ -14,9 +14,9 @@ public:
   using InterfaceToken::InterfaceToken;
 };
 
-bool InterfaceToken::parseLoopbackKeywords(std::shared_ptr<InterfaceToken> &tok,
-                                           const std::vector<std::string> &tokens,
-                                           size_t &cur) {
+bool InterfaceToken::parseLoopbackKeywords(
+    std::shared_ptr<InterfaceToken> &tok,
+    const std::vector<std::string> &tokens, size_t &cur) {
   (void)tok;
   (void)tokens;
   (void)cur;

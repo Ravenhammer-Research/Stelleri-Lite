@@ -32,11 +32,11 @@
 
 #pragma once
 
+#include "ConfigurationManager.hpp"
 #include "InterfaceConfig.hpp"
 #include <optional>
-#include <string>
-#include "ConfigurationManager.hpp"
 #include <stdexcept>
+#include <string>
 
 /**
  * @brief Configuration for CARP redundancy interfaces
@@ -46,7 +46,8 @@
  */
 class CarpInterfaceConfig : public InterfaceConfig {
 public:
-  explicit CarpInterfaceConfig(const InterfaceConfig &base) : InterfaceConfig(base) {}
+  explicit CarpInterfaceConfig(const InterfaceConfig &base)
+      : InterfaceConfig(base) {}
 
   /// Virtual Host ID (1–255)
   std::optional<int> vhid;

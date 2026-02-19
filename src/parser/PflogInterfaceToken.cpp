@@ -3,11 +3,10 @@
  * All rights reserved.
  */
 
+#include "ConfigurationManager.hpp"
 #include "InterfaceToken.hpp"
 #include "PflogInterfaceConfig.hpp"
-#include "ConfigurationManager.hpp"
 #include "PflogTableFormatter.hpp"
-#include <iostream>
 #include <iostream>
 
 class PflogInterfaceToken : public InterfaceToken {
@@ -31,16 +30,17 @@ InterfaceToken::pflogCompletions(const std::string &prev) {
 }
 
 void InterfaceToken::setPflogInterface(const InterfaceToken &tok,
-                                      ConfigurationManager *mgr,
-                                      InterfaceConfig &base, bool exists) {
+                                       ConfigurationManager *mgr,
+                                       InterfaceConfig &base, bool exists) {
   PflogInterfaceConfig pc(base);
   pc.save(*mgr);
   std::cout << "set interface: " << (exists ? "updated" : "created")
             << " pflog '" << tok.name() << "'\n";
 }
 
-std::string InterfaceToken::showPflogInterfaces(
-    const std::vector<InterfaceConfig> &ifaces, ConfigurationManager *) {
+std::string
+InterfaceToken::showPflogInterfaces(const std::vector<InterfaceConfig> &ifaces,
+                                    ConfigurationManager *) {
   PflogTableFormatter f;
   return f.format(ifaces);
 }

@@ -13,7 +13,8 @@
 #include <stdexcept>
 #include <sys/ioctl.h>
 
-void SystemConfigurationManager::SaveCarp(const CarpInterfaceConfig &carp) const {
+void SystemConfigurationManager::SaveCarp(
+    const CarpInterfaceConfig &carp) const {
   if (carp.name.empty())
     throw std::runtime_error("CarpInterfaceConfig has no interface name set");
 
@@ -61,8 +62,7 @@ void SystemConfigurationManager::SaveCarp(const CarpInterfaceConfig &carp) const
   }
 }
 
-std::vector<CarpInterfaceConfig>
-SystemConfigurationManager::GetCarpInterfaces(
+std::vector<CarpInterfaceConfig> SystemConfigurationManager::GetCarpInterfaces(
     const std::vector<InterfaceConfig> &bases) const {
   std::vector<CarpInterfaceConfig> out;
   for (const auto &ic : bases) {

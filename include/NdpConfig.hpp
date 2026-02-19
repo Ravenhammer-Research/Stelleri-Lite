@@ -37,7 +37,7 @@
 #include <string>
 
 class NdpConfig : public ConfigData {
-  public:
+public:
   std::string ip;                   // IPv6 address
   std::string mac;                  // MAC address
   std::optional<std::string> iface; // Interface name

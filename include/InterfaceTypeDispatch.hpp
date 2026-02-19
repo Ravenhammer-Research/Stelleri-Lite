@@ -53,31 +53,28 @@ struct InterfaceTypeDispatch {
   const char *defaultGroup; ///< FreeBSD auto-assigned group (nullptr if none)
 
   /// Tab-completion provider for type-specific keywords.
-  using CompletionsFn =
-      std::vector<std::string> (*)(const std::string &);
+  using CompletionsFn = std::vector<std::string> (*)(const std::string &);
 
   /// Parser for type-specific keyword arguments.
-  using ParseKeywordsFn =
-      bool (*)(std::shared_ptr<InterfaceToken> &,
-               const std::vector<std::string> &, size_t &);
+  using ParseKeywordsFn = bool (*)(std::shared_ptr<InterfaceToken> &,
+                                   const std::vector<std::string> &, size_t &);
 
   /// Execute 'set interface … type X' — builds type config and saves.
-  using SetFn =
-      void (*)(const InterfaceToken &, ConfigurationManager *,
-               InterfaceConfig &, bool);
+  using SetFn = void (*)(const InterfaceToken &, ConfigurationManager *,
+                         InterfaceConfig &, bool);
 
   /// Single-interface summary display.  Returns true if handled.
-  using ShowSingleFn =
-      bool (*)(const InterfaceConfig &, ConfigurationManager *);
+  using ShowSingleFn = bool (*)(const InterfaceConfig &,
+                                ConfigurationManager *);
 
   /// Multi-interface table formatter.  Returns the rendered table string.
-  using ShowTableFn =
-      std::string (*)(const std::vector<InterfaceConfig> &,
-                      ConfigurationManager *);
+  using ShowTableFn = std::string (*)(const std::vector<InterfaceConfig> &,
+                                      ConfigurationManager *);
 
-  CompletionsFn   completions;    ///< may be nullptr
-  ParseKeywordsFn parseKeywords;  ///< may be nullptr
-  SetFn           setInterface;   ///< may be nullptr
-  ShowSingleFn    showInterface;  ///< nullptr → fall back to generic formatter
-  ShowTableFn     showInterfaces; ///< nullptr → fall back to InterfaceTableFormatter
+  CompletionsFn completions;     ///< may be nullptr
+  ParseKeywordsFn parseKeywords; ///< may be nullptr
+  SetFn setInterface;            ///< may be nullptr
+  ShowSingleFn showInterface;    ///< nullptr → fall back to generic formatter
+  ShowTableFn
+      showInterfaces; ///< nullptr → fall back to InterfaceTableFormatter
 };

@@ -35,9 +35,9 @@
 
 #pragma once
 
-#include "ConfigurationManager.hpp"
 #include "BridgeInterfaceConfig.hpp"
 #include "CarpInterfaceConfig.hpp"
+#include "ConfigurationManager.hpp"
 #include "EpairInterfaceConfig.hpp"
 #include "GifInterfaceConfig.hpp"
 #include "GreInterfaceConfig.hpp"

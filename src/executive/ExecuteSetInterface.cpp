@@ -25,8 +25,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "InterfaceToken.hpp"
 #include "ConfigurationManager.hpp"
+#include "InterfaceToken.hpp"
 
 namespace netcli {
 

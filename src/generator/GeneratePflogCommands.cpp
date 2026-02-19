@@ -21,8 +21,7 @@ namespace netcli {
         continue;
 
       std::cout << "set "
-                << InterfaceToken::toString(
-                       const_cast<InterfaceConfig *>(&ifc))
+                << InterfaceToken::toString(const_cast<InterfaceConfig *>(&ifc))
                 << "\n";
       processedInterfaces.insert(ifc.name);
 

@@ -3,12 +3,12 @@
  * All rights reserved.
  */
 
-#include "InterfaceToken.hpp"
-#include "OvpnInterfaceConfig.hpp"
 #include "ConfigurationManager.hpp"
 #include "IPAddress.hpp"
-#include "SingleOvpnSummaryFormatter.hpp"
+#include "InterfaceToken.hpp"
+#include "OvpnInterfaceConfig.hpp"
 #include "OvpnTableFormatter.hpp"
+#include "SingleOvpnSummaryFormatter.hpp"
 #include <iostream>
 
 class OvpnInterfaceToken : public InterfaceToken {
@@ -60,8 +60,8 @@ InterfaceToken::ovpnCompletions(const std::string &prev) {
 }
 
 void InterfaceToken::setOvpnInterface(const InterfaceToken &tok,
-                                     ConfigurationManager *mgr,
-                                     InterfaceConfig &base, bool exists) {
+                                      ConfigurationManager *mgr,
+                                      InterfaceConfig &base, bool exists) {
   OvpnInterfaceConfig oc(base);
   if (tok.source)
     oc.source = IPAddress::fromString(*tok.source);
@@ -75,7 +75,7 @@ void InterfaceToken::setOvpnInterface(const InterfaceToken &tok,
 }
 
 bool InterfaceToken::showOvpnInterface(const InterfaceConfig &ic,
-                                      ConfigurationManager *mgr) {
+                                       ConfigurationManager *mgr) {
   std::vector<InterfaceConfig> v = {ic};
   auto ovpns = mgr->GetOvpnInterfaces(v);
   if (!ovpns.empty()) {
@@ -86,8 +86,9 @@ bool InterfaceToken::showOvpnInterface(const InterfaceConfig &ic,
   return false;
 }
 
-std::string InterfaceToken::showOvpnInterfaces(
-    const std::vector<InterfaceConfig> &ifaces, ConfigurationManager *mgr) {
+std::string
+InterfaceToken::showOvpnInterfaces(const std::vector<InterfaceConfig> &ifaces,
+                                   ConfigurationManager *mgr) {
   OvpnTableFormatter f;
   return f.format(mgr->GetOvpnInterfaces(ifaces));
 }

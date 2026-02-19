@@ -59,7 +59,7 @@ struct PolicyAccessListRule {
  * @brief An access-list containing ordered rules
  */
 struct PolicyAccessList {
-  uint32_t id = 0;                        ///< Access-list number
+  uint32_t id = 0; ///< Access-list number
   std::vector<PolicyAccessListRule> rules;
 };
 

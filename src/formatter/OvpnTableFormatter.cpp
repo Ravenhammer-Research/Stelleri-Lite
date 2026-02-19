@@ -3,7 +3,8 @@
 #include <string>
 #include <vector>
 
-std::string OvpnTableFormatter::format(const std::vector<OvpnInterfaceConfig> &interfaces) {
+std::string
+OvpnTableFormatter::format(const std::vector<OvpnInterfaceConfig> &interfaces) {
   if (interfaces.empty()) {
     return "No ovpn interfaces found.\n";
   }
@@ -16,9 +17,11 @@ std::string OvpnTableFormatter::format(const std::vector<OvpnInterfaceConfig> &i
 
   for (const auto &ovpn : interfaces) {
     std::string source = ovpn.source ? ovpn.source->toString() : "-";
-    std::string destination = ovpn.destination ? ovpn.destination->toString() : "-";
+    std::string destination =
+        ovpn.destination ? ovpn.destination->toString() : "-";
     std::string vrfStr = ovpn.vrf ? std::to_string(ovpn.vrf->table) : "-";
-    std::string tunnelVrfStr = ovpn.tunnel_vrf ? std::to_string(*ovpn.tunnel_vrf) : "-";
+    std::string tunnelVrfStr =
+        ovpn.tunnel_vrf ? std::to_string(*ovpn.tunnel_vrf) : "-";
 
     addRow({ovpn.name, source, destination, vrfStr, tunnelVrfStr});
   }

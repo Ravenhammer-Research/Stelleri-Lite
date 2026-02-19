@@ -2,9 +2,9 @@
  * IPsec system helper implementations
  */
 
+#include "IpsecInterfaceConfig.hpp"
 #include "Socket.hpp"
 #include "SystemConfigurationManager.hpp"
-#include "IpsecInterfaceConfig.hpp"
 
 #include "IPAddress.hpp"
 
@@ -25,8 +25,8 @@
 // ipsec_set_policy / ipsec_get_policylen / ipsec_strerror from libipsec
 extern "C" {
   caddr_t ipsec_set_policy(const char *, int);
-  int     ipsec_get_policylen(caddr_t);
-  char   *ipsec_dump_policy(caddr_t, const char *);
+  int ipsec_get_policylen(caddr_t);
+  char *ipsec_dump_policy(caddr_t, const char *);
   const char *ipsec_strerror(void);
 }
 
@@ -43,8 +43,7 @@ static std::vector<uint8_t> hexToBytes(const std::string &hex) {
   std::vector<uint8_t> out;
   out.reserve(h.size() / 2);
   for (size_t i = 0; i + 1 < h.size(); i += 2) {
-    auto byte = static_cast<uint8_t>(
-        std::stoul(h.substr(i, 2), nullptr, 16));
+    auto byte = static_cast<uint8_t>(std::stoul(h.substr(i, 2), nullptr, 16));
     out.push_back(byte);
   }
   return out;
@@ -52,35 +51,50 @@ static std::vector<uint8_t> hexToBytes(const std::string &hex) {
 
 /// Map auth algorithm name to SADB_AALG_* constant.
 static uint8_t authAlgorithmFromName(const std::string &name) {
-  if (name == "hmac-md5")       return SADB_AALG_MD5HMAC;
-  if (name == "hmac-sha1")      return SADB_AALG_SHA1HMAC;
-  if (name == "hmac-sha2-256")  return SADB_X_AALG_SHA2_256;
-  if (name == "hmac-sha2-384")  return SADB_X_AALG_SHA2_384;
-  if (name == "hmac-sha2-512")  return SADB_X_AALG_SHA2_512;
-  if (name == "aes-xcbc-mac")   return SADB_X_AALG_AES_XCBC_MAC;
-  if (name == "null")           return SADB_X_AALG_NULL;
+  if (name == "hmac-md5")
+    return SADB_AALG_MD5HMAC;
+  if (name == "hmac-sha1")
+    return SADB_AALG_SHA1HMAC;
+  if (name == "hmac-sha2-256")
+    return SADB_X_AALG_SHA2_256;
+  if (name == "hmac-sha2-384")
+    return SADB_X_AALG_SHA2_384;
+  if (name == "hmac-sha2-512")
+    return SADB_X_AALG_SHA2_512;
+  if (name == "aes-xcbc-mac")
+    return SADB_X_AALG_AES_XCBC_MAC;
+  if (name == "null")
+    return SADB_X_AALG_NULL;
   throw std::runtime_error("Unknown auth algorithm: " + name);
 }
 
 /// Map encryption algorithm name to SADB_EALG_* constant.
 static uint8_t encAlgorithmFromName(const std::string &name) {
-  if (name == "des-cbc")        return SADB_EALG_DESCBC;
-  if (name == "3des-cbc")       return SADB_EALG_3DESCBC;
+  if (name == "des-cbc")
+    return SADB_EALG_DESCBC;
+  if (name == "3des-cbc")
+    return SADB_EALG_3DESCBC;
   if (name == "aes-cbc" || name == "aes" || name == "rijndael-cbc")
     return SADB_X_EALG_AESCBC;
-  if (name == "aes-ctr")        return SADB_X_EALG_AESCTR;
-  if (name == "blowfish-cbc")   return SADB_X_EALG_BLOWFISHCBC;
-  if (name == "cast128-cbc")    return SADB_X_EALG_CAST128CBC;
-  if (name == "null")           return SADB_EALG_NULL;
-  if (name == "chacha20-poly1305") return SADB_X_EALG_CHACHA20POLY1305;
-  if (name == "aes-gcm-16")     return SADB_X_EALG_AESGCM16;
+  if (name == "aes-ctr")
+    return SADB_X_EALG_AESCTR;
+  if (name == "blowfish-cbc")
+    return SADB_X_EALG_BLOWFISHCBC;
+  if (name == "cast128-cbc")
+    return SADB_X_EALG_CAST128CBC;
+  if (name == "null")
+    return SADB_EALG_NULL;
+  if (name == "chacha20-poly1305")
+    return SADB_X_EALG_CHACHA20POLY1305;
+  if (name == "aes-gcm-16")
+    return SADB_X_EALG_AESGCM16;
   throw std::runtime_error("Unknown encryption algorithm: " + name);
 }
 
 /// Fill a sockaddr_in from a dotted-quad string.
 static void fillSockaddrV4(struct sockaddr_in &sin, const std::string &addr) {
   std::memset(&sin, 0, sizeof(sin));
-  sin.sin_len    = sizeof(sin);
+  sin.sin_len = sizeof(sin);
   sin.sin_family = AF_INET;
   if (inet_pton(AF_INET, addr.c_str(), &sin.sin_addr) != 1)
     throw std::runtime_error("Invalid IPv4 address: " + addr);
@@ -101,9 +115,12 @@ static inline size_t pfkeyAlign8(size_t n) {
 static void pfkeyAddSA(const IpsecSA &sa) {
   // Determine SA type
   uint8_t satype = 0;
-  if (sa.protocol == "ah")       satype = SADB_SATYPE_AH;
-  else if (sa.protocol == "esp") satype = SADB_SATYPE_ESP;
-  else throw std::runtime_error("Unknown SA protocol: " + sa.protocol);
+  if (sa.protocol == "ah")
+    satype = SADB_SATYPE_AH;
+  else if (sa.protocol == "esp")
+    satype = SADB_SATYPE_ESP;
+  else
+    throw std::runtime_error("Unknown SA protocol: " + sa.protocol);
 
   // Decode keys
   auto authKeyBytes = hexToBytes(sa.auth_key);
@@ -140,29 +157,29 @@ static void pfkeyAddSA(const IpsecSA &sa) {
 
   // --- sadb_msg header ---
   auto *msg = reinterpret_cast<struct sadb_msg *>(buf.data() + off);
-  msg->sadb_msg_version  = PF_KEY_V2;
-  msg->sadb_msg_type     = SADB_ADD;
-  msg->sadb_msg_satype   = satype;
-  msg->sadb_msg_len      = static_cast<uint16_t>(totalLen / 8);
-  msg->sadb_msg_pid      = static_cast<uint32_t>(getpid());
+  msg->sadb_msg_version = PF_KEY_V2;
+  msg->sadb_msg_type = SADB_ADD;
+  msg->sadb_msg_satype = satype;
+  msg->sadb_msg_len = static_cast<uint16_t>(totalLen / 8);
+  msg->sadb_msg_pid = static_cast<uint32_t>(getpid());
   off += sizeof(struct sadb_msg);
 
   // --- sadb_sa extension ---
   auto *saExt = reinterpret_cast<struct sadb_sa *>(buf.data() + off);
-  saExt->sadb_sa_len      = sizeof(struct sadb_sa) / 8;
-  saExt->sadb_sa_exttype  = SADB_EXT_SA;
-  saExt->sadb_sa_spi      = htonl(sa.spi);
-  saExt->sadb_sa_replay   = 0;
-  saExt->sadb_sa_state    = SADB_SASTATE_MATURE;
-  saExt->sadb_sa_auth     = authAlg;
-  saExt->sadb_sa_encrypt  = encAlg;
+  saExt->sadb_sa_len = sizeof(struct sadb_sa) / 8;
+  saExt->sadb_sa_exttype = SADB_EXT_SA;
+  saExt->sadb_sa_spi = htonl(sa.spi);
+  saExt->sadb_sa_replay = 0;
+  saExt->sadb_sa_state = SADB_SASTATE_MATURE;
+  saExt->sadb_sa_auth = authAlg;
+  saExt->sadb_sa_encrypt = encAlg;
   off += sizeof(struct sadb_sa);
 
   // --- address source ---
   auto *srcExt = reinterpret_cast<struct sadb_address *>(buf.data() + off);
-  srcExt->sadb_address_len      = static_cast<uint16_t>(addrExtLen / 8);
-  srcExt->sadb_address_exttype  = SADB_EXT_ADDRESS_SRC;
-  srcExt->sadb_address_proto    = 0;
+  srcExt->sadb_address_len = static_cast<uint16_t>(addrExtLen / 8);
+  srcExt->sadb_address_exttype = SADB_EXT_ADDRESS_SRC;
+  srcExt->sadb_address_proto = 0;
   srcExt->sadb_address_prefixlen = 32;
   std::memcpy(buf.data() + off + sizeof(struct sadb_address), &sa_src,
               sizeof(sa_src));
@@ -170,9 +187,9 @@ static void pfkeyAddSA(const IpsecSA &sa) {
 
   // --- address destination ---
   auto *dstExt = reinterpret_cast<struct sadb_address *>(buf.data() + off);
-  dstExt->sadb_address_len      = static_cast<uint16_t>(addrExtLen / 8);
-  dstExt->sadb_address_exttype  = SADB_EXT_ADDRESS_DST;
-  dstExt->sadb_address_proto    = 0;
+  dstExt->sadb_address_len = static_cast<uint16_t>(addrExtLen / 8);
+  dstExt->sadb_address_exttype = SADB_EXT_ADDRESS_DST;
+  dstExt->sadb_address_proto = 0;
   dstExt->sadb_address_prefixlen = 32;
   std::memcpy(buf.data() + off + sizeof(struct sadb_address), &sa_dst,
               sizeof(sa_dst));
@@ -180,9 +197,9 @@ static void pfkeyAddSA(const IpsecSA &sa) {
 
   // --- auth key ---
   auto *akExt = reinterpret_cast<struct sadb_key *>(buf.data() + off);
-  akExt->sadb_key_len     = static_cast<uint16_t>(authKeyExtLen / 8);
+  akExt->sadb_key_len = static_cast<uint16_t>(authKeyExtLen / 8);
   akExt->sadb_key_exttype = SADB_EXT_KEY_AUTH;
-  akExt->sadb_key_bits    = static_cast<uint16_t>(authKeyBytes.size() * 8);
+  akExt->sadb_key_bits = static_cast<uint16_t>(authKeyBytes.size() * 8);
   std::memcpy(buf.data() + off + sizeof(struct sadb_key), authKeyBytes.data(),
               authKeyBytes.size());
   off += authKeyExtLen;
@@ -190,9 +207,9 @@ static void pfkeyAddSA(const IpsecSA &sa) {
   // --- encrypt key (optional, ESP only) ---
   if (!encKeyBytes.empty()) {
     auto *ekExt = reinterpret_cast<struct sadb_key *>(buf.data() + off);
-    ekExt->sadb_key_len     = static_cast<uint16_t>(encKeyExtLen / 8);
+    ekExt->sadb_key_len = static_cast<uint16_t>(encKeyExtLen / 8);
     ekExt->sadb_key_exttype = SADB_EXT_KEY_ENCRYPT;
-    ekExt->sadb_key_bits    = static_cast<uint16_t>(encKeyBytes.size() * 8);
+    ekExt->sadb_key_bits = static_cast<uint16_t>(encKeyBytes.size() * 8);
     std::memcpy(buf.data() + off + sizeof(struct sadb_key), encKeyBytes.data(),
                 encKeyBytes.size());
     off += encKeyExtLen;
@@ -222,12 +239,11 @@ static void pfkeyAddSA(const IpsecSA &sa) {
 // SP add via ipsec_set_policy() + raw PF_KEY SADB_X_SPDADD message.
 // ---------------------------------------------------------------------------
 
-static void pfkeyAddSP(const IpsecSP &sp,
-                        const std::string &srcAddr,
-                        const std::string &dstAddr) {
+static void pfkeyAddSP(const IpsecSP &sp, const std::string &srcAddr,
+                       const std::string &dstAddr) {
   // Build the policy buffer using libipsec
-  caddr_t polBuf = ipsec_set_policy(sp.policy.c_str(),
-                                    static_cast<int>(sp.policy.size()));
+  caddr_t polBuf =
+      ipsec_set_policy(sp.policy.c_str(), static_cast<int>(sp.policy.size()));
   if (polBuf == nullptr)
     throw std::runtime_error("ipsec_set_policy failed: " +
                              std::string(ipsec_strerror()));
@@ -236,8 +252,10 @@ static void pfkeyAddSP(const IpsecSP &sp,
 
   // Determine direction
   uint8_t dir = 0;
-  if (sp.direction == "in")       dir = 1; // IPSEC_DIR_INBOUND
-  else if (sp.direction == "out") dir = 2; // IPSEC_DIR_OUTBOUND
+  if (sp.direction == "in")
+    dir = 1; // IPSEC_DIR_INBOUND
+  else if (sp.direction == "out")
+    dir = 2; // IPSEC_DIR_OUTBOUND
   else {
     free(polBuf);
     throw std::runtime_error("Unknown SP direction: " + sp.direction);
@@ -251,8 +269,7 @@ static void pfkeyAddSP(const IpsecSP &sp,
   const size_t addrExtLen =
       pfkeyAlign8(sizeof(struct sadb_address) + sizeof(struct sockaddr_in));
   const size_t polExtLen = pfkeyAlign8(static_cast<size_t>(polLen));
-  const size_t totalLen =
-      sizeof(struct sadb_msg) + addrExtLen * 2 + polExtLen;
+  const size_t totalLen = sizeof(struct sadb_msg) + addrExtLen * 2 + polExtLen;
 
   std::vector<uint8_t> buf(totalLen, 0);
   size_t off = 0;
@@ -260,17 +277,17 @@ static void pfkeyAddSP(const IpsecSP &sp,
   // --- sadb_msg header ---
   auto *msg = reinterpret_cast<struct sadb_msg *>(buf.data() + off);
   msg->sadb_msg_version = PF_KEY_V2;
-  msg->sadb_msg_type    = SADB_X_SPDADD;
-  msg->sadb_msg_satype  = 0;
-  msg->sadb_msg_len     = static_cast<uint16_t>(totalLen / 8);
-  msg->sadb_msg_pid     = static_cast<uint32_t>(getpid());
+  msg->sadb_msg_type = SADB_X_SPDADD;
+  msg->sadb_msg_satype = 0;
+  msg->sadb_msg_len = static_cast<uint16_t>(totalLen / 8);
+  msg->sadb_msg_pid = static_cast<uint32_t>(getpid());
   off += sizeof(struct sadb_msg);
 
   // --- address source ---
   auto *srcExt = reinterpret_cast<struct sadb_address *>(buf.data() + off);
-  srcExt->sadb_address_len      = static_cast<uint16_t>(addrExtLen / 8);
-  srcExt->sadb_address_exttype  = SADB_EXT_ADDRESS_SRC;
-  srcExt->sadb_address_proto    = 0;  // any protocol
+  srcExt->sadb_address_len = static_cast<uint16_t>(addrExtLen / 8);
+  srcExt->sadb_address_exttype = SADB_EXT_ADDRESS_SRC;
+  srcExt->sadb_address_proto = 0; // any protocol
   srcExt->sadb_address_prefixlen = 32;
   std::memcpy(buf.data() + off + sizeof(struct sadb_address), &sa_src,
               sizeof(sa_src));
@@ -278,9 +295,9 @@ static void pfkeyAddSP(const IpsecSP &sp,
 
   // --- address destination ---
   auto *dstExt = reinterpret_cast<struct sadb_address *>(buf.data() + off);
-  dstExt->sadb_address_len      = static_cast<uint16_t>(addrExtLen / 8);
-  dstExt->sadb_address_exttype  = SADB_EXT_ADDRESS_DST;
-  dstExt->sadb_address_proto    = 0;
+  dstExt->sadb_address_len = static_cast<uint16_t>(addrExtLen / 8);
+  dstExt->sadb_address_exttype = SADB_EXT_ADDRESS_DST;
+  dstExt->sadb_address_proto = 0;
   dstExt->sadb_address_prefixlen = 32;
   std::memcpy(buf.data() + off + sizeof(struct sadb_address), &sa_dst,
               sizeof(sa_dst));
@@ -334,7 +351,8 @@ static void setIpsecReqid(const std::string &ifname, uint32_t reqid) {
 // SaveIpsec — configure tunnel endpoints, then install SA/SP if present.
 // ---------------------------------------------------------------------------
 
-void SystemConfigurationManager::SaveIpsec(const IpsecInterfaceConfig &t) const {
+void SystemConfigurationManager::SaveIpsec(
+    const IpsecInterfaceConfig &t) const {
   if (t.name.empty())
     throw std::runtime_error("IpsecInterfaceConfig has no interface name set");
 
@@ -365,8 +383,7 @@ void SystemConfigurationManager::SaveIpsec(const IpsecInterfaceConfig &t) const 
       auto v4src = dynamic_cast<const IPv4Address *>(src_addr.get());
       auto v4dst = dynamic_cast<const IPv4Address *>(dst_addr.get());
 
-      auto *sin_src =
-          reinterpret_cast<struct sockaddr_in *>(&ifra.ifra_addr);
+      auto *sin_src = reinterpret_cast<struct sockaddr_in *>(&ifra.ifra_addr);
       sin_src->sin_family = AF_INET;
       sin_src->sin_len = sizeof(struct sockaddr_in);
       sin_src->sin_addr.s_addr = htonl(v4src->value());
@@ -396,8 +413,10 @@ void SystemConfigurationManager::SaveIpsec(const IpsecInterfaceConfig &t) const 
 
   // Install Security Policies into the kernel SPD
   std::string srcStr, dstStr;
-  if (t.source)  srcStr = t.source->toString();
-  if (t.destination) dstStr = t.destination->toString();
+  if (t.source)
+    srcStr = t.source->toString();
+  if (t.destination)
+    dstStr = t.destination->toString();
 
   for (const auto &sp : t.security_policies) {
     // Use the tunnel endpoints as the SP selector addresses
@@ -412,7 +431,8 @@ void SystemConfigurationManager::CreateIpsec(const std::string &nm) const {
   cloneInterface(nm, SIOCIFCREATE);
 }
 
-std::vector<IpsecInterfaceConfig> SystemConfigurationManager::GetIpsecInterfaces(
+std::vector<IpsecInterfaceConfig>
+SystemConfigurationManager::GetIpsecInterfaces(
     const std::vector<InterfaceConfig> &bases) const {
   std::vector<IpsecInterfaceConfig> out;
   for (const auto &ic : bases) {

@@ -2,11 +2,17 @@
 #include "ConfigurationManager.hpp"
 #include "InterfaceType.hpp"
 
-void PfsyncInterfaceConfig::save(ConfigurationManager &mgr) const { mgr.SaveInterface(*this); }
+void PfsyncInterfaceConfig::save(ConfigurationManager &mgr) const {
+  mgr.SaveInterface(*this);
+}
 
-void PfsyncInterfaceConfig::create(ConfigurationManager &mgr) const { mgr.CreateInterface(name); }
+void PfsyncInterfaceConfig::create(ConfigurationManager &mgr) const {
+  mgr.CreateInterface(name);
+}
 
-void PfsyncInterfaceConfig::destroy(ConfigurationManager &mgr) const { mgr.DestroyInterface(name); }
+void PfsyncInterfaceConfig::destroy(ConfigurationManager &mgr) const {
+  mgr.DestroyInterface(name);
+}
 
 PfsyncInterfaceConfig::PfsyncInterfaceConfig(const InterfaceConfig &base) {
   name = base.name;

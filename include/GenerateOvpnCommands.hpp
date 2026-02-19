@@ -4,6 +4,6 @@
 #include <set>
 
 namespace netcli {
-void generateOvpnCommands(ConfigurationManager &mgr,
-                          std::set<std::string> &processedInterfaces);
+  void generateOvpnCommands(ConfigurationManager &mgr,
+                            std::set<std::string> &processedInterfaces);
 }

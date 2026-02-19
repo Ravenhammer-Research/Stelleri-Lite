@@ -32,10 +32,10 @@
 
 #pragma once
 
+#include "ConfigurationManager.hpp"
 #include "InterfaceConfig.hpp"
 #include <optional>
 #include <string>
-#include "ConfigurationManager.hpp"
 
 /**
  * @brief Configuration for VXLAN overlay interfaces
@@ -45,7 +45,8 @@
  */
 class VxlanInterfaceConfig : public InterfaceConfig {
 public:
-  explicit VxlanInterfaceConfig(const InterfaceConfig &base) : InterfaceConfig(base) {}
+  explicit VxlanInterfaceConfig(const InterfaceConfig &base)
+      : InterfaceConfig(base) {}
 
   /// VXLAN Network Identifier (24-bit)
   std::optional<uint32_t> vni;
@@ -85,7 +86,4 @@ public:
   void save(ConfigurationManager &mgr) const override;
   void create(ConfigurationManager &mgr) const;
   void destroy(ConfigurationManager &mgr) const override;
-
-
 };
- 

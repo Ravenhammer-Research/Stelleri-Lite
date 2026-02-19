@@ -34,7 +34,6 @@
 
 #include "InterfaceConfig.hpp"
 
-
 class LoopBackInterfaceConfig : public InterfaceConfig {
 public:
   explicit LoopBackInterfaceConfig(const InterfaceConfig &base)

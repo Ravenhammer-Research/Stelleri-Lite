@@ -12,5 +12,6 @@
 class GifTableFormatter : public TableFormatter<GifInterfaceConfig> {
 public:
   GifTableFormatter() = default;
-  std::string format(const std::vector<GifInterfaceConfig> &interfaces) override;
+  std::string
+  format(const std::vector<GifInterfaceConfig> &interfaces) override;
 };

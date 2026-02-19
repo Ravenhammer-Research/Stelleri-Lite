@@ -22,9 +22,7 @@ namespace netcli {
         continue;
 
       WireGuardInterfaceConfig wgc(ifc);
-      std::cout << "set "
-                << InterfaceToken::toString(&wgc)
-                << "\n";
+      std::cout << "set " << InterfaceToken::toString(&wgc) << "\n";
       processedInterfaces.insert(ifc.name);
 
       for (const auto &alias : ifc.aliases) {

@@ -50,8 +50,10 @@ SingleWlanSummaryFormatter::format(const WlanInterfaceConfig &w) const {
     oss << "BSSID:     " << *w.bssid << "\n";
   if (w.regdomain || w.country) {
     oss << "RegDomain: ";
-    if (w.regdomain) oss << *w.regdomain;
-    if (w.country) oss << " country " << *w.country;
+    if (w.regdomain)
+      oss << *w.regdomain;
+    if (w.country)
+      oss << " country " << *w.country;
     oss << "\n";
   }
   if (w.parent)
@@ -105,19 +107,33 @@ SingleWlanSummaryFormatter::format(const WlanInterfaceConfig &w) const {
   if (w.htconf) {
     const char *h = "off";
     switch (*w.htconf & 3) {
-    case 1: h = "ht20"; break;
-    case 3: h = "ht"; break;
+    case 1:
+      h = "ht20";
+      break;
+    case 3:
+      h = "ht";
+      break;
     }
     oss << "HTConf:    " << h << "\n";
   }
   if (w.ampdu) {
     std::string a;
     switch (*w.ampdu) {
-    case 0: a = "-ampdu"; break;
-    case 1: a = "ampdutx -ampdurx"; break;
-    case 2: a = "-ampdutx ampdurx"; break;
-    case 3: a = "ampdu"; break;
-    default: a = std::to_string(*w.ampdu); break;
+    case 0:
+      a = "-ampdu";
+      break;
+    case 1:
+      a = "ampdutx -ampdurx";
+      break;
+    case 2:
+      a = "-ampdutx ampdurx";
+      break;
+    case 3:
+      a = "ampdu";
+      break;
+    default:
+      a = std::to_string(*w.ampdu);
+      break;
     }
     oss << "AMPDU:     " << a;
     if (w.ampdu_limit)
@@ -129,9 +145,15 @@ SingleWlanSummaryFormatter::format(const WlanInterfaceConfig &w) const {
   if (w.stbc) {
     const char *v = "-stbc";
     switch (*w.stbc) {
-    case 1: v = "stbctx -stbcrx"; break;
-    case 2: v = "-stbctx stbcrx"; break;
-    case 3: v = "stbc"; break;
+    case 1:
+      v = "stbctx -stbcrx";
+      break;
+    case 2:
+      v = "-stbctx stbcrx";
+      break;
+    case 3:
+      v = "stbc";
+      break;
     }
     oss << "STBC:      " << v << "\n";
   }
@@ -142,7 +164,8 @@ SingleWlanSummaryFormatter::format(const WlanInterfaceConfig &w) const {
   if (w.roaming)
     oss << "Roaming:   " << WlanRoamingToString(*w.roaming) << "\n";
   if (w.media_subtype || w.media_mode)
-    oss << "Media:     " << WlanMediaToString(w.media_subtype, w.media_mode) << "\n";
+    oss << "Media:     " << WlanMediaToString(w.media_subtype, w.media_mode)
+        << "\n";
   if (w.drivercaps)
     oss << "DrvCaps:   0x" << std::hex << *w.drivercaps << std::dec << "\n";
   if (w.htcaps)

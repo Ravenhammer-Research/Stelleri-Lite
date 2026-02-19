@@ -32,8 +32,8 @@
 
 #pragma once
 
-#include "WlanInterfaceConfig.hpp"
 #include "TableFormatter.hpp"
+#include "WlanInterfaceConfig.hpp"
 #include <vector>
 
 class WlanTableFormatter : public TableFormatter<WlanInterfaceConfig> {

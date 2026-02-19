@@ -3,12 +3,12 @@
  * All rights reserved.
  */
 
-#include "InterfaceToken.hpp"
-#include "GifInterfaceConfig.hpp"
 #include "ConfigurationManager.hpp"
-#include "IPAddress.hpp"
-#include "SingleGifSummaryFormatter.hpp"
+#include "GifInterfaceConfig.hpp"
 #include "GifTableFormatter.hpp"
+#include "IPAddress.hpp"
+#include "InterfaceToken.hpp"
+#include "SingleGifSummaryFormatter.hpp"
 #include <iostream>
 
 class GifInterfaceToken : public InterfaceToken {
@@ -60,8 +60,8 @@ InterfaceToken::gifCompletions(const std::string &prev) {
 }
 
 void InterfaceToken::setGifInterface(const InterfaceToken &tok,
-                                    ConfigurationManager *mgr,
-                                    InterfaceConfig &base, bool exists) {
+                                     ConfigurationManager *mgr,
+                                     InterfaceConfig &base, bool exists) {
   GifInterfaceConfig gc(base);
   if (tok.source)
     gc.source = IPAddress::fromString(*tok.source);
@@ -70,12 +70,12 @@ void InterfaceToken::setGifInterface(const InterfaceToken &tok,
   if (tok.tunnel_vrf)
     gc.tunnel_vrf = *tok.tunnel_vrf;
   gc.save(*mgr);
-  std::cout << "set interface: " << (exists ? "updated" : "created")
-            << " gif '" << tok.name() << "'\n";
+  std::cout << "set interface: " << (exists ? "updated" : "created") << " gif '"
+            << tok.name() << "'\n";
 }
 
 bool InterfaceToken::showGifInterface(const InterfaceConfig &ic,
-                                     ConfigurationManager *mgr) {
+                                      ConfigurationManager *mgr) {
   std::vector<InterfaceConfig> v = {ic};
   auto gifs = mgr->GetGifInterfaces(v);
   if (!gifs.empty()) {
@@ -86,8 +86,9 @@ bool InterfaceToken::showGifInterface(const InterfaceConfig &ic,
   return false;
 }
 
-std::string InterfaceToken::showGifInterfaces(
-    const std::vector<InterfaceConfig> &ifaces, ConfigurationManager *mgr) {
+std::string
+InterfaceToken::showGifInterfaces(const std::vector<InterfaceConfig> &ifaces,
+                                  ConfigurationManager *mgr) {
   GifTableFormatter f;
   return f.format(mgr->GetGifInterfaces(ifaces));
 }

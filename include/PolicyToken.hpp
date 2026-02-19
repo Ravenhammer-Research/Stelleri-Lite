@@ -56,12 +56,12 @@ public:
   SubType sub_type = SubType::AccessList;
 
   /// Access-list fields
-  std::optional<uint32_t> acl_id;       ///< access-list number
-  std::optional<uint32_t> rule_seq;     ///< rule sequence number
-  std::optional<std::string> action;    ///< "permit" or "deny"
-  std::optional<std::string> source;    ///< source CIDR
+  std::optional<uint32_t> acl_id;         ///< access-list number
+  std::optional<uint32_t> rule_seq;       ///< rule sequence number
+  std::optional<std::string> action;      ///< "permit" or "deny"
+  std::optional<std::string> source;      ///< source CIDR
   std::optional<std::string> destination; ///< destination CIDR
-  std::optional<std::string> protocol;  ///< protocol
+  std::optional<std::string> protocol;    ///< protocol
 
   /**
    * @brief Render a PolicyConfig to a command string (for generator)
@@ -70,7 +70,6 @@ public:
 
 private:
   // Parse access-list sub-tokens starting at position i
-  static void parseAccessList(const std::vector<std::string> &tokens,
-                              size_t &i,
+  static void parseAccessList(const std::vector<std::string> &tokens, size_t &i,
                               std::shared_ptr<PolicyToken> &tok);
 };

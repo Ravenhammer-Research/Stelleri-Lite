@@ -3,12 +3,12 @@
  * All rights reserved.
  */
 
-#include "InterfaceToken.hpp"
-#include "IpsecInterfaceConfig.hpp"
 #include "ConfigurationManager.hpp"
 #include "IPAddress.hpp"
-#include "SingleIpsecSummaryFormatter.hpp"
+#include "InterfaceToken.hpp"
+#include "IpsecInterfaceConfig.hpp"
 #include "IpsecTableFormatter.hpp"
+#include "SingleIpsecSummaryFormatter.hpp"
 #include <iostream>
 
 class IpsecInterfaceToken : public InterfaceToken {
@@ -29,10 +29,9 @@ std::string InterfaceToken::toString(IpsecInterfaceConfig *cfg) {
   if (cfg->reqid)
     s += " reqid " + std::to_string(*cfg->reqid);
   for (const auto &sa : cfg->security_associations) {
-    s += " sa source " + sa.src + " destination " + sa.dst +
-         " protocol " + sa.protocol + " spi " +
-         std::to_string(sa.spi) + " algorithm " + sa.algorithm +
-         " key " + sa.auth_key;
+    s += " sa source " + sa.src + " destination " + sa.dst + " protocol " +
+         sa.protocol + " spi " + std::to_string(sa.spi) + " algorithm " +
+         sa.algorithm + " key " + sa.auth_key;
     if (sa.enc_algorithm)
       s += " enc-algorithm " + *sa.enc_algorithm;
     if (sa.enc_key)
@@ -75,29 +74,44 @@ bool InterfaceToken::parseIpsecKeywords(std::shared_ptr<InterfaceToken> &tok,
     while (cur < tokens.size()) {
       const std::string &sk = tokens[cur];
       if (sk == "source" && cur + 1 < tokens.size()) {
-        sa.src = tokens[cur + 1]; cur += 2; continue;
+        sa.src = tokens[cur + 1];
+        cur += 2;
+        continue;
       }
       if (sk == "destination" && cur + 1 < tokens.size()) {
-        sa.dst = tokens[cur + 1]; cur += 2; continue;
+        sa.dst = tokens[cur + 1];
+        cur += 2;
+        continue;
       }
       if (sk == "protocol" && cur + 1 < tokens.size()) {
-        sa.protocol = tokens[cur + 1]; cur += 2; continue;
+        sa.protocol = tokens[cur + 1];
+        cur += 2;
+        continue;
       }
       if (sk == "spi" && cur + 1 < tokens.size()) {
         sa.spi = static_cast<uint32_t>(std::stoul(tokens[cur + 1], nullptr, 0));
-        cur += 2; continue;
+        cur += 2;
+        continue;
       }
       if (sk == "algorithm" && cur + 1 < tokens.size()) {
-        sa.algorithm = tokens[cur + 1]; cur += 2; continue;
+        sa.algorithm = tokens[cur + 1];
+        cur += 2;
+        continue;
       }
       if (sk == "key" && cur + 1 < tokens.size()) {
-        sa.auth_key = tokens[cur + 1]; cur += 2; continue;
+        sa.auth_key = tokens[cur + 1];
+        cur += 2;
+        continue;
       }
       if (sk == "enc-algorithm" && cur + 1 < tokens.size()) {
-        sa.enc_algorithm = tokens[cur + 1]; cur += 2; continue;
+        sa.enc_algorithm = tokens[cur + 1];
+        cur += 2;
+        continue;
       }
       if (sk == "enc-key" && cur + 1 < tokens.size()) {
-        sa.enc_key = tokens[cur + 1]; cur += 2; continue;
+        sa.enc_key = tokens[cur + 1];
+        cur += 2;
+        continue;
       }
       break;
     }
@@ -112,14 +126,20 @@ bool InterfaceToken::parseIpsecKeywords(std::shared_ptr<InterfaceToken> &tok,
     while (cur < tokens.size()) {
       const std::string &sk = tokens[cur];
       if (sk == "direction" && cur + 1 < tokens.size()) {
-        sp.direction = tokens[cur + 1]; cur += 2; continue;
+        sp.direction = tokens[cur + 1];
+        cur += 2;
+        continue;
       }
       if (sk == "policy" && cur + 1 < tokens.size()) {
-        sp.policy = tokens[cur + 1]; cur += 2; continue;
+        sp.policy = tokens[cur + 1];
+        cur += 2;
+        continue;
       }
       if (sk == "reqid" && cur + 1 < tokens.size()) {
-        sp.reqid = static_cast<uint32_t>(std::stoul(tokens[cur + 1], nullptr, 0));
-        cur += 2; continue;
+        sp.reqid =
+            static_cast<uint32_t>(std::stoul(tokens[cur + 1], nullptr, 0));
+        cur += 2;
+        continue;
       }
       break;
     }
@@ -145,8 +165,8 @@ InterfaceToken::ipsecCompletions(const std::string &prev) {
 }
 
 void InterfaceToken::setIpsecInterface(const InterfaceToken &tok,
-                                      ConfigurationManager *mgr,
-                                      InterfaceConfig &base, bool exists) {
+                                       ConfigurationManager *mgr,
+                                       InterfaceConfig &base, bool exists) {
   IpsecInterfaceConfig icfg(base);
   if (tok.source)
     icfg.source = IPAddress::fromString(*tok.source);
@@ -166,7 +186,7 @@ void InterfaceToken::setIpsecInterface(const InterfaceToken &tok,
 }
 
 bool InterfaceToken::showIpsecInterface(const InterfaceConfig &ic,
-                                       ConfigurationManager *mgr) {
+                                        ConfigurationManager *mgr) {
   std::vector<InterfaceConfig> v = {ic};
   auto ipsecs = mgr->GetIpsecInterfaces(v);
   if (!ipsecs.empty()) {
@@ -177,8 +197,9 @@ bool InterfaceToken::showIpsecInterface(const InterfaceConfig &ic,
   return false;
 }
 
-std::string InterfaceToken::showIpsecInterfaces(
-    const std::vector<InterfaceConfig> &ifaces, ConfigurationManager *mgr) {
+std::string
+InterfaceToken::showIpsecInterfaces(const std::vector<InterfaceConfig> &ifaces,
+                                    ConfigurationManager *mgr) {
   IpsecTableFormatter f;
   return f.format(mgr->GetIpsecInterfaces(ifaces));
 }

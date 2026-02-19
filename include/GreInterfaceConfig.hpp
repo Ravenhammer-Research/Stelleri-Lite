@@ -32,11 +32,11 @@
 
 #pragma once
 
+#include "ConfigurationManager.hpp"
 #include "InterfaceConfig.hpp"
 #include <optional>
-#include <string>
 #include <stdexcept>
-#include "ConfigurationManager.hpp"
+#include <string>
 
 /**
  * @brief Configuration for GRE tunnel interfaces
@@ -46,7 +46,8 @@
  */
 class GreInterfaceConfig : public InterfaceConfig {
 public:
-  explicit GreInterfaceConfig(const InterfaceConfig &base) : InterfaceConfig(base) {}
+  explicit GreInterfaceConfig(const InterfaceConfig &base)
+      : InterfaceConfig(base) {}
 
   /// Tunnel source address
   std::optional<std::string> greSource;

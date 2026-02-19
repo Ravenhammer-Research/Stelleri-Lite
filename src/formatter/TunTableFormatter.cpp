@@ -3,7 +3,8 @@
 #include <string>
 #include <vector>
 
-std::string TunTableFormatter::format(const std::vector<TunInterfaceConfig> &interfaces) {
+std::string
+TunTableFormatter::format(const std::vector<TunInterfaceConfig> &interfaces) {
   if (interfaces.empty()) {
     return "No tun interfaces found.\n";
   }
@@ -16,9 +17,11 @@ std::string TunTableFormatter::format(const std::vector<TunInterfaceConfig> &int
 
   for (const auto &tun : interfaces) {
     std::string source = tun.source ? tun.source->toString() : "-";
-    std::string destination = tun.destination ? tun.destination->toString() : "-";
+    std::string destination =
+        tun.destination ? tun.destination->toString() : "-";
     std::string vrfStr = tun.vrf ? std::to_string(tun.vrf->table) : "-";
-    std::string tunnelVrfStr = tun.tunnel_vrf ? std::to_string(*tun.tunnel_vrf) : "-";
+    std::string tunnelVrfStr =
+        tun.tunnel_vrf ? std::to_string(*tun.tunnel_vrf) : "-";
 
     addRow({tun.name, source, destination, vrfStr, tunnelVrfStr});
   }

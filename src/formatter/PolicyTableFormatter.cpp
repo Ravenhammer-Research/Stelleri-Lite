@@ -49,8 +49,7 @@ PolicyTableFormatter::format(const std::vector<PolicyConfig> &entries) {
     for (const auto &rule : acl.rules) {
       addRow({std::to_string(acl.id), std::to_string(rule.seq),
               rule.action.empty() ? "-" : rule.action,
-              rule.source.value_or("any"),
-              rule.destination.value_or("any"),
+              rule.source.value_or("any"), rule.destination.value_or("any"),
               rule.protocol.value_or("any")});
     }
   }

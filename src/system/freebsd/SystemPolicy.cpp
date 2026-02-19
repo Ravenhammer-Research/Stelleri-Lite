@@ -52,6 +52,7 @@ void SystemConfigurationManager::SetPolicy(const PolicyConfig & /*pc*/) const {
 
 // ── DeletePolicy (stub) ──────────────────────────────────────────────
 
-void SystemConfigurationManager::DeletePolicy(const PolicyConfig & /*pc*/) const {
+void SystemConfigurationManager::DeletePolicy(
+    const PolicyConfig & /*pc*/) const {
   // not yet implemented
 }

@@ -3,11 +3,10 @@
  * All rights reserved.
  */
 
+#include "ConfigurationManager.hpp"
 #include "InterfaceToken.hpp"
 #include "PfsyncInterfaceConfig.hpp"
-#include "ConfigurationManager.hpp"
 #include "PfsyncTableFormatter.hpp"
-#include <iostream>
 #include <iostream>
 
 class PfsyncInterfaceToken : public InterfaceToken {
@@ -31,16 +30,17 @@ InterfaceToken::pfsyncCompletions(const std::string &prev) {
 }
 
 void InterfaceToken::setPfsyncInterface(const InterfaceToken &tok,
-                                       ConfigurationManager *mgr,
-                                       InterfaceConfig &base, bool exists) {
+                                        ConfigurationManager *mgr,
+                                        InterfaceConfig &base, bool exists) {
   PfsyncInterfaceConfig pc(base);
   pc.save(*mgr);
   std::cout << "set interface: " << (exists ? "updated" : "created")
             << " pfsync '" << tok.name() << "'\n";
 }
 
-std::string InterfaceToken::showPfsyncInterfaces(
-    const std::vector<InterfaceConfig> &ifaces, ConfigurationManager *) {
+std::string
+InterfaceToken::showPfsyncInterfaces(const std::vector<InterfaceConfig> &ifaces,
+                                     ConfigurationManager *) {
   PfsyncTableFormatter f;
   return f.format(ifaces);
 }

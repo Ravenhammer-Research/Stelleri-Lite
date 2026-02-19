@@ -32,8 +32,8 @@
 
 #pragma once
 
-#include "VlanInterfaceConfig.hpp"
 #include "TableFormatter.hpp"
+#include "VlanInterfaceConfig.hpp"
 #include <string>
 #include <vector>
 
@@ -51,5 +51,6 @@ public:
    * @param interfaces List of VlanInterfaceConfig
    * @return Formatted ASCII table string
    */
-  std::string format(const std::vector<VlanInterfaceConfig> &interfaces) override;
+  std::string
+  format(const std::vector<VlanInterfaceConfig> &interfaces) override;
 };

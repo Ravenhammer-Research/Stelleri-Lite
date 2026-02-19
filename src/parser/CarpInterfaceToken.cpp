@@ -3,11 +3,11 @@
  * All rights reserved.
  */
 
-#include "InterfaceToken.hpp"
 #include "CarpInterfaceConfig.hpp"
-#include "ConfigurationManager.hpp"
-#include "SingleCarpSummaryFormatter.hpp"
 #include "CarpTableFormatter.hpp"
+#include "ConfigurationManager.hpp"
+#include "InterfaceToken.hpp"
+#include "SingleCarpSummaryFormatter.hpp"
 #include <iostream>
 
 class CarpInterfaceToken : public InterfaceToken {
@@ -74,8 +74,8 @@ InterfaceToken::carpCompletions(const std::string &prev) {
 }
 
 void InterfaceToken::setCarpInterface(const InterfaceToken &tok,
-                                     ConfigurationManager *mgr,
-                                     InterfaceConfig &base, bool exists) {
+                                      ConfigurationManager *mgr,
+                                      InterfaceConfig &base, bool exists) {
   CarpInterfaceConfig cc(base);
   if (tok.carp) {
     if (tok.carp->vhid)
@@ -93,7 +93,7 @@ void InterfaceToken::setCarpInterface(const InterfaceToken &tok,
 }
 
 bool InterfaceToken::showCarpInterface(const InterfaceConfig &ic,
-                                      ConfigurationManager *mgr) {
+                                       ConfigurationManager *mgr) {
   std::vector<InterfaceConfig> v = {ic};
   auto carps = mgr->GetCarpInterfaces(v);
   if (!carps.empty()) {
@@ -104,8 +104,9 @@ bool InterfaceToken::showCarpInterface(const InterfaceConfig &ic,
   return false;
 }
 
-std::string InterfaceToken::showCarpInterfaces(
-    const std::vector<InterfaceConfig> &ifaces, ConfigurationManager *) {
+std::string
+InterfaceToken::showCarpInterfaces(const std::vector<InterfaceConfig> &ifaces,
+                                   ConfigurationManager *) {
   CarpTableFormatter f;
   return f.format(ifaces);
 }

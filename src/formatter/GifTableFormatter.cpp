@@ -3,7 +3,8 @@
 #include <string>
 #include <vector>
 
-std::string GifTableFormatter::format(const std::vector<GifInterfaceConfig> &interfaces) {
+std::string
+GifTableFormatter::format(const std::vector<GifInterfaceConfig> &interfaces) {
   if (interfaces.empty()) {
     return "No gif interfaces found.\n";
   }
@@ -16,9 +17,11 @@ std::string GifTableFormatter::format(const std::vector<GifInterfaceConfig> &int
 
   for (const auto &gif : interfaces) {
     std::string source = gif.source ? gif.source->toString() : "-";
-    std::string destination = gif.destination ? gif.destination->toString() : "-";
+    std::string destination =
+        gif.destination ? gif.destination->toString() : "-";
     std::string vrfStr = gif.vrf ? std::to_string(gif.vrf->table) : "-";
-    std::string tunnelVrfStr = gif.tunnel_vrf ? std::to_string(*gif.tunnel_vrf) : "-";
+    std::string tunnelVrfStr =
+        gif.tunnel_vrf ? std::to_string(*gif.tunnel_vrf) : "-";
 
     addRow({gif.name, source, destination, vrfStr, tunnelVrfStr});
   }

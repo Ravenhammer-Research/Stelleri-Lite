@@ -20,14 +20,15 @@
 
 namespace {
 
-// Populate wireless-specific metadata on a WlanInterfaceConfig.
-// Val-type queries:  kernel returns result in req.i_val  (set i_len=0, i_data=nullptr)
-// Buffer-type queries: kernel fills req.i_data buffer    (set i_len=bufsize, i_data=buf)
-void populateWlanMetadata(WlanInterfaceConfig &w, const std::string &ifname,
-                          std::optional<uint32_t> flags) {
-  Socket s(AF_INET, SOCK_DGRAM);
-  struct ieee80211req req{};
-  std::strncpy(req.i_name, ifname.c_str(), IFNAMSIZ - 1);
+  // Populate wireless-specific metadata on a WlanInterfaceConfig.
+  // Val-type queries:  kernel returns result in req.i_val  (set i_len=0,
+  // i_data=nullptr) Buffer-type queries: kernel fills req.i_data buffer    (set
+  // i_len=bufsize, i_data=buf)
+  void populateWlanMetadata(WlanInterfaceConfig &w, const std::string &ifname,
+                            std::optional<uint32_t> flags) {
+    Socket s(AF_INET, SOCK_DGRAM);
+    struct ieee80211req req{};
+    std::strncpy(req.i_name, ifname.c_str(), IFNAMSIZ - 1);
 
     // SSID (buffer-type)
     {
@@ -68,9 +69,8 @@ void populateWlanMetadata(WlanInterfaceConfig &w, const std::string &ifname,
       req.i_data = mac.data();
       if (ioctl(s, SIOCG80211, &req) == 0 && req.i_len >= 6) {
         char macbuf[32];
-        std::snprintf(macbuf, sizeof(macbuf),
-                      "%02x:%02x:%02x:%02x:%02x:%02x", mac[0], mac[1],
-                      mac[2], mac[3], mac[4], mac[5]);
+        std::snprintf(macbuf, sizeof(macbuf), "%02x:%02x:%02x:%02x:%02x:%02x",
+                      mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
         w.bssid = std::string(macbuf);
       }
     }
@@ -85,7 +85,8 @@ void populateWlanMetadata(WlanInterfaceConfig &w, const std::string &ifname,
         w.parent = std::string(pbuf.data(), static_cast<size_t>(req.i_len));
     }
 
-    // Auth mode (val-type) — values match IEEE80211_AUTH_* from <net80211/_ieee80211.h>
+    // Auth mode (val-type) — values match IEEE80211_AUTH_* from
+    // <net80211/_ieee80211.h>
     {
       req.i_type = IEEE80211_IOC_AUTHMODE;
       req.i_len = 0;
@@ -137,7 +138,8 @@ void populateWlanMetadata(WlanInterfaceConfig &w, const std::string &ifname,
       w.status = "down";
 
     // Driver / HT / VHT capabilities via IEEE80211_IOC_DEVCAPS (buffer-type).
-    // We only need the caps words, not the full channel list, so ask for 1 chan.
+    // We only need the caps words, not the full channel list, so ask for 1
+    // chan.
     {
       size_t sz = IEEE80211_DEVCAPS_SIZE(1);
       std::vector<char> buf(sz, 0);
@@ -164,13 +166,27 @@ void populateWlanMetadata(WlanInterfaceConfig &w, const std::string &ifname,
           w.country = std::string(rd.isocc, 2);
         // Map well-known SKUs to names
         switch (rd.regdomain) {
-        case 0x10: w.regdomain = "FCC"; break;
-        case 0x20: w.regdomain = "DOC"; break;
-        case 0x30: w.regdomain = "ETSI"; break;
-        case 0x31: w.regdomain = "SPAIN"; break;
-        case 0x32: w.regdomain = "FRANCE"; break;
-        case 0x40: w.regdomain = "MKK"; break;
-        case 0x41: w.regdomain = "MKK2"; break;
+        case 0x10:
+          w.regdomain = "FCC";
+          break;
+        case 0x20:
+          w.regdomain = "DOC";
+          break;
+        case 0x30:
+          w.regdomain = "ETSI";
+          break;
+        case 0x31:
+          w.regdomain = "SPAIN";
+          break;
+        case 0x32:
+          w.regdomain = "FRANCE";
+          break;
+        case 0x40:
+          w.regdomain = "MKK";
+          break;
+        case 0x41:
+          w.regdomain = "MKK2";
+          break;
         default:
           if (rd.regdomain)
             w.regdomain = std::to_string(rd.regdomain);
@@ -195,8 +211,8 @@ void populateWlanMetadata(WlanInterfaceConfig &w, const std::string &ifname,
       // For STA mode, set macaddr to BSSID to get the pairwise key
       if (w.bssid) {
         unsigned int m[6];
-        if (std::sscanf(w.bssid->c_str(), "%x:%x:%x:%x:%x:%x",
-                        &m[0], &m[1], &m[2], &m[3], &m[4], &m[5]) == 6)
+        if (std::sscanf(w.bssid->c_str(), "%x:%x:%x:%x:%x:%x", &m[0], &m[1],
+                        &m[2], &m[3], &m[4], &m[5]) == 6)
           for (int j = 0; j < 6; ++j)
             ik.ik_macaddr[j] = static_cast<uint8_t>(m[j]);
       }
@@ -239,14 +255,29 @@ void populateWlanMetadata(WlanInterfaceConfig &w, const std::string &ifname,
         int mi = IEEE80211_MODE_AUTO;
         if (w.media_mode) {
           switch (*w.media_mode) {
-          case WlanMediaMode::A_11A:   mi = IEEE80211_MODE_11A; break;
-          case WlanMediaMode::B_11B:   mi = IEEE80211_MODE_11B; break;
-          case WlanMediaMode::G_11G:   mi = IEEE80211_MODE_11G; break;
-          case WlanMediaMode::NA_11NA: mi = IEEE80211_MODE_11NA; break;
-          case WlanMediaMode::NG_11NG: mi = IEEE80211_MODE_11NG; break;
-          case WlanMediaMode::VHT_5G:  mi = IEEE80211_MODE_VHT_5GHZ; break;
-          case WlanMediaMode::VHT_2G:  mi = IEEE80211_MODE_VHT_2GHZ; break;
-          default: break;
+          case WlanMediaMode::A_11A:
+            mi = IEEE80211_MODE_11A;
+            break;
+          case WlanMediaMode::B_11B:
+            mi = IEEE80211_MODE_11B;
+            break;
+          case WlanMediaMode::G_11G:
+            mi = IEEE80211_MODE_11G;
+            break;
+          case WlanMediaMode::NA_11NA:
+            mi = IEEE80211_MODE_11NA;
+            break;
+          case WlanMediaMode::NG_11NG:
+            mi = IEEE80211_MODE_11NG;
+            break;
+          case WlanMediaMode::VHT_5G:
+            mi = IEEE80211_MODE_VHT_5GHZ;
+            break;
+          case WlanMediaMode::VHT_2G:
+            mi = IEEE80211_MODE_VHT_2GHZ;
+            break;
+          default:
+            break;
           }
         }
         auto &p = tp.params[mi];
@@ -364,17 +395,25 @@ void populateWlanMetadata(WlanInterfaceConfig &w, const std::string &ifname,
 
         // Mode bits (wider mask to capture VHT2G = 0x00080000)
         int mode = media & 0x000f0000;
-        if (mode == IFM_IEEE80211_11A)        w.media_mode = WlanMediaMode::A_11A;
-        else if (mode == IFM_IEEE80211_11B)   w.media_mode = WlanMediaMode::B_11B;
-        else if (mode == IFM_IEEE80211_11G)   w.media_mode = WlanMediaMode::G_11G;
-        else if (mode == IFM_IEEE80211_11NA)  w.media_mode = WlanMediaMode::NA_11NA;
-        else if (mode == IFM_IEEE80211_11NG)  w.media_mode = WlanMediaMode::NG_11NG;
-        else if (mode == IFM_IEEE80211_VHT5G) w.media_mode = WlanMediaMode::VHT_5G;
-        else if (mode == IFM_IEEE80211_VHT2G) w.media_mode = WlanMediaMode::VHT_2G;
-        else                                  w.media_mode = WlanMediaMode::AUTO;
+        if (mode == IFM_IEEE80211_11A)
+          w.media_mode = WlanMediaMode::A_11A;
+        else if (mode == IFM_IEEE80211_11B)
+          w.media_mode = WlanMediaMode::B_11B;
+        else if (mode == IFM_IEEE80211_11G)
+          w.media_mode = WlanMediaMode::G_11G;
+        else if (mode == IFM_IEEE80211_11NA)
+          w.media_mode = WlanMediaMode::NA_11NA;
+        else if (mode == IFM_IEEE80211_11NG)
+          w.media_mode = WlanMediaMode::NG_11NG;
+        else if (mode == IFM_IEEE80211_VHT5G)
+          w.media_mode = WlanMediaMode::VHT_5G;
+        else if (mode == IFM_IEEE80211_VHT2G)
+          w.media_mode = WlanMediaMode::VHT_2G;
+        else
+          w.media_mode = WlanMediaMode::AUTO;
       }
     }
-}
+  }
 
 } // anonymous namespace
 
@@ -396,8 +435,7 @@ void SystemConfigurationManager::SaveWlan(
   SaveInterface(wlan);
 }
 
-std::vector<WlanInterfaceConfig>
-SystemConfigurationManager::GetWlanInterfaces(
+std::vector<WlanInterfaceConfig> SystemConfigurationManager::GetWlanInterfaces(
     const std::vector<InterfaceConfig> &bases) const {
   std::vector<WlanInterfaceConfig> out;
   for (const auto &ic : bases) {

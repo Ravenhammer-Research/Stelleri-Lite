@@ -40,7 +40,8 @@ void SixToFourInterfaceConfig::create(ConfigurationManager &mgr) const {
 
 void SixToFourInterfaceConfig::save(ConfigurationManager &mgr) const {
   if (name.empty())
-    throw std::runtime_error("SixToFourInterfaceConfig has no interface name set");
+    throw std::runtime_error(
+        "SixToFourInterfaceConfig has no interface name set");
 
   if (!InterfaceConfig::exists(mgr, name))
     create(mgr);

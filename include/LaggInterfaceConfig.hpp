@@ -37,8 +37,8 @@
 #include <string>
 #include <vector>
 
-#include "LaggProtocol.hpp"
 #include "ConfigurationManager.hpp"
+#include "LaggProtocol.hpp"
 
 /**
  * @brief Configuration for link aggregation interfaces
@@ -48,9 +48,10 @@ public:
   LaggInterfaceConfig() = default;
   LaggInterfaceConfig(const InterfaceConfig &base);
   LaggInterfaceConfig(const InterfaceConfig &base, LaggProtocol protocol,
-             std::vector<std::string> members,
-             std::optional<uint32_t> hash_policy, std::optional<int> lacp_rate,
-             std::optional<int> min_links);
+                      std::vector<std::string> members,
+                      std::optional<uint32_t> hash_policy,
+                      std::optional<int> lacp_rate,
+                      std::optional<int> min_links);
   LaggProtocol protocol =
       LaggProtocol::NONE;           ///< LAGG protocol (LACP, failover, etc.)
   std::vector<std::string> members; ///< Member port names

@@ -3,9 +3,9 @@
  * All rights reserved.
  */
 
+#include "ConfigurationManager.hpp"
 #include "InterfaceToken.hpp"
 #include "TapInterfaceConfig.hpp"
-#include "ConfigurationManager.hpp"
 #include "TapTableFormatter.hpp"
 #include <iostream>
 
@@ -36,16 +36,17 @@ InterfaceToken::tapCompletions(const std::string &prev) {
 }
 
 void InterfaceToken::setTapInterface(const InterfaceToken &tok,
-                                    ConfigurationManager *mgr,
-                                    InterfaceConfig &base, bool exists) {
+                                     ConfigurationManager *mgr,
+                                     InterfaceConfig &base, bool exists) {
   TapInterfaceConfig tc(base);
   tc.save(*mgr);
-  std::cout << "set interface: " << (exists ? "updated" : "created")
-            << " tap '" << tok.name() << "'\n";
+  std::cout << "set interface: " << (exists ? "updated" : "created") << " tap '"
+            << tok.name() << "'\n";
 }
 
-std::string InterfaceToken::showTapInterfaces(
-    const std::vector<InterfaceConfig> &ifaces, ConfigurationManager *) {
+std::string
+InterfaceToken::showTapInterfaces(const std::vector<InterfaceConfig> &ifaces,
+                                  ConfigurationManager *) {
   TapTableFormatter f;
   return f.format(ifaces);
 }

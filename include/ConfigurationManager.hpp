@@ -79,31 +79,31 @@ public:
   virtual std::vector<InterfaceConfig>
   GetInterfacesByGroup(const std::optional<VRFConfig> &vrf,
                        std::string_view group) const = 0;
-  virtual std::vector<BridgeInterfaceConfig> GetBridgeInterfaces(
-      const std::vector<InterfaceConfig> &bases) const = 0;
-  virtual std::vector<LaggInterfaceConfig> GetLaggInterfaces(
-      const std::vector<InterfaceConfig> &bases) const = 0;
-  virtual std::vector<VlanInterfaceConfig> GetVLANInterfaces(
-      const std::vector<InterfaceConfig> &bases) const = 0;
-  
-  virtual std::vector<TunInterfaceConfig> GetTunInterfaces(
-      const std::vector<InterfaceConfig> &bases) const = 0;
-  virtual std::vector<GifInterfaceConfig> GetGifInterfaces(
-      const std::vector<InterfaceConfig> &bases) const = 0;
-  virtual std::vector<OvpnInterfaceConfig> GetOvpnInterfaces(
-      const std::vector<InterfaceConfig> &bases) const = 0;
-  virtual std::vector<IpsecInterfaceConfig> GetIpsecInterfaces(
-      const std::vector<InterfaceConfig> &bases) const = 0;
-  virtual std::vector<GreInterfaceConfig> GetGreInterfaces(
-      const std::vector<InterfaceConfig> &bases) const = 0;
-  virtual std::vector<VxlanInterfaceConfig> GetVxlanInterfaces(
-      const std::vector<InterfaceConfig> &bases) const = 0;
-  virtual std::vector<EpairInterfaceConfig> GetEpairInterfaces(
-      const std::vector<InterfaceConfig> &bases) const = 0;
-  virtual std::vector<WlanInterfaceConfig> GetWlanInterfaces(
-      const std::vector<InterfaceConfig> &bases) const = 0;
-  virtual std::vector<CarpInterfaceConfig> GetCarpInterfaces(
-      const std::vector<InterfaceConfig> &bases) const = 0;
+  virtual std::vector<BridgeInterfaceConfig>
+  GetBridgeInterfaces(const std::vector<InterfaceConfig> &bases) const = 0;
+  virtual std::vector<LaggInterfaceConfig>
+  GetLaggInterfaces(const std::vector<InterfaceConfig> &bases) const = 0;
+  virtual std::vector<VlanInterfaceConfig>
+  GetVLANInterfaces(const std::vector<InterfaceConfig> &bases) const = 0;
+
+  virtual std::vector<TunInterfaceConfig>
+  GetTunInterfaces(const std::vector<InterfaceConfig> &bases) const = 0;
+  virtual std::vector<GifInterfaceConfig>
+  GetGifInterfaces(const std::vector<InterfaceConfig> &bases) const = 0;
+  virtual std::vector<OvpnInterfaceConfig>
+  GetOvpnInterfaces(const std::vector<InterfaceConfig> &bases) const = 0;
+  virtual std::vector<IpsecInterfaceConfig>
+  GetIpsecInterfaces(const std::vector<InterfaceConfig> &bases) const = 0;
+  virtual std::vector<GreInterfaceConfig>
+  GetGreInterfaces(const std::vector<InterfaceConfig> &bases) const = 0;
+  virtual std::vector<VxlanInterfaceConfig>
+  GetVxlanInterfaces(const std::vector<InterfaceConfig> &bases) const = 0;
+  virtual std::vector<EpairInterfaceConfig>
+  GetEpairInterfaces(const std::vector<InterfaceConfig> &bases) const = 0;
+  virtual std::vector<WlanInterfaceConfig>
+  GetWlanInterfaces(const std::vector<InterfaceConfig> &bases) const = 0;
+  virtual std::vector<CarpInterfaceConfig>
+  GetCarpInterfaces(const std::vector<InterfaceConfig> &bases) const = 0;
   virtual std::vector<RouteConfig>
   GetStaticRoutes(const std::optional<VRFConfig> &vrf = std::nullopt) const = 0;
   virtual std::vector<RouteConfig>
@@ -160,16 +160,16 @@ public:
   // VLAN operations
   virtual void SaveVlan(const VlanInterfaceConfig &vlan) const = 0;
 
-    // Tunnel operations (specific types below)
-  
-    virtual void CreateTun(const std::string &name) const = 0;
-    virtual void SaveTun(const TunInterfaceConfig &tun) const = 0;
-    virtual void CreateGif(const std::string &name) const = 0;
-    virtual void SaveGif(const GifInterfaceConfig &gif) const = 0;
-    virtual void CreateOvpn(const std::string &name) const = 0;
-    virtual void SaveOvpn(const OvpnInterfaceConfig &ovpn) const = 0;
-    virtual void CreateIpsec(const std::string &name) const = 0;
-    virtual void SaveIpsec(const IpsecInterfaceConfig &ipsec) const = 0;
+  // Tunnel operations (specific types below)
+
+  virtual void CreateTun(const std::string &name) const = 0;
+  virtual void SaveTun(const TunInterfaceConfig &tun) const = 0;
+  virtual void CreateGif(const std::string &name) const = 0;
+  virtual void SaveGif(const GifInterfaceConfig &gif) const = 0;
+  virtual void CreateOvpn(const std::string &name) const = 0;
+  virtual void SaveOvpn(const OvpnInterfaceConfig &ovpn) const = 0;
+  virtual void CreateIpsec(const std::string &name) const = 0;
+  virtual void SaveIpsec(const IpsecInterfaceConfig &ipsec) const = 0;
 
   // WLAN operations
   virtual void CreateWlan(const std::string &name) const = 0;
@@ -195,8 +195,8 @@ public:
   virtual void DeleteRoute(const RouteConfig &route) const = 0;
 
   // Policy operations (access-lists, prefix-lists, route-maps)
-  virtual std::vector<PolicyConfig>
-  GetPolicies(const std::optional<uint32_t> &acl_filter = std::nullopt) const = 0;
+  virtual std::vector<PolicyConfig> GetPolicies(
+      const std::optional<uint32_t> &acl_filter = std::nullopt) const = 0;
   virtual void SetPolicy(const PolicyConfig &pc) const = 0;
   virtual void DeletePolicy(const PolicyConfig &pc) const = 0;
 
@@ -221,18 +221,20 @@ public:
 
   // Helper methods used by system-specific implementations (defined in
   // src/system/freebsd/*.cpp)
-  virtual void prepare_ifreq(struct ifreq &ifr, const std::string &name) const = 0;
-  virtual void cloneInterface(const std::string &name, unsigned long cmd) const = 0;
+  virtual void prepare_ifreq(struct ifreq &ifr,
+                             const std::string &name) const = 0;
+  virtual void cloneInterface(const std::string &name,
+                              unsigned long cmd) const = 0;
   virtual std::optional<int> query_ifreq_int(const std::string &ifname,
-                                     unsigned long req,
-                                     IfreqIntField which) const = 0;
+                                             unsigned long req,
+                                             IfreqIntField which) const = 0;
   virtual std::optional<std::pair<std::string, int>>
   query_ifreq_sockaddr(const std::string &ifname, unsigned long req) const = 0;
-  virtual std::vector<std::string> query_interface_groups(const std::string &ifname)
-      const = 0;
+  virtual std::vector<std::string>
+  query_interface_groups(const std::string &ifname) const = 0;
   virtual void populateInterfaceMetadata(InterfaceConfig &ic) const = 0;
 
   // VRF matching helper
-    virtual bool matches_vrf(const InterfaceConfig &ic,
-                                     const std::optional<VRFConfig> &vrf) const = 0;
+  virtual bool matches_vrf(const InterfaceConfig &ic,
+                           const std::optional<VRFConfig> &vrf) const = 0;
 };

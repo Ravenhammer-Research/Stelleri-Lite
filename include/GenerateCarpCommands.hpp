@@ -4,6 +4,6 @@
 #include <set>
 
 namespace netcli {
-void generateCarpCommands(ConfigurationManager &mgr,
-                          std::set<std::string> &processedInterfaces);
+  void generateCarpCommands(ConfigurationManager &mgr,
+                            std::set<std::string> &processedInterfaces);
 }

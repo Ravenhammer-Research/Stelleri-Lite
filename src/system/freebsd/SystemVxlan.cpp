@@ -14,7 +14,8 @@ void SystemConfigurationManager::CreateVxlan(const std::string &name) const {
   cloneInterface(name, SIOCIFCREATE);
 }
 
-void SystemConfigurationManager::SaveVxlan(const VxlanInterfaceConfig &vxlan) const {
+void SystemConfigurationManager::SaveVxlan(
+    const VxlanInterfaceConfig &vxlan) const {
   if (vxlan.name.empty())
     throw std::runtime_error("VxlanInterfaceConfig has no interface name set");
 
@@ -27,7 +28,8 @@ void SystemConfigurationManager::SaveVxlan(const VxlanInterfaceConfig &vxlan) co
   SaveInterface(vxlan);
 }
 
-std::vector<VxlanInterfaceConfig> SystemConfigurationManager::GetVxlanInterfaces(
+std::vector<VxlanInterfaceConfig>
+SystemConfigurationManager::GetVxlanInterfaces(
     const std::vector<InterfaceConfig> &bases) const {
   std::vector<VxlanInterfaceConfig> out;
   for (const auto &ic : bases) {

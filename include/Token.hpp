@@ -37,8 +37,8 @@
 #include <string_view>
 #include <vector>
 
-#include "ConfigurationManager.hpp"
 #include "ConfigData.hpp"
+#include "ConfigurationManager.hpp"
 
 /**
  * @brief Base class for command tokens in the parser chain

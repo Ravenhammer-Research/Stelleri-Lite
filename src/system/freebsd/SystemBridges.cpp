@@ -230,8 +230,7 @@ SystemConfigurationManager::GetBridgeMembers(const std::string &name) const {
     std::vector<struct ifbreq> buf(entries);
 
     struct ifbifconf ifbic{};
-    ifbic.ifbic_len =
-        static_cast<uint32_t>(buf.size() * sizeof(struct ifbreq));
+    ifbic.ifbic_len = static_cast<uint32_t>(buf.size() * sizeof(struct ifbreq));
     ifbic.ifbic_buf = reinterpret_cast<caddr_t>(buf.data());
 
     struct ifdrv ifd{};

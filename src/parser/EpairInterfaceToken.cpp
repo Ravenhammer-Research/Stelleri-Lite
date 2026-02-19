@@ -3,11 +3,11 @@
  * All rights reserved.
  */
 
-#include "InterfaceToken.hpp"
-#include "EpairInterfaceConfig.hpp"
 #include "ConfigurationManager.hpp"
-#include "SingleEpairSummaryFormatter.hpp"
+#include "EpairInterfaceConfig.hpp"
 #include "EpairTableFormatter.hpp"
+#include "InterfaceToken.hpp"
+#include "SingleEpairSummaryFormatter.hpp"
 #include <iostream>
 
 class EpairInterfaceToken : public InterfaceToken {
@@ -31,8 +31,8 @@ InterfaceToken::epairCompletions(const std::string &prev) {
 }
 
 void InterfaceToken::setEpairInterface(const InterfaceToken &tok,
-                                      ConfigurationManager *mgr,
-                                      InterfaceConfig &base, bool exists) {
+                                       ConfigurationManager *mgr,
+                                       InterfaceConfig &base, bool exists) {
   EpairInterfaceConfig vic(base);
   vic.save(*mgr);
   std::cout << "set interface: " << (exists ? "updated" : "created")
@@ -40,7 +40,7 @@ void InterfaceToken::setEpairInterface(const InterfaceToken &tok,
 }
 
 bool InterfaceToken::showEpairInterface(const InterfaceConfig &ic,
-                                       ConfigurationManager *mgr) {
+                                        ConfigurationManager *mgr) {
   std::vector<InterfaceConfig> v = {ic};
   auto epairs = mgr->GetEpairInterfaces(v);
   if (!epairs.empty()) {
@@ -51,8 +51,9 @@ bool InterfaceToken::showEpairInterface(const InterfaceConfig &ic,
   return false;
 }
 
-std::string InterfaceToken::showEpairInterfaces(
-    const std::vector<InterfaceConfig> &ifaces, ConfigurationManager *) {
+std::string
+InterfaceToken::showEpairInterfaces(const std::vector<InterfaceConfig> &ifaces,
+                                    ConfigurationManager *) {
   EpairTableFormatter f;
   return f.format(ifaces);
 }

@@ -91,7 +91,8 @@ std::vector<VlanInterfaceConfig> SystemConfigurationManager::GetVLANInterfaces(
   return out;
 }
 
-void SystemConfigurationManager::SaveVlan(const VlanInterfaceConfig &vlan) const {
+void SystemConfigurationManager::SaveVlan(
+    const VlanInterfaceConfig &vlan) const {
   if (vlan.name.empty())
     throw std::runtime_error("VlanInterfaceConfig has no interface name set");
 

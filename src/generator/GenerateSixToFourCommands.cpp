@@ -22,9 +22,7 @@ namespace netcli {
         continue;
 
       SixToFourInterfaceConfig sc(ifc);
-      std::cout << "set "
-                << InterfaceToken::toString(&sc)
-                << "\n";
+      std::cout << "set " << InterfaceToken::toString(&sc) << "\n";
       processedInterfaces.insert(ifc.name);
 
       for (const auto &alias : ifc.aliases) {

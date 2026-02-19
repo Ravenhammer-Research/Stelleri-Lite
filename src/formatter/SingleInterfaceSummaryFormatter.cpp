@@ -26,50 +26,50 @@
  */
 
 #include "SingleInterfaceSummaryFormatter.hpp"
+#include "IPNetwork.hpp"
+#include "IPv6Flags.hpp"
 #include "IfCapFlags.hpp"
 #include "InterfaceConfig.hpp"
 #include "InterfaceFlags.hpp"
 #include "InterfaceType.hpp"
-#include "IPNetwork.hpp"
-#include "IPv6Flags.hpp"
 #include <sstream>
 
 namespace {
 
-void formatIPv6Annotations(std::ostringstream &oss, const IPNetwork *net) {
-  if (!net || net->family() != AddressFamily::IPv6)
-    return;
-  auto *v6 = dynamic_cast<const IPv6Network *>(net);
-  if (!v6)
-    return;
-  if (v6->scopeid)
-    oss << " scopeid 0x" << std::hex << *v6->scopeid << std::dec;
-  if (v6->addr_flags) {
-    uint32_t f = *v6->addr_flags;
-    if (hasIn6(f, In6AddrFlag::Autoconf))
-      oss << " autoconf";
-    if (hasIn6(f, In6AddrFlag::Temporary))
-      oss << " temporary";
-    if (hasIn6(f, In6AddrFlag::Deprecated))
-      oss << " deprecated";
-    if (hasIn6(f, In6AddrFlag::Tentative))
-      oss << " tentative";
-    if (hasIn6(f, In6AddrFlag::Duplicated))
-      oss << " duplicated";
-    if (hasIn6(f, In6AddrFlag::Detached))
-      oss << " detached";
-    if (hasIn6(f, In6AddrFlag::NoDad))
-      oss << " no_dad";
-    if (hasIn6(f, In6AddrFlag::Anycast))
-      oss << " anycast";
-    if (hasIn6(f, In6AddrFlag::PreferSource))
-      oss << " prefer_source";
+  void formatIPv6Annotations(std::ostringstream &oss, const IPNetwork *net) {
+    if (!net || net->family() != AddressFamily::IPv6)
+      return;
+    auto *v6 = dynamic_cast<const IPv6Network *>(net);
+    if (!v6)
+      return;
+    if (v6->scopeid)
+      oss << " scopeid 0x" << std::hex << *v6->scopeid << std::dec;
+    if (v6->addr_flags) {
+      uint32_t f = *v6->addr_flags;
+      if (hasIn6(f, In6AddrFlag::Autoconf))
+        oss << " autoconf";
+      if (hasIn6(f, In6AddrFlag::Temporary))
+        oss << " temporary";
+      if (hasIn6(f, In6AddrFlag::Deprecated))
+        oss << " deprecated";
+      if (hasIn6(f, In6AddrFlag::Tentative))
+        oss << " tentative";
+      if (hasIn6(f, In6AddrFlag::Duplicated))
+        oss << " duplicated";
+      if (hasIn6(f, In6AddrFlag::Detached))
+        oss << " detached";
+      if (hasIn6(f, In6AddrFlag::NoDad))
+        oss << " no_dad";
+      if (hasIn6(f, In6AddrFlag::Anycast))
+        oss << " anycast";
+      if (hasIn6(f, In6AddrFlag::PreferSource))
+        oss << " prefer_source";
+    }
+    if (v6->pltime && *v6->pltime != 0xffffffff)
+      oss << " pltime " << *v6->pltime;
+    if (v6->vltime && *v6->vltime != 0xffffffff)
+      oss << " vltime " << *v6->vltime;
   }
-  if (v6->pltime && *v6->pltime != 0xffffffff)
-    oss << " pltime " << *v6->pltime;
-  if (v6->vltime && *v6->vltime != 0xffffffff)
-    oss << " vltime " << *v6->vltime;
-}
 
 } // namespace
 

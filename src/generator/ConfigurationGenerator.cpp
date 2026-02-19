@@ -26,21 +26,21 @@
  */
 
 #include "ConfigurationGenerator.hpp"
-#include "GenerateTunCommands.hpp"
-#include "GenerateGifCommands.hpp"
-#include "GenerateOvpnCommands.hpp"
-#include "GenerateIpsecCommands.hpp"
-#include "GenerateGreCommands.hpp"
-#include "GenerateVxlanCommands.hpp"
-#include "GenerateWlanCommands.hpp"
+#include "GenerateArpCommands.hpp"
 #include "GenerateCarpCommands.hpp"
-#include "GenerateTapCommands.hpp"
+#include "GenerateGifCommands.hpp"
+#include "GenerateGreCommands.hpp"
+#include "GenerateIpsecCommands.hpp"
+#include "GenerateNdpCommands.hpp"
+#include "GenerateOvpnCommands.hpp"
 #include "GeneratePflogCommands.hpp"
 #include "GeneratePfsyncCommands.hpp"
-#include "GenerateWireGuardCommands.hpp"
 #include "GenerateSixToFourCommands.hpp"
-#include "GenerateArpCommands.hpp"
-#include "GenerateNdpCommands.hpp"
+#include "GenerateTapCommands.hpp"
+#include "GenerateTunCommands.hpp"
+#include "GenerateVxlanCommands.hpp"
+#include "GenerateWireGuardCommands.hpp"
+#include "GenerateWlanCommands.hpp"
 
 namespace netcli {
 

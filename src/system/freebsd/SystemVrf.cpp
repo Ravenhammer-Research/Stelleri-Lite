@@ -26,8 +26,8 @@
  */
 
 #include "InterfaceConfig.hpp"
-#include "SystemConfigurationManager.hpp"
 #include "RouteConfig.hpp"
+#include "SystemConfigurationManager.hpp"
 
 #include <cstring>
 #include <net/if.h>

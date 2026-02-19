@@ -3,11 +3,11 @@
  * All rights reserved.
  */
 
-#include "InterfaceToken.hpp"
 #include "BridgeInterfaceConfig.hpp"
-#include "ConfigurationManager.hpp"
-#include "SingleBridgeSummaryFormatter.hpp"
 #include "BridgeTableFormatter.hpp"
+#include "ConfigurationManager.hpp"
+#include "InterfaceToken.hpp"
+#include "SingleBridgeSummaryFormatter.hpp"
 #include <iostream>
 
 class BridgeInterfaceToken : public InterfaceToken {
@@ -69,8 +69,8 @@ InterfaceToken::bridgeCompletions(const std::string &prev) {
 }
 
 void InterfaceToken::setBridgeInterface(const InterfaceToken &tok,
-                                       ConfigurationManager *mgr,
-                                       InterfaceConfig &base, bool exists) {
+                                        ConfigurationManager *mgr,
+                                        InterfaceConfig &base, bool exists) {
   BridgeInterfaceConfig bic(base);
   if (tok.bridge) {
     for (const auto &m : tok.bridge->members)
@@ -96,8 +96,9 @@ bool InterfaceToken::showBridgeInterface(const InterfaceConfig &ic,
   return false;
 }
 
-std::string InterfaceToken::showBridgeInterfaces(
-    const std::vector<InterfaceConfig> &ifaces, ConfigurationManager *mgr) {
+std::string
+InterfaceToken::showBridgeInterfaces(const std::vector<InterfaceConfig> &ifaces,
+                                     ConfigurationManager *mgr) {
   BridgeTableFormatter f;
   return f.format(mgr->GetBridgeInterfaces(ifaces));
 }

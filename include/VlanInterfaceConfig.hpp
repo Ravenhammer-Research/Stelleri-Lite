@@ -32,14 +32,14 @@
 
 #pragma once
 
+#include "ConfigurationManager.hpp"
 #include "InterfaceConfig.hpp"
 #include "PriorityCodePoint.hpp"
 #include "VlanProto.hpp"
 #include <cstdint>
 #include <optional>
-#include <string>
-#include "ConfigurationManager.hpp"
 #include <stdexcept>
+#include <string>
 
 /**
  * @brief Configuration for VLAN interfaces
@@ -51,8 +51,8 @@ public:
   VlanInterfaceConfig() = default;
   VlanInterfaceConfig(const InterfaceConfig &base);
   VlanInterfaceConfig(const InterfaceConfig &base, uint16_t id,
-             std::optional<std::string> parent,
-             std::optional<PriorityCodePoint> pcp);
+                      std::optional<std::string> parent,
+                      std::optional<PriorityCodePoint> pcp);
 
   uint16_t id = 0; ///< VLAN ID (1-4094)
   std::optional<std::string>

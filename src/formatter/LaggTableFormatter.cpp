@@ -117,7 +117,8 @@ LaggTableFormatter::format(const std::vector<LaggInterfaceConfig> &interfaces) {
         status = "down";
     }
 
-    addRow({lac.name, proto, hashCell, membersCell, mtuCell, flagsCell, status});
+    addRow(
+        {lac.name, proto, hashCell, membersCell, mtuCell, flagsCell, status});
   }
 
   return renderTable(80);

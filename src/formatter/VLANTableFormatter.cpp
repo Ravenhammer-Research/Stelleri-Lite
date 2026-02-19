@@ -27,8 +27,8 @@
 
 #include "VlanTableFormatter.hpp"
 #include "InterfaceFlags.hpp"
-#include "VlanInterfaceConfig.hpp"
 #include "VlanFlags.hpp"
+#include "VlanInterfaceConfig.hpp"
 #include "VlanProto.hpp"
 #include <algorithm>
 
@@ -99,10 +99,8 @@ VlanTableFormatter::format(const std::vector<VlanInterfaceConfig> &interfaces) {
         v.pcp ? std::to_string(static_cast<int>(*v.pcp)) : std::string("-");
     std::string nameStr = v.name;
     std::string protoStr = vlanProtoToString(v.proto);
-    std::string flagsStr =
-        v.flags ? flagsToString(*v.flags) : std::string("-");
-    std::string mtuStr =
-        v.mtu ? std::to_string(*v.mtu) : std::string("-");
+    std::string flagsStr = v.flags ? flagsToString(*v.flags) : std::string("-");
+    std::string mtuStr = v.mtu ? std::to_string(*v.mtu) : std::string("-");
     std::string optionsStr = "-";
     if (v.options_bits) {
       auto s = vlanCapsToString(*v.options_bits);
@@ -110,8 +108,8 @@ VlanTableFormatter::format(const std::vector<VlanInterfaceConfig> &interfaces) {
         optionsStr = s;
     }
 
-    addRow({v.name, vidStr, nameStr, parent, pcpStr, mtuStr, flagsStr,
-            protoStr, optionsStr});
+    addRow({v.name, vidStr, nameStr, parent, pcpStr, mtuStr, flagsStr, protoStr,
+            optionsStr});
   }
 
   // Sort by interface name
