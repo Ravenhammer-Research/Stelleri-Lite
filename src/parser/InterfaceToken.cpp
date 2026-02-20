@@ -319,6 +319,13 @@ std::string InterfaceToken::toString(InterfaceConfig *cfg) {
     result += " mtu " + std::to_string(*cfg->mtu);
   if (cfg->address)
     result += " address " + cfg->address->toString();
+  // Emit status when flags are available (e.g. "status up" or "status down").
+  if (cfg->flags) {
+    if (hasFlag(*cfg->flags, InterfaceFlag::UP))
+      result += " status up";
+    else
+      result += " status down";
+  }
   if (!cfg->groups.empty()) {
     // Skip the default group that FreeBSD assigns automatically.
     auto *dg = dispatch(cfg->type);

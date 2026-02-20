@@ -33,9 +33,10 @@
 #pragma once
 
 #include "ConfigurationManager.hpp"
-#include "InterfaceConfig.hpp"
-#include "PolicyConfig.hpp"
-#include "VRFConfig.hpp"
+
+/* don't put subclass includes here, put forward decls 
+ * in ConfigurationManager instead. 
+ */
 
 #include <optional>
 #include <string>
@@ -159,6 +160,11 @@ public:
   void SaveOvpn(const OvpnInterfaceConfig &ovpn) const override;
   void CreateIpsec(const std::string &name) const override;
   void SaveIpsec(const IpsecInterfaceConfig &ipsec) const override;
+  void CreateSixToFour(const std::string &name) const;
+  void SaveSixToFour(const SixToFourInterfaceConfig &t) const;
+  void DestroySixToFour(const std::string &name) const;
+  std::vector<SixToFourInterfaceConfig>
+  GetSixToFourInterfaces(const std::vector<InterfaceConfig> &bases) const;
 
   // WLAN
   void CreateWlan(const std::string &name) const override;
@@ -168,6 +174,13 @@ public:
   void CreateTap(const std::string &name) const override;
   void SaveTap(const TapInterfaceConfig &tap) const override;
 
+    // PFLOG
+    void CreatePflog(const std::string &name) const;
+    void SavePflog(const PflogInterfaceConfig &p) const;
+    void DestroyPflog(const std::string &name) const;
+    std::vector<PflogInterfaceConfig>
+    GetPflogInterfaces(const std::vector<InterfaceConfig> &bases) const;
+
   // GRE
   void CreateGre(const std::string &name) const override;
   void SaveGre(const GreInterfaceConfig &gre) const override;
@@ -175,6 +188,13 @@ public:
   // VXLAN
   void CreateVxlan(const std::string &name) const override;
   void SaveVxlan(const VxlanInterfaceConfig &vxlan) const override;
+
+    // PFSYNC
+    void CreatePfsync(const std::string &name) const;
+    void SavePfsync(const PfsyncInterfaceConfig &p) const;
+    void DestroyPfsync(const std::string &name) const;
+    std::vector<PfsyncInterfaceConfig>
+    GetPfsyncInterfaces(const std::vector<InterfaceConfig> &bases) const;
 
   // CARP
   void SaveCarp(const CarpInterfaceConfig &carp) const override;

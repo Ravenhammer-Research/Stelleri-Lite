@@ -13,10 +13,10 @@ namespace netcli {
   void generateArpCommands(ConfigurationManager &mgr) {
     auto entries = mgr.GetArpEntries();
     for (auto &entry : entries) {
-      // Only emit permanent (static) entries — dynamic ones are learned at
-      // runtime and should not be persisted in configuration.
-      if (!entry.permanent)
+      // Only care about published. 
+      if (!entry.published)
         continue;
+
       std::cout << "set " << ArpToken::toString(&entry) << "\n";
     }
   }

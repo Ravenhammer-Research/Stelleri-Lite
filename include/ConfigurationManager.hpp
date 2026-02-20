@@ -60,6 +60,9 @@ class EpairInterfaceConfig;
 class WlanInterfaceConfig;
 class TapInterfaceConfig;
 class CarpInterfaceConfig;
+class PflogInterfaceConfig;
+class PfsyncInterfaceConfig;
+class SixToFourInterfaceConfig;
 
 /**
  * @brief Abstract base class for configuration storage and retrieval

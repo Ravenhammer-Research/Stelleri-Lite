@@ -35,6 +35,7 @@
 #include <net/if_dl.h>
 #include <net/route.h>
 #include <netinet/icmp6.h>
+#include <netinet/if_ether.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <sys/sysctl.h>
@@ -121,24 +122,50 @@ std::vector<NdpConfig> SystemConfigurationManager::GetNdpEntries(
     entry.ip = ip_buf;
     entry.iface = ifname;
 
-    // Get MAC address
+    // Get MAC address and link-layer metadata
+    entry.ifindex = static_cast<int>(sdl->sdl_index);
+    entry.sdl_alen = static_cast<int>(sdl->sdl_alen);
     if (sdl->sdl_alen == ETHER_ADDR_LEN) {
       auto *ea = reinterpret_cast<struct ether_addr *>(LLADDR(sdl));
       entry.mac = formatMAC(ea);
+      entry.has_lladdr = true;
     } else {
       entry.mac = "(incomplete)";
+      entry.has_lladdr = false;
     }
 
+    // Copy rtm_rmx metrics and compute expiration if present
+    entry.rmx_expire = rtm->rtm_rmx.rmx_expire;
+    entry.rmx_mtu = rtm->rtm_rmx.rmx_mtu;
+    entry.rmx_hopcount = rtm->rtm_rmx.rmx_hopcount;
+    entry.rmx_rtt = rtm->rtm_rmx.rmx_rtt;
+    entry.rmx_rttvar = rtm->rtm_rmx.rmx_rttvar;
+    entry.rmx_recvpipe = rtm->rtm_rmx.rmx_recvpipe;
+    entry.rmx_sendpipe = rtm->rtm_rmx.rmx_sendpipe;
+    entry.rmx_ssthresh = rtm->rtm_rmx.rmx_ssthresh;
+    entry.rmx_pksent = rtm->rtm_rmx.rmx_pksent;
+    entry.rmx_weight = rtm->rtm_rmx.rmx_state;
+
     // Check if permanent (no expiration)
-    if (rtm->rtm_rmx.rmx_expire == 0) {
+    if (entry.rmx_expire == 0) {
       entry.permanent = true;
     } else {
       struct timespec tp;
       clock_gettime(CLOCK_MONOTONIC, &tp);
-      int expire_in = rtm->rtm_rmx.rmx_expire - tp.tv_sec;
+      int expire_in = entry.rmx_expire - tp.tv_sec;
       if (expire_in > 0)
         entry.expire = expire_in;
     }
+
+    // Copy raw flags and provenance
+    entry.flags = rtm->rtm_flags;
+    entry.rtm_type = rtm->rtm_type;
+    entry.rtm_pid = rtm->rtm_pid;
+    entry.rtm_seq = rtm->rtm_seq;
+    entry.rtm_msglen = rtm->rtm_msglen;
+
+    // Mark proxy/announce entries (RTF_ANNOUNCE) similar to ndp.c
+    entry.is_proxy = (rtm->rtm_flags & RTF_ANNOUNCE) != 0;
 
     // Check if router
     if (rtm->rtm_flags & RTF_GATEWAY)
@@ -153,20 +180,118 @@ std::vector<NdpConfig> SystemConfigurationManager::GetNdpEntries(
 bool SystemConfigurationManager::SetNdpEntry(
     const std::string &ip, const std::string &mac,
     const std::optional<std::string> &iface, bool temp) const {
-  // TODO: Implement NDP entry setting using routing socket (RTM_ADD)
-  // Similar to the set() function in ndp.c
-  (void)ip;
-  (void)mac;
-  (void)iface;
+  // Build RTM_ADD routing socket message with RTA_DST and RTA_GATEWAY.
+  // This mirrors the approach used by ndp(8): destination is the IPv6
+  // neighbor address, gateway is a sockaddr_dl containing the link-layer
+  // address. If `iface` is provided, use its index for the sockaddr_dl.
+
+  auto roundup = [](size_t a) -> size_t {
+    const size_t l = sizeof(long);
+    return (a + l - 1) & ~(l - 1);
+  };
+
+  struct sockaddr_in6 sin6 = {};
+  sin6.sin6_len = sizeof(sin6);
+  sin6.sin6_family = AF_INET6;
+  if (inet_pton(AF_INET6, ip.c_str(), &sin6.sin6_addr) != 1)
+    return false;
+
+  // Parse MAC string "aa:bb:cc:dd:ee:ff"
+  unsigned char mac_bytes[8] = {};
+  int mac_len = 0;
+  {
+    unsigned int b[8];
+    char *s = const_cast<char *>(mac.c_str());
+    int n = std::sscanf(s, "%x:%x:%x:%x:%x:%x", &b[0], &b[1], &b[2], &b[3], &b[4], &b[5]);
+    if (n < 6)
+      return false;
+    for (int i = 0; i < 6; ++i)
+      mac_bytes[i] = static_cast<unsigned char>(b[i]);
+    mac_len = 6;
+  }
+
+  // Prepare sockaddr_dl for gateway
+  int ifindex = 0;
+  if (iface) {
+    ifindex = if_nametoindex(iface->c_str());
+    if (ifindex == 0)
+      return false;
+  }
+
+  // Create buffer for message
+  std::vector<char> buf(512);
+  char *p = buf.data();
+
+  struct rt_msghdr *rtm = reinterpret_cast<struct rt_msghdr *>(p);
+  std::memset(rtm, 0, sizeof(*rtm));
+  p += sizeof(*rtm);
+
+  // Copy destination sockaddr_in6
+  std::memcpy(p, &sin6, sizeof(sin6));
+  size_t sin6_sz = roundup(sizeof(sin6));
+  p += sin6_sz;
+
+  // Build sockaddr_dl. We'll allocate minimal sockaddr_dl and copy MAC into LLADDR.
+  struct sockaddr_dl sdl = {};
+  sdl.sdl_len = static_cast<unsigned char>(sizeof(struct sockaddr_dl) + mac_len);
+  sdl.sdl_family = AF_LINK;
+  sdl.sdl_index = ifindex;
+  sdl.sdl_alen = static_cast<unsigned char>(mac_len);
+  // sdl.sdl_data may contain name length; leave as 0
+  // Copy sdl header, then write MAC into LLADDR(sdl)
+  std::memcpy(p, &sdl, sizeof(struct sockaddr_dl));
+  // LLADDR is pointer arithmetic on sockaddr_dl; compute offset
+  char *ll = p + offsetof(struct sockaddr_dl, sdl_data);
+  // For portability, ensure we don't overflow
+  std::memcpy(ll, mac_bytes, mac_len);
+  size_t sdl_sz = roundup(static_cast<size_t>(sdl.sdl_len));
+  p += sdl_sz;
+
+  rtm->rtm_msglen = static_cast<int>(p - buf.data());
+  rtm->rtm_version = RTM_VERSION;
+  rtm->rtm_type = RTM_ADD;
+  rtm->rtm_flags = RTF_HOST | RTF_STATIC;
+  rtm->rtm_addrs = RTA_DST | RTA_GATEWAY;
+
+  // Send via routing socket
+  #include "RoutingSocket.hpp"
   (void)temp;
-  return false;
+  return WriteRoutingSocket(std::vector<char>(buf.data(), buf.data() + rtm->rtm_msglen), AF_INET6);
 }
 
 bool SystemConfigurationManager::DeleteNdpEntry(
     const std::string &ip, const std::optional<std::string> &iface) const {
-  // TODO: Implement NDP entry deletion using routing socket (RTM_DELETE)
-  // Similar to the delete() function in ndp.c
-  (void)ip;
+  auto roundup = [](size_t a) -> size_t {
+    const size_t l = sizeof(long);
+    return (a + l - 1) & ~(l - 1);
+  };
+
+  struct sockaddr_in6 sin6 = {};
+  sin6.sin6_len = sizeof(sin6);
+  sin6.sin6_family = AF_INET6;
+  if (inet_pton(AF_INET6, ip.c_str(), &sin6.sin6_addr) != 1)
+    return false;
+
+  std::vector<char> buf(256);
+  char *p = buf.data();
+  struct rt_msghdr *rtm = reinterpret_cast<struct rt_msghdr *>(p);
+  std::memset(rtm, 0, sizeof(*rtm));
+  p += sizeof(*rtm);
+
+  std::memcpy(p, &sin6, sizeof(sin6));
+  p += roundup(sizeof(sin6));
+
+  rtm->rtm_msglen = static_cast<int>(p - buf.data());
+  rtm->rtm_version = RTM_VERSION;
+  rtm->rtm_type = RTM_DELETE;
+  rtm->rtm_flags = RTF_HOST;
+  rtm->rtm_addrs = RTA_DST;
+
+  int s = socket(PF_ROUTE, SOCK_RAW, AF_INET6);
+  if (s < 0)
+    return false;
   (void)iface;
-  return false;
+  ssize_t written = write(s, buf.data(), rtm->rtm_msglen);
+  close(s);
+  return (written == rtm->rtm_msglen);
 }

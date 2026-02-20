@@ -148,21 +148,105 @@ std::vector<ArpConfig> SystemConfigurationManager::GetArpEntries(
 bool SystemConfigurationManager::SetArpEntry(
     const std::string &ip, const std::string &mac,
     const std::optional<std::string> &iface, bool temp, bool pub) const {
-  // TODO: Implement ARP entry setting using routing socket (RTM_ADD)
-  // Similar to the set() function in arp.c
-  (void)ip;
-  (void)mac;
-  (void)iface;
+  // Build RTM_ADD for an ARP (IPv4) neighbor entry.
+  auto roundup = [](size_t a) -> size_t {
+    const size_t l = sizeof(long);
+    return (a + l - 1) & ~(l - 1);
+  };
+
+  struct sockaddr_in sin = {};
+  sin.sin_len = sizeof(sin);
+  sin.sin_family = AF_INET;
+  if (inet_pton(AF_INET, ip.c_str(), &sin.sin_addr) != 1)
+    return false;
+
+  unsigned char mac_bytes[8] = {};
+  int mac_len = 0;
+  {
+    unsigned int b[8];
+    char *s = const_cast<char *>(mac.c_str());
+    int n = std::sscanf(s, "%x:%x:%x:%x:%x:%x", &b[0], &b[1], &b[2], &b[3], &b[4], &b[5]);
+    if (n < 6)
+      return false;
+    for (int i = 0; i < 6; ++i)
+      mac_bytes[i] = static_cast<unsigned char>(b[i]);
+    mac_len = 6;
+  }
+
+  int ifindex = 0;
+  if (iface) {
+    ifindex = if_nametoindex(iface->c_str());
+    if (ifindex == 0)
+      return false;
+  }
+
+  std::vector<char> buf(512);
+  char *p = buf.data();
+
+  struct rt_msghdr *rtm = reinterpret_cast<struct rt_msghdr *>(p);
+  std::memset(rtm, 0, sizeof(*rtm));
+  p += sizeof(*rtm);
+
+  std::memcpy(p, &sin, sizeof(sin));
+  p += roundup(sizeof(sin));
+
+  struct sockaddr_dl sdl = {};
+  sdl.sdl_len = static_cast<unsigned char>(sizeof(struct sockaddr_dl) + mac_len);
+  sdl.sdl_family = AF_LINK;
+  sdl.sdl_index = ifindex;
+  sdl.sdl_alen = static_cast<unsigned char>(mac_len);
+
+  std::memcpy(p, &sdl, sizeof(struct sockaddr_dl));
+  char *ll = p + offsetof(struct sockaddr_dl, sdl_data);
+  std::memcpy(ll, mac_bytes, mac_len);
+  p += roundup(static_cast<size_t>(sdl.sdl_len));
+
+  rtm->rtm_msglen = static_cast<int>(p - buf.data());
+  rtm->rtm_version = RTM_VERSION;
+  rtm->rtm_type = RTM_ADD;
+  rtm->rtm_flags = RTF_HOST | (temp ? 0 : RTF_STATIC);
+  if (pub)
+    rtm->rtm_flags |= RTF_ANNOUNCE;
+  rtm->rtm_addrs = RTA_DST | RTA_GATEWAY;
+
+  #include "RoutingSocket.hpp"
   (void)temp;
-  (void)pub;
-  return false;
+  return WriteRoutingSocket(std::vector<char>(buf.data(), buf.data() + rtm->rtm_msglen), AF_INET);
 }
 
 bool SystemConfigurationManager::DeleteArpEntry(
     const std::string &ip, const std::optional<std::string> &iface) const {
-  // TODO: Implement ARP entry deletion using routing socket (RTM_DELETE)
-  // Similar to the delete_rtsock() function in arp.c
-  (void)ip;
+  auto roundup = [](size_t a) -> size_t {
+    const size_t l = sizeof(long);
+    return (a + l - 1) & ~(l - 1);
+  };
+
+  struct sockaddr_in sin = {};
+  sin.sin_len = sizeof(sin);
+  sin.sin_family = AF_INET;
+  if (inet_pton(AF_INET, ip.c_str(), &sin.sin_addr) != 1)
+    return false;
+
+  std::vector<char> buf(256);
+  char *p = buf.data();
+  struct rt_msghdr *rtm = reinterpret_cast<struct rt_msghdr *>(p);
+  std::memset(rtm, 0, sizeof(*rtm));
+  p += sizeof(*rtm);
+
+  std::memcpy(p, &sin, sizeof(sin));
+  p += roundup(sizeof(sin));
+
+  rtm->rtm_msglen = static_cast<int>(p - buf.data());
+  rtm->rtm_version = RTM_VERSION;
+  rtm->rtm_type = RTM_DELETE;
+  rtm->rtm_flags = RTF_HOST;
+  rtm->rtm_addrs = RTA_DST;
+
+  int s = socket(PF_ROUTE, SOCK_RAW, AF_INET);
+  if (s < 0)
+    return false;
+  ssize_t written = write(s, buf.data(), rtm->rtm_msglen);
+  close(s);
   (void)iface;
-  return false;
+  return (written == rtm->rtm_msglen);
 }

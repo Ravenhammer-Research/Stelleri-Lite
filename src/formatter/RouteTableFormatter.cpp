@@ -41,6 +41,7 @@ RouteTableFormatter::format(const std::vector<RouteConfig> &routes) {
 
   addColumn("Destination", "Destination", 8, 10, true);
   addColumn("Gateway", "Gateway", 6, 7, true);
+  addColumn("Author", "Author", 6, 8, true);
   addColumn("Interface", "Interface", 6, 4, true);
   addColumn("Flags", "Flags", 3, 2, true);
   addColumn("Scope", "Scope", 5, 6, true);
@@ -50,6 +51,7 @@ RouteTableFormatter::format(const std::vector<RouteConfig> &routes) {
     std::string dest = route.prefix.empty() ? "-" : route.prefix;
     std::string gateway = route.nexthop.value_or("-");
     std::string iface = route.iface.value_or("-");
+    std::string author = route.author.value_or("-");
     std::string scope = route.scope.value_or("-");
     std::string expire = "-";
     if (route.expire)
@@ -58,20 +60,20 @@ RouteTableFormatter::format(const std::vector<RouteConfig> &routes) {
     // Build flags in netstat order: U G H S B R (plain letters — legend is
     // bold). Use portable constants from RouteConfig.
     std::string flags;
-    if (route.flags & RouteConfig::RTF_UP_FLAG)
+    if (route.flags & RouteConfig::Flag(RouteConfig::UP))
       flags += "U";
-    if (route.flags & RouteConfig::RTF_GATEWAY_FLAG)
+    if (route.flags & RouteConfig::Flag(RouteConfig::GATEWAY))
       flags += "G";
-    if (route.flags & RouteConfig::RTF_HOST_FLAG)
+    if (route.flags & RouteConfig::Flag(RouteConfig::HOST))
       flags += "H";
-    if (route.flags & RouteConfig::RTF_STATIC_FLAG)
+    if (route.flags & RouteConfig::Flag(RouteConfig::STATIC))
       flags += "S";
     if (route.blackhole)
       flags += "B";
     if (route.reject)
       flags += "R";
 
-    addRow({dest, gateway, iface, flags, scope, expire});
+    addRow({dest, gateway, author, iface, flags, scope, expire});
   }
 
   // Display VRF header: if kernel reported a fib name like "fibN", show
