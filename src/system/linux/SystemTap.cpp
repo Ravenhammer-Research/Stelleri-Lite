@@ -25,18 +25,19 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "TapInterfaceConfig.hpp"
 #include "SystemConfigurationManager.hpp"
-#include <linux/if_tun.h>
+#include "TapInterfaceConfig.hpp"
+#include <cstring>
 #include <fcntl.h>
+#include <linux/if_tun.h>
+#include <net/if.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
-#include <cstring>
-#include <net/if.h>
 
 void SystemConfigurationManager::CreateTap(const std::string &name) const {
   int fd = open("/dev/net/tun", O_RDWR);
-  if (fd < 0) return;
+  if (fd < 0)
+    return;
 
   struct ifreq ifr{};
   ifr.ifr_flags = IFF_TAP | IFF_NO_PI;
@@ -49,7 +50,8 @@ void SystemConfigurationManager::CreateTap(const std::string &name) const {
   close(fd);
 }
 
-void SystemConfigurationManager::SaveTap(const TapInterfaceConfig &tap [[maybe_unused]]) const {
+void SystemConfigurationManager::SaveTap(const TapInterfaceConfig &tap
+                                         [[maybe_unused]]) const {
   if (!InterfaceExists(tap.name)) {
     CreateTap(tap.name);
   }

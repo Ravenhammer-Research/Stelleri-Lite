@@ -25,20 +25,19 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "IPAddress.hpp"
+#include "IPNetwork.hpp"
 #include "RouteConfig.hpp"
 #include "SystemConfigurationManager.hpp"
-#include <fstream>
-#include <sstream>
-#include <iomanip>
 #include <arpa/inet.h>
-#include <net/if.h>
+#include <cstring>
+#include <fstream>
+#include <iomanip>
+#include <linux/route.h>
+#include <sstream>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
-#include <linux/route.h>
 #include <unistd.h>
-#include <cstring>
-#include "IPNetwork.hpp"
-#include "IPAddress.hpp"
 
 namespace {
   std::string hexToIp(const std::string &hex) {
@@ -59,25 +58,29 @@ namespace {
     }
     return count;
   }
-}
+} // namespace
 
-std::vector<RouteConfig> SystemConfigurationManager::GetStaticRoutes(
-    const std::optional<VRFConfig> &vrf [[maybe_unused]]) const {
+std::vector<RouteConfig>
+SystemConfigurationManager::GetStaticRoutes(const std::optional<VRFConfig> &vrf
+                                            [[maybe_unused]]) const {
   std::vector<RouteConfig> routes;
-  
-  // IPv4 - Listing routes via ioctl is not standard on Linux, using /proc/net/route for enumeration.
+
+  // IPv4 - Listing routes via ioctl is not standard on Linux, using
+  // /proc/net/route for enumeration.
   std::ifstream ipv4_route("/proc/net/route");
   if (ipv4_route.is_open()) {
     std::string line;
     std::getline(ipv4_route, line); // Skip header
     while (std::getline(ipv4_route, line)) {
       std::stringstream ss(line);
-      std::string iface, dest, gateway, flags, refcnt, use, metric, mask, mtu, window, irtt;
-      ss >> iface >> dest >> gateway >> flags >> refcnt >> use >> metric >> mask >> mtu >> window >> irtt;
+      std::string iface, dest, gateway, flags, refcnt, use, metric, mask, mtu,
+          window, irtt;
+      ss >> iface >> dest >> gateway >> flags >> refcnt >> use >> metric >>
+          mask >> mtu >> window >> irtt;
 
       RouteConfig rc;
       rc.iface = iface;
-      
+
       std::string dest_ip = hexToIp(dest);
       uint32_t mask_val = 0;
       std::stringstream mss;
@@ -92,7 +95,7 @@ std::vector<RouteConfig> SystemConfigurationManager::GetStaticRoutes(
 
       rc.flags = std::stoul(flags, nullptr, 16);
       rc.rmx_mtu = std::stoi(mtu);
-      
+
       routes.push_back(rc);
     }
   }
@@ -103,8 +106,10 @@ std::vector<RouteConfig> SystemConfigurationManager::GetStaticRoutes(
     std::string line;
     while (std::getline(ipv6_route, line)) {
       std::stringstream ss(line);
-      std::string dest, dest_len, src, src_len, nexthop, metric, refcnt, use, flags, iface;
-      ss >> dest >> dest_len >> src >> src_len >> nexthop >> metric >> refcnt >> use >> flags >> iface;
+      std::string dest, dest_len, src, src_len, nexthop, metric, refcnt, use,
+          flags, iface;
+      ss >> dest >> dest_len >> src >> src_len >> nexthop >> metric >> refcnt >>
+          use >> flags >> iface;
 
       RouteConfig rc;
       rc.iface = iface;
@@ -117,10 +122,11 @@ std::vector<RouteConfig> SystemConfigurationManager::GetStaticRoutes(
       }
       char buf[INET6_ADDRSTRLEN];
       inet_ntop(AF_INET6, &addr, buf, sizeof(buf));
-      rc.prefix = std::string(buf) + "/" + std::to_string(std::stoul(dest_len, nullptr, 16));
+      rc.prefix = std::string(buf) + "/" +
+                  std::to_string(std::stoul(dest_len, nullptr, 16));
 
       if (nexthop != "00000000000000000000000000000000") {
-         for (int i = 0; i < 16; ++i) {
+        for (int i = 0; i < 16; ++i) {
           std::string byte = nexthop.substr(i * 2, 2);
           addr.s6_addr[i] = static_cast<uint8_t>(std::stoul(byte, nullptr, 16));
         }
@@ -143,7 +149,8 @@ std::vector<RouteConfig> SystemConfigurationManager::GetRoutes(
 
 void SystemConfigurationManager::AddRoute(const RouteConfig &route) const {
   int sock = socket(AF_INET, SOCK_DGRAM, 0);
-  if (sock < 0) return;
+  if (sock < 0)
+    return;
 
   struct rtentry rt{};
   memset(&rt, 0, sizeof(rt));
@@ -174,7 +181,7 @@ void SystemConfigurationManager::AddRoute(const RouteConfig &route) const {
 
   rt.rt_flags |= RTF_UP;
   if (route.iface) {
-    rt.rt_dev = const_cast<char*>(route.iface->c_str());
+    rt.rt_dev = const_cast<char *>(route.iface->c_str());
   }
 
   ioctl(sock, SIOCADDRT, &rt);
@@ -183,7 +190,8 @@ void SystemConfigurationManager::AddRoute(const RouteConfig &route) const {
 
 void SystemConfigurationManager::DeleteRoute(const RouteConfig &route) const {
   int sock = socket(AF_INET, SOCK_DGRAM, 0);
-  if (sock < 0) return;
+  if (sock < 0)
+    return;
 
   struct rtentry rt{};
   memset(&rt, 0, sizeof(rt));

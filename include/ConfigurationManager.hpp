@@ -114,7 +114,8 @@ public:
   virtual std::vector<PfsyncInterfaceConfig>
   GetPfsyncInterfaces(const std::vector<InterfaceConfig> &bases) const = 0;
   // virtual std::vector<WireGuardInterfaceConfig>
-  // GetWireGuardInterfaces(const std::vector<InterfaceConfig> &bases) const = 0;
+  // GetWireGuardInterfaces(const std::vector<InterfaceConfig> &bases) const =
+  // 0;
   virtual std::vector<RouteConfig>
   GetStaticRoutes(const std::optional<VRFConfig> &vrf = std::nullopt) const = 0;
   virtual std::vector<RouteConfig>

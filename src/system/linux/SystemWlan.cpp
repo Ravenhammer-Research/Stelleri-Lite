@@ -25,10 +25,10 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "WlanInterfaceConfig.hpp"
 #include "SystemConfigurationManager.hpp"
-#include <vector>
+#include "WlanInterfaceConfig.hpp"
 #include <string>
+#include <vector>
 
 std::vector<WlanInterfaceConfig> SystemConfigurationManager::GetWlanInterfaces(
     const std::vector<InterfaceConfig> &bases) const {
@@ -42,11 +42,15 @@ std::vector<WlanInterfaceConfig> SystemConfigurationManager::GetWlanInterfaces(
   return results;
 }
 
-void SystemConfigurationManager::CreateWlan(const std::string &name [[maybe_unused]]) const {
-  // WLAN creation on Linux is usually not 'creating' but configuring an existing hardware interface.
-  // Unless it's creating a virtual interface (e.g. monitor mode, multiple SSIDs).
+void SystemConfigurationManager::CreateWlan(const std::string &name
+                                            [[maybe_unused]]) const {
+  // WLAN creation on Linux is usually not 'creating' but configuring an
+  // existing hardware interface. Unless it's creating a virtual interface (e.g.
+  // monitor mode, multiple SSIDs).
 }
 
-void SystemConfigurationManager::SaveWlan(const WlanInterfaceConfig &wlan [[maybe_unused]]) const {
-  // Apply SSID, passphrase, mode etc via nl80211 or specialized tools like wpa_supplicant
+void SystemConfigurationManager::SaveWlan(const WlanInterfaceConfig &wlan
+                                          [[maybe_unused]]) const {
+  // Apply SSID, passphrase, mode etc via nl80211 or specialized tools like
+  // wpa_supplicant
 }

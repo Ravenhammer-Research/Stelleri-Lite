@@ -27,14 +27,14 @@
 
 #include "BridgeInterfaceConfig.hpp"
 #include "SystemConfigurationManager.hpp"
-#include <vector>
-#include <string>
 #include <cstring>
+#include <linux/sockios.h>
+#include <net/if.h>
+#include <string>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
-#include <net/if.h>
-#include <linux/sockios.h>
 #include <unistd.h>
+#include <vector>
 
 /* Linux bridge-utils legacy ioctl interface */
 #ifndef BRCTL_GET_VERSION
@@ -74,11 +74,12 @@ std::vector<std::string>
 SystemConfigurationManager::GetBridgeMembers(const std::string &name) const {
   std::vector<std::string> members;
   int sock = socket(AF_INET, SOCK_DGRAM, 0);
-  if (sock < 0) return members;
+  if (sock < 0)
+    return members;
 
   unsigned long args[4];
   int indices[1024];
-  
+
   args[0] = BRCTL_GET_PORT_LIST;
   args[1] = (unsigned long)indices;
   args[2] = 1024;
@@ -104,11 +105,13 @@ SystemConfigurationManager::GetBridgeMembers(const std::string &name) const {
 
 void SystemConfigurationManager::CreateBridge(const std::string &name) const {
   int sock = socket(AF_INET, SOCK_DGRAM, 0);
-  if (sock < 0) return;
+  if (sock < 0)
+    return;
   ioctl(sock, SIOCBRADDBR, name.c_str());
   close(sock);
 }
 
-void SystemConfigurationManager::SaveBridge(const BridgeInterfaceConfig &bic [[maybe_unused]]) const {
+void SystemConfigurationManager::SaveBridge(const BridgeInterfaceConfig &bic
+                                            [[maybe_unused]]) const {
   // Can use SIOCBRADDIF to add members
 }

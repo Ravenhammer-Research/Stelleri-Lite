@@ -26,15 +26,18 @@
  */
 
 #include "InterfaceConfig.hpp"
-#include "SystemConfigurationManager.hpp"
 #include "Socket.hpp"
+#include "SystemConfigurationManager.hpp"
 
 #include <algorithm>
 #include <cstring>
 #include <ifaddrs.h>
 #include <iostream>
+#include <linux/ethtool.h>
+#include <linux/sockios.h>
 #include <net/if.h>
 #include <net/if_arp.h>
+#include <netdb.h>
 #include <netinet/in.h>
 #include <string>
 #include <sys/ioctl.h>
@@ -42,9 +45,6 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <unordered_map>
-#include <linux/ethtool.h>
-#include <linux/sockios.h>
-#include <netdb.h>
 
 namespace {
 
@@ -55,21 +55,33 @@ namespace {
     // 1. Try ethtool to get driver information
     struct ethtool_drvinfo drvinfo{};
     drvinfo.cmd = ETHTOOL_GDRVINFO;
-    ifr.ifr_data = reinterpret_cast<char*>(&drvinfo);
+    ifr.ifr_data = reinterpret_cast<char *>(&drvinfo);
     if (ioctl(sock, SIOCETHTOOL, &ifr) == 0) {
       std::string driver(drvinfo.driver);
-      if (driver == "bridge") return InterfaceType::Bridge;
-      if (driver == "bonding") return InterfaceType::Lagg;
-      if (driver == "8021q") return InterfaceType::VLAN;
-      if (driver == "vrf") return InterfaceType::VRF;
-      if (driver == "tun") return InterfaceType::Tun;
-      if (driver == "veth") return InterfaceType::Epair;
-      if (driver == "vxlan") return InterfaceType::VXLAN;
-      if (driver == "gre" || driver == "gretap") return InterfaceType::GRE;
-      if (driver == "sit") return InterfaceType::SixToFour;
-      if (driver == "ipip") return InterfaceType::Ipip;
-      if (driver == "wireguard") return InterfaceType::WireGuard;
-      if (driver == "macvlan") return InterfaceType::Ethernet; // Or a specific type if added
+      if (driver == "bridge")
+        return InterfaceType::Bridge;
+      if (driver == "bonding")
+        return InterfaceType::Lagg;
+      if (driver == "8021q")
+        return InterfaceType::VLAN;
+      if (driver == "vrf")
+        return InterfaceType::VRF;
+      if (driver == "tun")
+        return InterfaceType::Tun;
+      if (driver == "veth")
+        return InterfaceType::Epair;
+      if (driver == "vxlan")
+        return InterfaceType::VXLAN;
+      if (driver == "gre" || driver == "gretap")
+        return InterfaceType::GRE;
+      if (driver == "sit")
+        return InterfaceType::SixToFour;
+      if (driver == "ipip")
+        return InterfaceType::Ipip;
+      if (driver == "wireguard")
+        return InterfaceType::WireGuard;
+      if (driver == "macvlan")
+        return InterfaceType::Ethernet; // Or a specific type if added
     }
 
     // 2. Try Wireless Extensions (SIOCGIWNAME = 0x8B01)
@@ -84,13 +96,19 @@ namespace {
     std::strncpy(ifr.ifr_name, name.c_str(), IFNAMSIZ - 1);
     if (ioctl(sock, SIOCGIFHWADDR, &ifr) == 0) {
       switch (ifr.ifr_hwaddr.sa_family) {
-        case ARPHRD_LOOPBACK: return InterfaceType::Loopback;
-        case ARPHRD_ETHER: return InterfaceType::Ethernet;
-        case ARPHRD_PPP: return InterfaceType::PPP;
-        case ARPHRD_TUNNEL:
-        case ARPHRD_TUNNEL6: return InterfaceType::IPsec;
-        case ARPHRD_SIT: return InterfaceType::SixToFour;
-        case ARPHRD_IEEE80211: return InterfaceType::Wireless;
+      case ARPHRD_LOOPBACK:
+        return InterfaceType::Loopback;
+      case ARPHRD_ETHER:
+        return InterfaceType::Ethernet;
+      case ARPHRD_PPP:
+        return InterfaceType::PPP;
+      case ARPHRD_TUNNEL:
+      case ARPHRD_TUNNEL6:
+        return InterfaceType::IPsec;
+      case ARPHRD_SIT:
+        return InterfaceType::SixToFour;
+      case ARPHRD_IEEE80211:
+        return InterfaceType::Wireless;
       }
     }
 
@@ -102,7 +120,8 @@ namespace {
 void SystemConfigurationManager::populateInterfaceMetadata(
     InterfaceConfig &ic) const {
   int sock = socket(AF_INET, SOCK_DGRAM, 0);
-  if (sock < 0) return;
+  if (sock < 0)
+    return;
 
   struct ifreq ifr{};
   std::strncpy(ifr.ifr_name, ic.name.c_str(), IFNAMSIZ - 1);
@@ -117,7 +136,8 @@ void SystemConfigurationManager::populateInterfaceMetadata(
 
   // HW address
   if (ioctl(sock, SIOCGIFHWADDR, &ifr) == 0) {
-    unsigned char *mac = reinterpret_cast<unsigned char *>(ifr.ifr_hwaddr.sa_data);
+    unsigned char *mac =
+        reinterpret_cast<unsigned char *>(ifr.ifr_hwaddr.sa_data);
     char macbuf[32];
     std::snprintf(macbuf, sizeof(macbuf), "%02x:%02x:%02x:%02x:%02x:%02x",
                   mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
@@ -137,7 +157,7 @@ void SystemConfigurationManager::populateInterfaceMetadata(
   // Speed via Ethtool
   struct ethtool_cmd edata{};
   edata.cmd = ETHTOOL_GSET;
-  ifr.ifr_data = reinterpret_cast<char*>(&edata);
+  ifr.ifr_data = reinterpret_cast<char *>(&edata);
   if (ioctl(sock, SIOCETHTOOL, &ifr) == 0) {
     uint32_t speed = ethtool_cmd_speed(&edata);
     if (speed != static_cast<uint32_t>(SPEED_UNKNOWN) && speed > 0) {
@@ -160,7 +180,8 @@ std::vector<InterfaceConfig> SystemConfigurationManager::GetInterfaces(
   std::unordered_map<std::string, InterfaceConfig> iface_map;
 
   for (ifa = ifaddr; ifa != nullptr; ifa = ifa->ifa_next) {
-    if (ifa->ifa_name == nullptr) continue;
+    if (ifa->ifa_name == nullptr)
+      continue;
 
     std::string name(ifa->ifa_name);
     auto [it, inserted] = iface_map.try_emplace(name);
@@ -171,11 +192,14 @@ std::vector<InterfaceConfig> SystemConfigurationManager::GetInterfaces(
       populateInterfaceMetadata(ic);
     }
 
-    if (ifa->ifa_addr == nullptr) continue;
+    if (ifa->ifa_addr == nullptr)
+      continue;
 
     if (ifa->ifa_addr->sa_family == AF_INET) {
-      struct sockaddr_in *sa = reinterpret_cast<struct sockaddr_in *>(ifa->ifa_addr);
-      struct sockaddr_in *nm = reinterpret_cast<struct sockaddr_in *>(ifa->ifa_netmask);
+      struct sockaddr_in *sa =
+          reinterpret_cast<struct sockaddr_in *>(ifa->ifa_addr);
+      struct sockaddr_in *nm =
+          reinterpret_cast<struct sockaddr_in *>(ifa->ifa_netmask);
       int prefix = 0;
       if (nm) {
         uint32_t mask = ntohl(nm->sin_addr.s_addr);
@@ -184,15 +208,18 @@ std::vector<InterfaceConfig> SystemConfigurationManager::GetInterfaces(
           mask <<= 1;
         }
       }
-      auto net = std::make_unique<IPv4Network>(ntohl(sa->sin_addr.s_addr), prefix);
+      auto net =
+          std::make_unique<IPv4Network>(ntohl(sa->sin_addr.s_addr), prefix);
       if (!ic.address) {
         ic.address = std::move(net);
       } else {
         ic.aliases.push_back(std::move(net));
       }
     } else if (ifa->ifa_addr->sa_family == AF_INET6) {
-      struct sockaddr_in6 *sa6 = reinterpret_cast<struct sockaddr_in6 *>(ifa->ifa_addr);
-      struct sockaddr_in6 *nm6 = reinterpret_cast<struct sockaddr_in6 *>(ifa->ifa_netmask);
+      struct sockaddr_in6 *sa6 =
+          reinterpret_cast<struct sockaddr_in6 *>(ifa->ifa_addr);
+      struct sockaddr_in6 *nm6 =
+          reinterpret_cast<struct sockaddr_in6 *>(ifa->ifa_netmask);
       int prefix = 0;
       if (nm6) {
         for (int i = 0; i < 16; i++) {
@@ -228,7 +255,8 @@ std::vector<InterfaceConfig> SystemConfigurationManager::GetInterfaces(
 }
 
 std::vector<InterfaceConfig> SystemConfigurationManager::GetInterfacesByGroup(
-    const std::optional<VRFConfig> &vrf, std::string_view group [[maybe_unused]]) const {
+    const std::optional<VRFConfig> &vrf,
+    std::string_view group [[maybe_unused]]) const {
   return GetInterfaces(vrf);
 }
 
@@ -236,32 +264,38 @@ bool SystemConfigurationManager::InterfaceExists(std::string_view name) const {
   return if_nametoindex(std::string(name).c_str()) != 0;
 }
 
-bool SystemConfigurationManager::matches_vrf(const InterfaceConfig &ic [[maybe_unused]],
-                                            const std::optional<VRFConfig> &vrf [[maybe_unused]]) const {
-  if (!vrf) return true;
-  if (!ic.vrf) return vrf->table == 0;
+bool SystemConfigurationManager::matches_vrf(const InterfaceConfig &ic
+                                             [[maybe_unused]],
+                                             const std::optional<VRFConfig> &vrf
+                                             [[maybe_unused]]) const {
+  if (!vrf)
+    return true;
+  if (!ic.vrf)
+    return vrf->table == 0;
   return ic.vrf->table == vrf->table;
 }
 
-void SystemConfigurationManager::CreateInterface(const std::string &name [[maybe_unused]]) const {
-}
+void SystemConfigurationManager::CreateInterface(const std::string &name
+                                                 [[maybe_unused]]) const {}
 
-void SystemConfigurationManager::DestroyInterface(const std::string &name [[maybe_unused]]) const {
-}
+void SystemConfigurationManager::DestroyInterface(const std::string &name
+                                                  [[maybe_unused]]) const {}
 
-void SystemConfigurationManager::SaveInterface(const InterfaceConfig &ic [[maybe_unused]]) const {
-}
+void SystemConfigurationManager::SaveInterface(const InterfaceConfig &ic
+                                               [[maybe_unused]]) const {}
 
-void SystemConfigurationManager::RemoveInterfaceAddress(const std::string &ifname [[maybe_unused]],
-                                                        const std::string &addr [[maybe_unused]]) const {
-}
+void SystemConfigurationManager::RemoveInterfaceAddress(
+    const std::string &ifname [[maybe_unused]],
+    const std::string &addr [[maybe_unused]]) const {}
 
-void SystemConfigurationManager::RemoveInterfaceGroup(const std::string &ifname [[maybe_unused]],
-                                                      const std::string &group [[maybe_unused]]) const {
-}
+void SystemConfigurationManager::RemoveInterfaceGroup(const std::string &ifname
+                                                      [[maybe_unused]],
+                                                      const std::string &group
+                                                      [[maybe_unused]]) const {}
 
-std::vector<std::string> SystemConfigurationManager::GetInterfaceAddresses(
-    const std::string &ifname, int family) const {
+std::vector<std::string>
+SystemConfigurationManager::GetInterfaceAddresses(const std::string &ifname,
+                                                  int family) const {
   std::vector<std::string> addresses;
   struct ifaddrs *ifaddr, *ifa;
 
@@ -270,13 +304,15 @@ std::vector<std::string> SystemConfigurationManager::GetInterfaceAddresses(
   }
 
   for (ifa = ifaddr; ifa != nullptr; ifa = ifa->ifa_next) {
-    if (ifa->ifa_name == nullptr || ifname != ifa->ifa_name) continue;
-    if (ifa->ifa_addr == nullptr || ifa->ifa_addr->sa_family != family) continue;
+    if (ifa->ifa_name == nullptr || ifname != ifa->ifa_name)
+      continue;
+    if (ifa->ifa_addr == nullptr || ifa->ifa_addr->sa_family != family)
+      continue;
 
     char host[NI_MAXHOST];
     int s = getnameinfo(ifa->ifa_addr,
-                        (family == AF_INET) ? sizeof(struct sockaddr_in) :
-                                              sizeof(struct sockaddr_in6),
+                        (family == AF_INET) ? sizeof(struct sockaddr_in)
+                                            : sizeof(struct sockaddr_in6),
                         host, NI_MAXHOST, nullptr, 0, NI_NUMERICHOST);
     if (s == 0) {
       addresses.push_back(host);

@@ -44,7 +44,7 @@
 class VRFConfig : public ConfigData {
 public:
   std::string name; ///< VRF name (e.g., vrf255)
-  int table; ///< Routing table ID (0-65535)
+  int table;        ///< Routing table ID (0-65535)
 
   VRFConfig() : table(0) {}
   explicit VRFConfig(int t) : table(t) {}

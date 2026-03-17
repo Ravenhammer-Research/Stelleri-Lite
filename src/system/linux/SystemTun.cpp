@@ -25,18 +25,19 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "TunInterfaceConfig.hpp"
 #include "SystemConfigurationManager.hpp"
-#include <linux/if_tun.h>
+#include "TunInterfaceConfig.hpp"
+#include <cstring>
 #include <fcntl.h>
+#include <linux/if_tun.h>
+#include <net/if.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
-#include <cstring>
-#include <net/if.h>
 
 void SystemConfigurationManager::CreateTun(const std::string &name) const {
   int fd = open("/dev/net/tun", O_RDWR);
-  if (fd < 0) return;
+  if (fd < 0)
+    return;
 
   struct ifreq ifr{};
   ifr.ifr_flags = IFF_TUN | IFF_NO_PI;
@@ -45,13 +46,14 @@ void SystemConfigurationManager::CreateTun(const std::string &name) const {
   }
 
   ioctl(fd, TUNSETIFF, &ifr);
-  // In Linux, the interface usually disappears when the FD is closed, 
+  // In Linux, the interface usually disappears when the FD is closed,
   // unless TUNSETPERSIST is used.
   ioctl(fd, TUNSETPERSIST, 1);
   close(fd);
 }
 
-void SystemConfigurationManager::SaveTun(const TunInterfaceConfig &tun [[maybe_unused]]) const {
+void SystemConfigurationManager::SaveTun(const TunInterfaceConfig &tun
+                                         [[maybe_unused]]) const {
   if (!InterfaceExists(tun.name)) {
     CreateTun(tun.name);
   }

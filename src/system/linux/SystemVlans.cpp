@@ -25,15 +25,15 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "VlanInterfaceConfig.hpp"
 #include "SystemConfigurationManager.hpp"
+#include "VlanInterfaceConfig.hpp"
+#include <cstring>
 #include <linux/if_vlan.h>
 #include <linux/sockios.h>
+#include <net/if.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 #include <unistd.h>
-#include <cstring>
-#include <net/if.h>
 
 std::vector<VlanInterfaceConfig> SystemConfigurationManager::GetVLANInterfaces(
     const std::vector<InterfaceConfig> &bases) const {
@@ -42,20 +42,22 @@ std::vector<VlanInterfaceConfig> SystemConfigurationManager::GetVLANInterfaces(
     if (ic.type == InterfaceType::VLAN) {
       VlanInterfaceConfig vconf(ic);
       // Linux VLAN info is often retrieved via netlink or /proc/net/vlan/config
-      // For now, we'll use a basic implementation or stub as ioctls for 
+      // For now, we'll use a basic implementation or stub as ioctls for
       // GET_VLAN_REALDEV_NAME and GET_VLAN_VID exist.
       int sock = socket(AF_INET, SOCK_DGRAM, 0);
       if (sock >= 0) {
         struct vlan_ioctl_args vlan_args{};
         vlan_args.cmd = GET_VLAN_VID_CMD;
-        std::strncpy(vlan_args.device1, ic.name.c_str(), sizeof(vlan_args.device1) - 1);
+        std::strncpy(vlan_args.device1, ic.name.c_str(),
+                     sizeof(vlan_args.device1) - 1);
         if (ioctl(sock, SIOCGIFVLAN, &vlan_args) == 0) {
           vconf.id = vlan_args.u.VID;
         }
 
         std::memset(&vlan_args, 0, sizeof(vlan_args));
         vlan_args.cmd = GET_VLAN_REALDEV_NAME_CMD;
-        std::strncpy(vlan_args.device1, ic.name.c_str(), sizeof(vlan_args.device1) - 1);
+        std::strncpy(vlan_args.device1, ic.name.c_str(),
+                     sizeof(vlan_args.device1) - 1);
         if (ioctl(sock, SIOCGIFVLAN, &vlan_args) == 0) {
           vconf.parent = std::string(vlan_args.u.device2);
         }
@@ -67,14 +69,17 @@ std::vector<VlanInterfaceConfig> SystemConfigurationManager::GetVLANInterfaces(
   return out;
 }
 
-void SystemConfigurationManager::SaveVlan(const VlanInterfaceConfig &vlan [[maybe_unused]]) const {
+void SystemConfigurationManager::SaveVlan(const VlanInterfaceConfig &vlan
+                                          [[maybe_unused]]) const {
   int sock = socket(AF_INET, SOCK_DGRAM, 0);
-  if (sock < 0) return;
+  if (sock < 0)
+    return;
 
   struct vlan_ioctl_args vlan_args{};
   vlan_args.cmd = ADD_VLAN_CMD;
   if (vlan.parent) {
-    std::strncpy(vlan_args.device1, vlan.parent->c_str(), sizeof(vlan_args.device1) - 1);
+    std::strncpy(vlan_args.device1, vlan.parent->c_str(),
+                 sizeof(vlan_args.device1) - 1);
   }
   vlan_args.u.VID = vlan.id;
 

@@ -31,9 +31,9 @@
 
 namespace netcli {
 
-  void executeSetVRF(const VRFToken &tok,
-                     ConfigurationManager *mgr) {
-    if (!mgr) return;
+  void executeSetVRF(const VRFToken &tok, ConfigurationManager *mgr) {
+    if (!mgr)
+      return;
     VRFConfig cfg(tok.name(), tok.table());
     cfg.save(*mgr);
   }

@@ -78,12 +78,12 @@ std::vector<ArpConfig> SystemConfigurationManager::GetArpEntries(
   return entries;
 }
 
-bool SystemConfigurationManager::SetArpEntry(const std::string &ip,
-                                            const std::string &mac,
-                                            const std::optional<std::string> &iface,
-                                            bool temp, bool pub) const {
+bool SystemConfigurationManager::SetArpEntry(
+    const std::string &ip, const std::string &mac,
+    const std::optional<std::string> &iface, bool temp, bool pub) const {
   int sock = socket(AF_INET, SOCK_DGRAM, 0);
-  if (sock < 0) return false;
+  if (sock < 0)
+    return false;
 
   struct arpreq req{};
   struct sockaddr_in *sin = (struct sockaddr_in *)&req.arp_pa;
@@ -105,8 +105,10 @@ bool SystemConfigurationManager::SetArpEntry(const std::string &ip,
   }
 
   req.arp_flags = ATF_COM;
-  if (!temp) req.arp_flags |= ATF_PERM;
-  if (pub) req.arp_flags |= ATF_PUBL;
+  if (!temp)
+    req.arp_flags |= ATF_PERM;
+  if (pub)
+    req.arp_flags |= ATF_PUBL;
 
   if (iface) {
     std::strncpy(req.arp_dev, iface->c_str(), sizeof(req.arp_dev) - 1);
@@ -120,7 +122,8 @@ bool SystemConfigurationManager::SetArpEntry(const std::string &ip,
 bool SystemConfigurationManager::DeleteArpEntry(
     const std::string &ip, const std::optional<std::string> &iface) const {
   int sock = socket(AF_INET, SOCK_DGRAM, 0);
-  if (sock < 0) return false;
+  if (sock < 0)
+    return false;
 
   struct arpreq req{};
   struct sockaddr_in *sin = (struct sockaddr_in *)&req.arp_pa;

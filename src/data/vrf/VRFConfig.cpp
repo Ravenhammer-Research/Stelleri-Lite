@@ -28,9 +28,7 @@
 #include "VRFConfig.hpp"
 #include "ConfigurationManager.hpp"
 
-void VRFConfig::save(ConfigurationManager &mgr) const {
-  mgr.CreateVrf(*this);
-}
+void VRFConfig::save(ConfigurationManager &mgr) const { mgr.CreateVrf(*this); }
 
 void VRFConfig::destroy(ConfigurationManager &mgr) const {
   mgr.DeleteVrf(this->name);

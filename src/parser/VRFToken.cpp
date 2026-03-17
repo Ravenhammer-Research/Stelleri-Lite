@@ -27,14 +27,16 @@
 
 #include "VRFToken.hpp"
 
-VRFToken::VRFToken(int table, std::string name) : table_(table), name_(std::move(name)) {}
+VRFToken::VRFToken(int table, std::string name)
+    : table_(table), name_(std::move(name)) {}
 
 // Static renderer for VRFConfig
 std::string VRFToken::toString(VRFConfig *cfg) {
   if (!cfg)
     return std::string();
   if (!cfg->name.empty())
-    return std::string("vrf name ") + cfg->name + " table " + std::to_string(cfg->table);
+    return std::string("vrf name ") + cfg->name + " table " +
+           std::to_string(cfg->table);
   return std::string("vrf ") + std::to_string(cfg->table);
 }
 

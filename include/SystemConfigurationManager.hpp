@@ -146,8 +146,8 @@ public:
   void CreateSixToFour(const std::string &name) const override;
   void SaveSixToFour(const SixToFourInterfaceConfig &t) const override;
   void DestroySixToFour(const std::string &name) const override;
-  std::vector<SixToFourInterfaceConfig>
-  GetSixToFourInterfaces(const std::vector<InterfaceConfig> &bases) const override;
+  std::vector<SixToFourInterfaceConfig> GetSixToFourInterfaces(
+      const std::vector<InterfaceConfig> &bases) const override;
 
   // WLAN
   void CreateWlan(const std::string &name) const override;
@@ -200,7 +200,7 @@ public:
   void SetPolicy(const PolicyConfig &pc) const override;
   void DeletePolicy(const PolicyConfig &pc) const override;
 
-  #ifdef __FreeBSD__
+#ifdef __FreeBSD__
   enum class IfreqIntField { Metric, Fib, Mtu };
 
   // Helper methods used by system-specific implementations (defined in
@@ -219,12 +219,12 @@ public:
   // VRF matching helper
   bool matches_vrf(const InterfaceConfig &ic,
                    const std::optional<VRFConfig> &vrf) const;
-  #endif
+#endif
 
-  #ifdef __linux__
+#ifdef __linux__
   // Linux-specific helper methods
   void populateInterfaceMetadata(InterfaceConfig &ic) const;
   bool matches_vrf(const InterfaceConfig &ic,
                    const std::optional<VRFConfig> &vrf) const;
-  #endif
+#endif
 };
