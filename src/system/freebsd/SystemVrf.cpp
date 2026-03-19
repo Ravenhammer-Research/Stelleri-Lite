@@ -60,3 +60,12 @@ std::vector<VRFConfig> SystemConfigurationManager::GetVrfs() const {
   }
   return out;
 }
+
+/*
+ * These are unused because on FreeBSD a FIB is just tied to the
+ * max num of FIBs available.
+ */
+
+void SystemConfigurationManager::CreateVrf([[maybe_unused]] const VRFConfig &vrf) const {}
+
+void SystemConfigurationManager::DeleteVrf([[maybe_unused]] const std::string &name) const {}

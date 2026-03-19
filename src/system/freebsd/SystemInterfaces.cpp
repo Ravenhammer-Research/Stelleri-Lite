@@ -96,7 +96,7 @@ namespace {
       case IFT_PPP:
         return InterfaceType::PPP;
       case IFT_TUNNEL:
-        return InterfaceType::Tunnel;
+        return InterfaceType::Unknown; // XXX specific type?
       case IFT_GIF:
         return InterfaceType::Gif;
       case IFT_FDDI:
@@ -135,7 +135,7 @@ namespace {
     if (flags & IFF_LOOPBACK)
       return InterfaceType::Loopback;
     if (flags & IFF_POINTOPOINT)
-      return InterfaceType::PointToPoint;
+      return InterfaceType::PPP;
 
     return InterfaceType::Unknown;
   }
@@ -832,9 +832,9 @@ std::vector<InterfaceConfig> SystemConfigurationManager::GetInterfaces(
     // constant (lagg, bridge, wlan, gif, vlan, stf, pflog, …) is already
     // resolved above by ifAddrToInterfaceType and must NOT be touched here.
     auto kt = kv.second->type;
-    if (kt == InterfaceType::Ethernet || kt == InterfaceType::Tunnel ||
-        kt == InterfaceType::Unknown || kt == InterfaceType::Other ||
-        kt == InterfaceType::Epair || kt == InterfaceType::PointToPoint) {
+    if (kt == InterfaceType::Ethernet || kt == InterfaceType::Unknown ||
+        kt == InterfaceType::Other || kt == InterfaceType::Epair ||
+        kt == InterfaceType::PPP) {
       auto &nm = kv.second->name;
       if (nm.starts_with("bridge"))
         kv.second->type = InterfaceType::Bridge;
