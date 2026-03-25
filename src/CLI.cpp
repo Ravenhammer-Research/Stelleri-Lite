@@ -98,14 +98,18 @@ void CLI::processLine(const std::string &line) {
 
   netcli::Parser parser;
   auto toks = parser.tokenize(line);
-  auto cmd = parser.parse(toks);
-  if (!cmd || !cmd->head()) {
-    std::cerr << "Error: Invalid command\n";
-    return;
-  }
+  try {
+    auto cmd = parser.parse(toks);
+    if (!cmd || !cmd->head()) {
+      std::cerr << "Error: Invalid command\n";
+      return;
+    }
 
-  netcli::CommandDispatcher dispatcher;
-  dispatcher.dispatch(cmd->head(), mgr_.get());
+    netcli::CommandDispatcher dispatcher;
+    dispatcher.dispatch(cmd->head(), mgr_.get());
+  } catch (const std::exception &e) {
+    std::cerr << "Error: " << e.what() << "\n";
+  }
 }
 
 // =====================================================================

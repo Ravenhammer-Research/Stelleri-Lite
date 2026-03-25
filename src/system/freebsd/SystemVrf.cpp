@@ -66,6 +66,8 @@ std::vector<VRFConfig> SystemConfigurationManager::GetVrfs() const {
  * max num of FIBs available.
  */
 
-void SystemConfigurationManager::CreateVrf([[maybe_unused]] const VRFConfig &vrf) const {}
+void SystemConfigurationManager::CreateVrf(
+    [[maybe_unused]] const VRFConfig &vrf) const {}
 
-void SystemConfigurationManager::DeleteVrf([[maybe_unused]] const std::string &name) const {}
+void SystemConfigurationManager::DeleteVrf(
+    [[maybe_unused]] const std::string &name) const {}

@@ -1,6 +1,28 @@
 /*
- * Client.cpp
- * Minimal libnetconf2 client-side wrapper implementation.
+ * Copyright (c) 2026, Ravenhammer Research Inc.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  */
 
 #if !defined(STELLERI_NETCONF) || STELLERI_NETCONF != 1
@@ -45,6 +67,7 @@
 
 #include <cstdlib>
 #include <mutex>
+
 #ifdef NC_ENABLED_SSH_TLS
 #include <libnetconf2/session_client.h>
 #endif
@@ -57,8 +80,10 @@ std::unique_ptr<Client> Client::connect_unix(const std::string &path,
                                              const YangContext &ctx) {
   struct nc_session *s =
       nc_connect_unix(path.c_str(), const_cast<struct ly_ctx *>(ctx.get()));
+
   if (!s)
     return nullptr;
+
   Session sess(s);
   return std::unique_ptr<Client>(new Client(std::move(sess)));
 }
@@ -67,8 +92,10 @@ std::unique_ptr<Client> Client::connect_inout(int fdin, int fdout,
                                               const YangContext &ctx) {
   struct nc_session *s =
       nc_connect_inout(fdin, fdout, const_cast<struct ly_ctx *>(ctx.get()));
+
   if (!s)
     return nullptr;
+
   Session sess(s);
   return std::unique_ptr<Client>(new Client(std::move(sess)));
 }
@@ -79,8 +106,10 @@ std::unique_ptr<Client> Client::connect_ssh(const std::string &host,
                                             const YangContext &ctx) {
   struct nc_session *s = nc_connect_ssh(host.c_str(), port,
                                         const_cast<struct ly_ctx *>(ctx.get()));
+
   if (!s)
     return nullptr;
+
   Session sess(s);
   return std::unique_ptr<Client>(new Client(std::move(sess)));
 }
@@ -90,8 +119,10 @@ std::unique_ptr<Client> Client::connect_tls(const std::string &host,
                                             const YangContext &ctx) {
   struct nc_session *s = nc_connect_tls(host.c_str(), port,
                                         const_cast<struct ly_ctx *>(ctx.get()));
+
   if (!s)
     return nullptr;
+
   Session sess(s);
   return std::unique_ptr<Client>(new Client(std::move(sess)));
 }
@@ -100,20 +131,33 @@ std::unique_ptr<Client> Client::connect_tls(const std::string &host,
 // Singleton storage
 static std::unique_ptr<Client> g_client_instance;
 static std::mutex g_client_mutex;
+static std::once_flag g_client_init_flag;
+
+static void global_client_init() {
+  nc_client_init();
+  nc_client_set_schema_searchpath(
+      "/usr/local/share/yang/modules/yang/standard/ietf/RFC");
+}
 
 bool Client::init_unix(const std::string &path, const YangContext &ctx) {
+  std::call_once(g_client_init_flag, global_client_init);
   auto tmp = Client::connect_unix(path, ctx);
+
   if (!tmp)
     return false;
+
   std::lock_guard<std::mutex> lk(g_client_mutex);
   g_client_instance = std::move(tmp);
   return true;
 }
 
 bool Client::init_inout(int fdin, int fdout, const YangContext &ctx) {
+  std::call_once(g_client_init_flag, global_client_init);
   auto tmp = Client::connect_inout(fdin, fdout, ctx);
+
   if (!tmp)
     return false;
+
   std::lock_guard<std::mutex> lk(g_client_mutex);
   g_client_instance = std::move(tmp);
   return true;
@@ -122,9 +166,12 @@ bool Client::init_inout(int fdin, int fdout, const YangContext &ctx) {
 #ifdef NC_ENABLED_SSH_TLS
 bool Client::init_ssh(const std::string &host, uint16_t port,
                       const YangContext &ctx) {
+  std::call_once(g_client_init_flag, global_client_init);
   auto tmp = Client::connect_ssh(host, port, ctx);
+
   if (!tmp)
     return false;
+
   std::lock_guard<std::mutex> lk(g_client_mutex);
   g_client_instance = std::move(tmp);
   return true;
@@ -132,9 +179,12 @@ bool Client::init_ssh(const std::string &host, uint16_t port,
 
 bool Client::init_tls(const std::string &host, uint16_t port,
                       const YangContext &ctx) {
+  std::call_once(g_client_init_flag, global_client_init);
   auto tmp = Client::connect_tls(host, port, ctx);
+
   if (!tmp)
     return false;
+
   std::lock_guard<std::mutex> lk(g_client_mutex);
   g_client_instance = std::move(tmp);
   return true;
@@ -172,6 +222,7 @@ std::unique_ptr<NetconfServerReply> Client::getConfig(const YangData &filter
     return nullptr;
   uint64_t msgid = 0;
   NC_MSG_TYPE mt = nc_send_rpc(session_.getSessionPtr(), rpc, -1, &msgid);
+
   if (mt != NC_MSG_RPC) {
     nc_rpc_free(rpc);
     return nullptr;
@@ -179,19 +230,27 @@ std::unique_ptr<NetconfServerReply> Client::getConfig(const YangData &filter
 
   struct lyd_node *env = nullptr;
   struct lyd_node *op = nullptr;
+
   NC_MSG_TYPE rt =
       nc_recv_reply(session_.getSessionPtr(), rpc, msgid, -1, &env, &op);
+
   nc_rpc_free(rpc);
+
   if (rt == NC_MSG_REPLY) {
     if (op) {
       YangData d(op);
+
       auto r =
           std::make_unique<NetconfServerReply>(NetconfServerReply::RPL_DATA);
+
       r->setData(d);
+
       if (env)
         lyd_free_all(env);
+
       if (op)
         lyd_free_all(op);
+
       return r;
     }
     if (env)

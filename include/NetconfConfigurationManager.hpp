@@ -158,8 +158,8 @@ class NetconfConfigurationManager : public ConfigurationManager {
   void CreateSixToFour(const std::string &name) const override;
   void SaveSixToFour(const SixToFourInterfaceConfig &t) const override;
   void DestroySixToFour(const std::string &name) const override;
-  std::vector<SixToFourInterfaceConfig>
-  GetSixToFourInterfaces(const std::vector<InterfaceConfig> &bases) const override;
+  std::vector<SixToFourInterfaceConfig> GetSixToFourInterfaces(
+      const std::vector<InterfaceConfig> &bases) const override;
 
   // WLAN
   void CreateWlan(const std::string &name) const override;

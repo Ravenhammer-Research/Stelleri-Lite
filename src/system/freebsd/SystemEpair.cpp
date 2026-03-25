@@ -40,6 +40,7 @@
 #include <sys/socket.h>
 #include <sys/sockio.h>
 #include <sys/types.h>
+
 std::vector<EpairInterfaceConfig>
 SystemConfigurationManager::GetEpairInterfaces(
     const std::vector<InterfaceConfig> &bases) const {
@@ -55,10 +56,12 @@ SystemConfigurationManager::GetEpairInterfaces(
 void SystemConfigurationManager::CreateEpair(const std::string &nm) const {
   // For epair interfaces, check if the pair already exists
   std::string check_name = nm;
+
   if (nm.starts_with("epair") && !nm.empty() && nm.back() != 'a' &&
       nm.back() != 'b') {
     check_name = nm + "a";
   }
+
   if (InterfaceConfig::exists(*this, check_name))
     return;
 
@@ -72,7 +75,9 @@ void SystemConfigurationManager::CreateEpair(const std::string &nm) const {
     // Special-case epair clones similar to original logic
     if (err == EINVAL && nm.starts_with("epair")) {
       struct ifreq tmp_ifr;
+
       prepare_ifreq(tmp_ifr, "epair");
+
       if (ioctl(sock, SIOCIFCREATE2, &tmp_ifr) < 0) {
         int e = errno;
         // Try to load module and retry
@@ -83,7 +88,9 @@ void SystemConfigurationManager::CreateEpair(const std::string &nm) const {
                                      std::string(strerror(e)));
           }
         }
+
         prepare_ifreq(tmp_ifr, "epair");
+
         if (ioctl(sock, SIOCIFCREATE2, &tmp_ifr) < 0) {
           throw std::runtime_error("Failed to create epair interface: " +
                                    std::string(strerror(errno)));
@@ -91,17 +98,20 @@ void SystemConfigurationManager::CreateEpair(const std::string &nm) const {
       }
 
       std::string created = tmp_ifr.ifr_name;
+
       if (created.empty()) {
         throw std::runtime_error("Failed to determine created epair name");
       }
 
       std::string targetBase = nm;
+
       if (!targetBase.empty() &&
           (targetBase.back() == 'a' || targetBase.back() == 'b'))
         targetBase.pop_back();
 
       std::string srcPeerA = created;
       std::string srcPeerB = created;
+
       if (!srcPeerA.empty() && srcPeerA.back() == 'a')
         srcPeerB.back() = 'b';
       else
@@ -114,6 +124,7 @@ void SystemConfigurationManager::CreateEpair(const std::string &nm) const {
         struct ifreq nr;
         prepare_ifreq(nr, cur);
         nr.ifr_data = const_cast<char *>(newn.c_str());
+
         if (ioctl(sock, SIOCSIFNAME, &nr) < 0) {
           return false;
         }
@@ -122,6 +133,7 @@ void SystemConfigurationManager::CreateEpair(const std::string &nm) const {
 
       bool okA = rename_iface(srcPeerA, tgtA);
       bool okB = rename_iface(srcPeerB, tgtB);
+
       if (!okB && okA) {
         rename_iface(tgtA, srcPeerA);
       }
@@ -144,6 +156,7 @@ void SystemConfigurationManager::SaveEpair(
   // pairs
   std::string actual_name = vic.name;
   std::string check_name = vic.name;
+
   if (vic.name.starts_with("epair") && !vic.name.empty() &&
       vic.name.back() != 'a' && vic.name.back() != 'b') {
     check_name = vic.name + "a";

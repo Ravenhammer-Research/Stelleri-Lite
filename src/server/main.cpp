@@ -1,5 +1,28 @@
-/* netd main: initialize libnetconf2, wire logging and run a simple loop.
- * This keeps protocol-specific handlers in `Server`.
+/*
+ * Copyright (c) 2026, Ravenhammer Research Inc.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  */
 
 #if !defined(STELLERI_NETCONF) || STELLERI_NETCONF != 1
@@ -27,6 +50,7 @@
 #include <libnetconf2/server_config.h>
 #include <libnetconf2/session_server.h>
 #include <libyang/libyang.h>
+
 #if defined(__clang__)
 #pragma clang diagnostic pop
 #elif defined(__GNUC__)
@@ -49,6 +73,7 @@ static void nc_print_clb(const struct nc_session * /*session*/,
                          NC_VERB_LEVEL level, const char *msg) {
   using logger::Level;
   auto &log = logger::get();
+
   switch (level) {
   case NC_VERB_ERROR:
     log.error(msg ? msg : "");
@@ -84,12 +109,11 @@ int main(int argc, char **argv) {
   std::vector<Endpoint> endpoints;
 
   // Default unix socket path when none is specified (netconf build only)
-#ifdef STELLERI_NETCONF
   const std::string default_unix_socket = "netconf.sock";
-#endif
 
-  const char *short_opts = "h";
+  const char *short_opts = "hv";
   const struct option long_opts[] = {{"help", no_argument, nullptr, 'h'},
+                                     {"verbose", no_argument, nullptr, 'v'},
                                      {"unix", required_argument, nullptr, 0},
                                      {"tcp", required_argument, nullptr, 0},
                                      {"ssh", required_argument, nullptr, 0},
@@ -98,13 +122,19 @@ int main(int argc, char **argv) {
 
   int idx = 0;
   int c;
+  bool verbose = false;
+
   while ((c = getopt_long(argc, argv, short_opts, long_opts, &idx)) != -1) {
     if (c == 'h') {
-      std::puts("Usage: netd [--unix PATH] [--tcp ADDR:PORT] [--ssh ADDR:PORT] "
+      std::puts("Usage: netd [-v|--verbose] [--unix PATH] [--tcp ADDR:PORT] "
+                "[--ssh ADDR:PORT] "
                 "[--tls ADDR:PORT]");
       return 0;
+    } else if (c == 'v') {
+      verbose = true;
     } else if (c == 0) {
       const char *name = long_opts[idx].name;
+
       if (std::strcmp(name, "unix") == 0) {
         Endpoint e;
         e.type = Endpoint::Type::Unix;
@@ -116,6 +146,7 @@ int main(int argc, char **argv) {
         e.type = Endpoint::Type::Tcp;
         std::string arg(optarg);
         auto p = arg.find(':');
+
         if (p == std::string::npos) {
           e.addr = "0.0.0.0";
           e.port = static_cast<uint16_t>(std::stoi(arg));
@@ -129,6 +160,7 @@ int main(int argc, char **argv) {
         e.type = Endpoint::Type::SSH;
         std::string arg(optarg);
         auto p = arg.find(':');
+
         if (p == std::string::npos) {
           e.addr = "0.0.0.0";
           e.port = NC_PORT_SSH;
@@ -142,6 +174,7 @@ int main(int argc, char **argv) {
         e.type = Endpoint::Type::TLS;
         std::string arg(optarg);
         auto p = arg.find(':');
+
         if (p == std::string::npos) {
           e.addr = "0.0.0.0";
           e.port = NC_PORT_TLS;
@@ -154,11 +187,18 @@ int main(int argc, char **argv) {
     }
   }
 
-  log.info("netd: initializing libnetconf2");
+  log.debug("netd: initializing libnetconf2");
 
   // Route libnetconf2 internal prints to our logger.
   nc_set_print_clb_session(nc_print_clb);
-  nc_verbosity(NC_VERB_WARNING);
+  if (verbose) {
+    nc_verbosity(NC_VERB_DEBUG_LOWLVL);
+#ifdef NC_ENABLED_SSH_TLS
+    nc_libssh_thread_verbosity(4);
+#endif
+  } else {
+    nc_verbosity(NC_VERB_WARNING);
+  }
 
   if (nc_server_init() != 0) {
     log.error("netd: nc_server_init() failed");
@@ -172,19 +212,35 @@ int main(int argc, char **argv) {
 
   // Initialize or obtain a libyang context for the server.
   struct ly_ctx *ctx = nullptr;
+
   if (nc_server_init_ctx(&ctx) != 0) {
     log.warn("netd: nc_server_init_ctx() reported an issue (continuing)");
+  }
+
+  // Load and implement ietf-interfaces so clients can use it.
+  if (ctx) {
+    ly_ctx_set_searchdir(
+        ctx, "/usr/local/share/yang/modules/yang/standard/ietf/RFC");
+    const struct lys_module *mod =
+        ly_ctx_load_module(ctx, "ietf-interfaces", nullptr, nullptr);
+
+    if (mod) {
+      if (lys_set_implemented(const_cast<struct lys_module *>(mod), nullptr) !=
+          LY_SUCCESS) {
+        log.warn("netd: failed to implement ietf-interfaces");
+      }
+    } else {
+      log.warn("netd: failed to load ietf-interfaces");
+    }
   }
 
   // If endpoints were requested on the CLI, build server configuration and
   // apply it.
   if (endpoints.empty()) {
-#ifdef STELLERI_NETCONF
     Endpoint e;
     e.type = Endpoint::Type::Unix;
     e.extra = default_unix_socket;
     endpoints.push_back(std::move(e));
-#endif
   }
 
   if (!endpoints.empty()) {
@@ -194,6 +250,7 @@ int main(int argc, char **argv) {
       // Enable 'unix-socket-path' feature for 'libnetconf2-netconf-server'.
       struct lys_module *mod =
           ly_ctx_get_module_implemented(ctx, "libnetconf2-netconf-server");
+
       if (mod) {
         const char *features[] = {"unix-socket-path", nullptr};
         if (lys_set_implemented(mod, features) != LY_SUCCESS) {
@@ -204,6 +261,7 @@ int main(int argc, char **argv) {
 
       struct lyd_node *config = nullptr;
       unsigned count = 0;
+
       for (const auto &ep : endpoints) {
         std::string name = "ep" + std::to_string(count++);
         if (ep.type == Endpoint::Type::Unix) {
@@ -218,8 +276,10 @@ int main(int argc, char **argv) {
           // applicable.
           NC_TRANSPORT_IMPL ti =
               (ep.type == Endpoint::Type::SSH) ? NC_TI_SSH : NC_TI_TLS;
+
           if (ep.type == Endpoint::Type::Tcp)
             ti = NC_TI_TLS; // TCP treated as TLS by default
+
           if (nc_server_config_add_address_port(ctx, name.c_str(), ti,
                                                 ep.addr.c_str(), ep.port,
                                                 &config) != 0) {
@@ -258,8 +318,10 @@ int main(int argc, char **argv) {
   // Main loop
   while (g_running.load()) {
     struct nc_session *new_sess = nullptr;
+
     // Non-blocking accept for new sessions
     NC_MSG_TYPE msgtype = nc_accept(100, ctx, &new_sess);
+
     if (msgtype == NC_MSG_HELLO) {
       if (nc_ps_add_session(ps, new_sess) != 0) {
         log.warn("netd: failed to add new session to pollsession");
@@ -270,6 +332,7 @@ int main(int argc, char **argv) {
     // Process existing sessions
     struct nc_session *active_sess = nullptr;
     int ret = nc_ps_poll(ps, 100, &active_sess);
+
     if (ret & (NC_PSPOLL_SESSION_TERM | NC_PSPOLL_SESSION_ERROR)) {
       if (active_sess) {
         nc_ps_del_session(ps, active_sess);

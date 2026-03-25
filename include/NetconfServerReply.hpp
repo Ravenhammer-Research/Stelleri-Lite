@@ -70,11 +70,34 @@ public:
     rpl_ = RPL_DATA;
   }
 
-  void setError(ErrorCode code, const struct ly_ctx *ctx = nullptr) {
+  void setError(ErrorCode code, const struct ly_ctx *ctx = nullptr,
+                NC_ERR_TYPE type = NC_ERR_TYPE_APP) {
     rpl_ = RPL_ERROR;
-    /* libnetconf2's nc_err() takes a libyang context first and returns a
-       libyang data node representing the <rpc-error>. */
-    err_ = nc_err(ctx, static_cast<NC_ERR>(code));
+    NC_ERR tag = static_cast<NC_ERR>(code);
+    switch (tag) {
+    case NC_ERR_IN_USE:
+    case NC_ERR_INVALID_VALUE:
+    case NC_ERR_ACCESS_DENIED:
+    case NC_ERR_ROLLBACK_FAILED:
+    case NC_ERR_OP_NOT_SUPPORTED:
+    case NC_ERR_TOO_BIG:
+    case NC_ERR_RES_DENIED:
+    case NC_ERR_OP_FAILED:
+      err_ = nc_err(ctx, tag, type);
+      break;
+    case NC_ERR_DATA_EXISTS:
+    case NC_ERR_DATA_MISSING:
+    case NC_ERR_MALFORMED_MSG:
+      err_ = nc_err(ctx, tag);
+      break;
+    default:
+      // Other tags (like MISSING_ATTR) require more arguments than just 'type'.
+      // For a conservative default that avoids 'Invalid argument' errors,
+      // pass 'type' and hope for the best, or use OP_FAILED if context is
+      // missing.
+      err_ = nc_err(ctx, tag, type);
+      break;
+    }
   }
   // If you have a libyang context and want to convert libyang diagnostics to
   // an <rpc-error>, build it via nc_err() when available. The helper

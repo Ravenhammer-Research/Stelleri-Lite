@@ -4,7 +4,8 @@
 
 #include "NetconfConfigurationManager.hpp"
 
-std::vector<PflogInterfaceConfig> NetconfConfigurationManager::GetPflogInterfaces(
+std::vector<PflogInterfaceConfig>
+NetconfConfigurationManager::GetPflogInterfaces(
     const std::vector<InterfaceConfig> & /*bases*/) const {
   return {};
 }

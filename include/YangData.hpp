@@ -61,7 +61,8 @@ public:
     if (!node_)
       return std::make_unique<YangData>(nullptr);
     struct lyd_node *dup = nullptr;
-    int rc = lyd_dup_single(node_, nullptr, 0, &dup);
+    // Use LYD_DUP_RECURSIVE (0x01) to clone the entire tree.
+    int rc = lyd_dup_single(node_, nullptr, LYD_DUP_RECURSIVE, &dup);
     if (rc != static_cast<int>(LyResult::Success) || !dup)
       return nullptr;
     return std::make_unique<YangData>(dup);

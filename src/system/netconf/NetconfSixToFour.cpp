@@ -17,5 +17,4 @@ void NetconfConfigurationManager::SaveSixToFour(
     const SixToFourInterfaceConfig & /*t*/) const {}
 
 void NetconfConfigurationManager::DestroySixToFour(
-    const std::string & /*name*/) const {
-}
+    const std::string & /*name*/) const {}

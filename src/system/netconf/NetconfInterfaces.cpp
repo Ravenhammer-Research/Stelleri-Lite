@@ -23,11 +23,23 @@ std::vector<InterfaceConfig> NetconfConfigurationManager::GetInterfaces(
   if (!yctx.get())
     throw YangError(yctx);
 
-  // Obtain the module for building a typed subtree filter
   YangModule ym = yctx.GetModule("ietf-interfaces");
   const struct lys_module *mod = ym.getModulePtr();
-  if (!mod || !ym.valid())
-    throw YangError(yctx);
+
+  if (!mod || !ym.valid()) {
+    // Attempt to load it if it's missing from the context.
+    mod = ly_ctx_load_module(const_cast<struct ly_ctx *>(yctx.get()),
+                             "ietf-interfaces", nullptr, nullptr);
+    if (!mod) {
+      throw std::runtime_error("ietf-interfaces module not found in client "
+                               "context and failed to load");
+    }
+    // Implement it so we can create data nodes.
+    if (lys_set_implemented(const_cast<struct lys_module *>(mod), nullptr) !=
+        LY_SUCCESS) {
+      throw YangError(yctx);
+    }
+  }
 
   struct lyd_node *filter_node = nullptr;
   if (lyd_new_inner(nullptr, mod, "interfaces", 0, &filter_node) !=
@@ -96,4 +108,5 @@ std::vector<VRFConfig> NetconfConfigurationManager::GetVrfs() const {
 }
 
 void NetconfConfigurationManager::CreateVrf(const VRFConfig & /*vrf*/) const {}
-void NetconfConfigurationManager::DeleteVrf(const std::string & /*name*/) const {}
+void NetconfConfigurationManager::DeleteVrf(
+    const std::string & /*name*/) const {}

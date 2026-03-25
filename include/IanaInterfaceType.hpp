@@ -51,7 +51,7 @@ namespace netconf {
   }
 
   inline InterfaceType ianaIdentityToInterfaceType(std::string id) {
-    if(id == "iana-if-type:ethernetCsmacd")
+    if (id == "iana-if-type:ethernetCsmacd")
       return InterfaceType::Ethernet;
     else if (id == "iana-if-type:softwareLoopback")
       return InterfaceType::Loopback;
@@ -73,6 +73,7 @@ namespace netconf {
       return InterfaceType::SixToFour;
     else if (id == "ietf-network-instance")
       return InterfaceType::VRF;
-    else return InterfaceType::Unknown;
+    else
+      return InterfaceType::Unknown;
   }
-}
+} // namespace netconf

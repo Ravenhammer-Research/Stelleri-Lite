@@ -175,4 +175,3 @@ inline InterfaceType interfaceTypeFromString(const std::string &s) {
     return InterfaceType::Wireless;
   return InterfaceType::Unknown;
 }
-

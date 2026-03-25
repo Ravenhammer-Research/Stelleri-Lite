@@ -29,5 +29,6 @@ public:
   // C-style RPC callback suitable for registration with libnetconf2.
   // Signature matches: (struct lyd_node *rpc, struct nc_session *session).
   static struct nc_server_reply *
-  server_rpc_callback(struct lyd_node *rpc, struct nc_session *session) noexcept;
+  server_rpc_callback(struct lyd_node *rpc,
+                      struct nc_session *session) noexcept;
 };

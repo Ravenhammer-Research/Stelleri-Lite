@@ -3,3 +3,6 @@ usr
 yang
 libyang
 libnetconf2
+.cache
+.kdev4/
+Stelleri.kdev4
