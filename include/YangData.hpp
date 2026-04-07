@@ -60,6 +60,7 @@ public:
   virtual std::unique_ptr<YangData> clone() const {
     if (!node_)
       return std::make_unique<YangData>(nullptr);
+
     struct lyd_node *dup = nullptr;
     // Use LYD_DUP_RECURSIVE (0x01) to clone the entire tree.
     int rc = lyd_dup_single(node_, nullptr, LYD_DUP_RECURSIVE, &dup);

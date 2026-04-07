@@ -18,6 +18,8 @@
 
 class NetconfExecutor {
 public:
+  static void init(const struct ly_ctx *ctx);
+
   static std::unique_ptr<NetconfServerReply> get(const Session &session,
                                                  const YangData &filter);
 

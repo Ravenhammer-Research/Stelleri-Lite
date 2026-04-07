@@ -36,11 +36,14 @@
 class Session {
 public:
   Session() = default;
+
   explicit Session(std::string id) : id_(std::move(id)) {}
+
   explicit Session(struct nc_session *s) : nc_session_(s) {
     if (nc_session_)
       id_ = std::to_string(nc_session_get_id(nc_session_));
   }
+
   virtual ~Session() = default;
 
   const std::string &id() const {
@@ -48,6 +51,7 @@ public:
       id_ = std::to_string(nc_session_get_id(nc_session_));
     return id_;
   }
+
   void setId(const std::string &id) { id_ = id; }
 
   // yangContext should return YangContext.

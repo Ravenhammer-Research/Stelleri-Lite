@@ -59,9 +59,12 @@ bool Server::registerCallbacks() {
 
 void Server::unregisterCallbacks() { nc_set_global_rpc_clb(nullptr); }
 
+#include "Logger.hpp"
+
 struct nc_server_reply *
 Server::server_rpc_callback(struct lyd_node *rpc,
                             struct nc_session *session) noexcept {
+  auto &log = logger::get();
   Session s(session);
   std::unique_ptr<NetconfServerReply> reply;
 
@@ -73,6 +76,8 @@ Server::server_rpc_callback(struct lyd_node *rpc,
     if (schema && schema->name)
       opname = schema->name;
   }
+
+  log.debug(std::format("Server: received RPC operation: {}", (opname ? opname : "unknown")));
 
   // Extract the operation payload (duplicate so YangData owns it).
   struct lyd_node *data_node = nullptr;
@@ -128,10 +133,12 @@ Server::server_rpc_callback(struct lyd_node *rpc,
   }
 
   if (!reply) {
+    log.warn(std::format("Server: handler for {} returned null reply", (opname ? opname : "unknown")));
     const struct ly_ctx *ctx = nc_session_get_ctx(session);
     struct lyd_node *err = nc_err(ctx, NC_ERR_OP_FAILED, NC_ERR_TYPE_APP);
     return nc_server_reply_err(err);
   }
 
+  log.debug(std::format("Server: returning reply for {}", (opname ? opname : "unknown")));
   return reply->toNcServerReply();
 }

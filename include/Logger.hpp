@@ -14,7 +14,39 @@
 #include <sstream>
 #include <string>
 
+#if defined(STELLERI_NETCONF) || STELLERI_NETCONF == 1
+
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wgnu-anonymous-struct"
+#pragma clang diagnostic ignored "-Wnested-anon-types"
+#elif defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wgnu-anonymous-struct"
+#pragma GCC diagnostic ignored "-Wnested-anon-types"
+#endif
+
+#include <libnetconf2/log.h>
+#include <libyang/libyang.h>
+
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#elif defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
+
+#endif
+
 namespace logger {
+
+#if defined(STELLERI_NETCONF) || STELLERI_NETCONF == 1
+  static void nc_print_clb(const struct nc_session * /*session*/,
+                           NC_VERB_LEVEL level, const char *msg);
+
+  static void ly_print_clb(LY_LOG_LEVEL level, const char *msg,
+                           const char * /*path*/, const char * /*app_tag*/,
+                           uint64_t /*line*/);
+#endif
 
   enum class Level { Debug = 0, Info, Warn, Error, Off };
 
@@ -76,6 +108,7 @@ namespace logger {
                                           : context + ": exception: <null>");
         return;
       }
+
       try {
         std::rethrow_exception(ep);
       } catch (const std::exception &e) {
@@ -87,7 +120,15 @@ namespace logger {
     }
 
   private:
-    Logger() : level_(Level::Info), out_(&std::cerr) {}
+    Logger() : level_(Level::Info), out_(&std::cerr) {
+#if defined(STELLERI_NETCONF) || STELLERI_NETCONF == 1
+      // Route libnetconf2 internal prints to our logger.
+      nc_set_print_clb_session(nc_print_clb);
+      // Route libyang internal prints to our logger.
+      ly_set_log_clb(ly_print_clb);
+#endif
+    }
+
     ~Logger() = default;
 
     static const char *levelToString(Level l) {
@@ -112,4 +153,62 @@ namespace logger {
 
   inline Logger &get() { return Logger::instance(); }
 
+
+#if defined(STELLERI_NETCONF) || STELLERI_NETCONF == 1
+
+  // Forward libnetconf2 print messages into our logger.
+  static void nc_print_clb(const struct nc_session * /*session*/,
+                          NC_VERB_LEVEL level, const char *msg) {
+    auto &log = logger::get();
+    std::string m = "libnetconf2: ";
+    m += (msg ? msg : "");
+
+    switch (level) {
+      case NC_VERB_ERROR:
+        log.error(m);
+        break;
+      case NC_VERB_WARNING:
+        log.warn(m);
+        break;
+      case NC_VERB_VERBOSE:
+        log.info(m);
+        break;
+      case NC_VERB_DEBUG:
+      case NC_VERB_DEBUG_LOWLVL:
+        log.debug(m);
+        break;
+      default:
+        log.info(m);
+        break;
+    }
+  }
+
+  // Forward libyang print messages into our logger.
+  static void ly_print_clb(LY_LOG_LEVEL level, const char *msg,
+                          const char * /*path*/, const char * /*app_tag*/,
+                          uint64_t /*line*/) {
+    auto &log = logger::get();
+    std::string m = "libyang: ";
+    m += (msg ? msg : "");
+
+    switch (level) {
+      case LY_LLERR:
+        log.error(m);
+        break;
+      case LY_LLWRN:
+        log.warn(m);
+        break;
+      case LY_LLVRB:
+        log.info(m);
+        break;
+      case LY_LLDBG:
+        log.debug(m);
+        break;
+      default:
+        log.info(m);
+        break;
+    }
+  }
+
+#endif
 } // namespace logger

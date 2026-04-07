@@ -27,11 +27,12 @@
 
 #include "CLI.hpp"
 #include "CommandGenerator.hpp"
+#include "Logger.hpp"
+#include "SystemConfigurationManager.hpp"
 #ifdef STELLERI_NETCONF
 #include "Client.hpp"
 #include "NetconfConfigurationManager.hpp"
-#else
-#include "SystemConfigurationManager.hpp"
+#include <libnetconf2/log.h>
 #endif
 #ifdef STELLERI_NETCONF
 #include <libnetconf2/netconf.h>
@@ -44,6 +45,7 @@
 int main(int argc, char *argv[]) {
   std::string onecmd;
   bool generate = false;
+  bool verbose = false;
 #ifdef STELLERI_NETCONF
   const std::string default_unix_socket = "/var/run/stelleri/netconf.sock";
   bool client_initialized = false;
@@ -52,6 +54,7 @@ int main(int argc, char *argv[]) {
   struct option longopts[] = {{"file", required_argument, nullptr, 'f'},
                               {"generate", no_argument, nullptr, 'g'},
                               {"interactive", no_argument, nullptr, 'i'},
+                              {"verbose", no_argument, nullptr, 'v'},
                               {"help", no_argument, nullptr, 'h'},
 #ifdef STELLERI_NETCONF
                               {"unix", required_argument, nullptr, 'U'},
@@ -62,7 +65,7 @@ int main(int argc, char *argv[]) {
 
   int ch;
   int longidx = 0;
-  while ((ch = getopt_long(argc, argv, "f:gihU:", longopts, &longidx)) != -1) {
+  while ((ch = getopt_long(argc, argv, "f:givhU:", longopts, &longidx)) != -1) {
     if (ch == 0) {
 #ifdef STELLERI_NETCONF
       const char *lname = longopts[longidx].name;
@@ -120,6 +123,9 @@ int main(int argc, char *argv[]) {
     case 'i':
       // Interactive mode (default anyway)
       break;
+    case 'v':
+      verbose = true;
+      break;
 #ifdef STELLERI_NETCONF
     case 'U':
       // --unix / -U: initialize unix socket client
@@ -132,11 +138,12 @@ int main(int argc, char *argv[]) {
       break;
 #endif
     case 'h':
-      std::cout << "Usage: netcli [command] [-g] [-i]\n";
+      std::cout << "Usage: netcli [command] [-g] [-i] [-v]\n";
       std::cout << "  command           Execute a single command (any non-flag "
                    "args)\n";
       std::cout << "  -g, --generate    Generate configuration from system\n";
       std::cout << "  -i, --interactive Enter interactive mode\n";
+      std::cout << "  -v, --verbose     Enable verbose output\n";
       std::cout << "  -h, --help        Show this help message\n";
       std::cout << "Netconf options (STELLERI=netconf):\n";
       std::cout << "  -U, --unix PATH           Use unix socket PATH for "
@@ -149,12 +156,15 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  if (generate) {
+  if (verbose) {
+    logger::get().setLevel(logger::Level::Debug);
 #ifdef STELLERI_NETCONF
-    NetconfConfigurationManager mgr;
-#else
-    SystemConfigurationManager mgr;
+    nc_verbosity(NC_VERB_DEBUG);
 #endif
+  }
+
+  if (generate) {
+    SystemConfigurationManager mgr;
     netcli::CommandGenerator generator;
     generator.generateConfiguration(mgr);
     return 0;

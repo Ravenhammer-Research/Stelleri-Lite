@@ -29,8 +29,9 @@
 #error "netconf build only"
 #endif
 
-#include "Logger.hpp"
-#include "Server.hpp"
+#ifndef NC_ENABLED_SSH_TLS
+#define NC_ENABLED_SSH_TLS
+#endif
 
 #if defined(__clang__)
 #pragma clang diagnostic push
@@ -40,10 +41,6 @@
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wgnu-anonymous-struct"
 #pragma GCC diagnostic ignored "-Wnested-anon-types"
-#endif
-
-#ifndef NC_ENABLED_SSH_TLS
-#define NC_ENABLED_SSH_TLS
 #endif
 
 #include <libnetconf2/log.h>
@@ -57,6 +54,10 @@
 #pragma GCC diagnostic pop
 #endif
 
+#include "Logger.hpp"
+#include "NetconfExecutor.hpp"
+#include "Server.hpp"
+
 #include <atomic>
 #include <chrono>
 #include <csignal>
@@ -67,32 +68,6 @@
 #include <vector>
 
 static std::atomic<bool> g_running{true};
-
-// Forward libnetconf2 print messages into our logger.
-static void nc_print_clb(const struct nc_session * /*session*/,
-                         NC_VERB_LEVEL level, const char *msg) {
-  using logger::Level;
-  auto &log = logger::get();
-
-  switch (level) {
-  case NC_VERB_ERROR:
-    log.error(msg ? msg : "");
-    break;
-  case NC_VERB_WARNING:
-    log.warn(msg ? msg : "");
-    break;
-  case NC_VERB_VERBOSE:
-    log.info(msg ? msg : "");
-    break;
-  case NC_VERB_DEBUG:
-  case NC_VERB_DEBUG_LOWLVL:
-    log.debug(msg ? msg : "");
-    break;
-  default:
-    log.info(msg ? msg : "");
-    break;
-  }
-}
 
 int main(int argc, char **argv) {
   auto &log = logger::get();
@@ -122,19 +97,16 @@ int main(int argc, char **argv) {
 
   int idx = 0;
   int c;
-  bool verbose = false;
 
   while ((c = getopt_long(argc, argv, short_opts, long_opts, &idx)) != -1) {
     if (c == 'h') {
-      std::puts("Usage: netd [-v|--verbose] [--unix PATH] [--tcp ADDR:PORT] "
-                "[--ssh ADDR:PORT] "
+      std::puts("Usage: netd [-v] [--unix PATH] [--tcp ADDR:PORT] [--ssh ADDR:PORT] "
                 "[--tls ADDR:PORT]");
       return 0;
     } else if (c == 'v') {
-      verbose = true;
+      log.setLevel(logger::Level::Debug);
     } else if (c == 0) {
       const char *name = long_opts[idx].name;
-
       if (std::strcmp(name, "unix") == 0) {
         Endpoint e;
         e.type = Endpoint::Type::Unix;
@@ -187,19 +159,6 @@ int main(int argc, char **argv) {
     }
   }
 
-  log.debug("netd: initializing libnetconf2");
-
-  // Route libnetconf2 internal prints to our logger.
-  nc_set_print_clb_session(nc_print_clb);
-  if (verbose) {
-    nc_verbosity(NC_VERB_DEBUG_LOWLVL);
-#ifdef NC_ENABLED_SSH_TLS
-    nc_libssh_thread_verbosity(4);
-#endif
-  } else {
-    nc_verbosity(NC_VERB_WARNING);
-  }
-
   if (nc_server_init() != 0) {
     log.error("netd: nc_server_init() failed");
     return 1;
@@ -219,8 +178,9 @@ int main(int argc, char **argv) {
 
   // Load and implement ietf-interfaces so clients can use it.
   if (ctx) {
-    ly_ctx_set_searchdir(
-        ctx, "/usr/local/share/yang/modules/yang/standard/ietf/RFC");
+    ly_ctx_set_searchdir(ctx, "/usr/local/share/yang/modules/yang/standard/ietf/RFC");
+    ly_ctx_set_searchdir(ctx, "/usr/local/share/yang/modules/yang/standard/iana");
+    ly_ctx_set_searchdir(ctx, "/usr/local/share/yang/modules/libnetconf2");
     const struct lys_module *mod =
         ly_ctx_load_module(ctx, "ietf-interfaces", nullptr, nullptr);
 
@@ -232,6 +192,22 @@ int main(int argc, char **argv) {
     } else {
       log.warn("netd: failed to load ietf-interfaces");
     }
+
+    // Enable NETCONF capabilities by setting features on ietf-netconf.
+    struct lys_module *nc_mod =
+        ly_ctx_get_module_implemented(ctx, "ietf-netconf");
+    if (nc_mod) {
+      const char *nc_features[] = {"candidate", "writable-running",
+                                   "rollback-on-error", "validate", "xpath",
+                                   nullptr};
+      if (lys_set_implemented(nc_mod, nc_features) != LY_SUCCESS) {
+        log.warn("netd: failed to enable ietf-netconf features");
+      }
+    } else {
+      log.warn("netd: ietf-netconf module not found in context");
+    }
+
+    NetconfExecutor::init(ctx);
   }
 
   // If endpoints were requested on the CLI, build server configuration and

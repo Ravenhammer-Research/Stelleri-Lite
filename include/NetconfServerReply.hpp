@@ -105,20 +105,15 @@ public:
   // not used here.
 
   struct nc_server_reply *toNcServerReply(WdMode wd = WD_UNKNOWN,
-                                          ParamType pt = PARAMTYPE_FREE) const {
+                                          ParamType pt = PARAMTYPE_DUP_AND_FREE) const {
     if (rpl_ == RPL_OK)
       return nc_server_reply_ok();
 
     if (rpl_ == RPL_DATA) {
-      if (!data_)
-        return nullptr;
-      struct lyd_node *src = data_->toLydNode();
+      struct lyd_node *src = data_ ? data_->toLydNode() : nullptr;
       if (!src)
-        return nullptr;
-      struct lyd_node *dup = nullptr;
-      if (lyd_dup_single(src, nullptr, 0, &dup) != LY_SUCCESS || !dup)
-        return nullptr;
-      return nc_server_reply_data(dup, static_cast<NC_WD_MODE>(wd),
+        return nc_server_reply_ok();
+      return nc_server_reply_data(src, static_cast<NC_WD_MODE>(wd),
                                   static_cast<NC_PARAMTYPE>(pt));
     }
 
@@ -132,7 +127,7 @@ public:
 
   bool isError() const { return rpl_ == RPL_ERROR; }
   bool isOk() const { return rpl_ == RPL_OK; }
-  bool hasData() const { return data_ != nullptr; }
+  bool hasData() const { return rpl_ == RPL_DATA; }
   bool isNotification() const { return rpl_ == RPL_NOTIF; }
 
   // Return a cloned YangData wrapper of the stored reply data. Caller

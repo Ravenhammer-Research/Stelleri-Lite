@@ -41,31 +41,67 @@
 #include <memory>
 #include <mutex>
 
+#include "Logger.hpp"
+#include "NetconfExecutor.hpp"
+
 static struct lyd_node *g_running = nullptr;
 static struct lyd_node *g_candidate = nullptr;
 static std::mutex g_ds_mutex;
 
+void NetconfExecutor::init(const struct ly_ctx *ctx) {
+  auto &log = logger::get();
+  std::lock_guard<std::mutex> lock(g_ds_mutex);
+  if (g_running)
+    return;
+
+  log.debug("NetconfExecutor: initializing running datastore");
+
+  // Create the root node for ietf-interfaces. Use lyd_new_path to ensure it's
+  // properly initialized in the context.
+  if (lyd_new_path(nullptr, ctx, "/ietf-interfaces:interfaces", nullptr, 0, &g_running) != LY_SUCCESS) {
+      log.warn("NetconfExecutor: failed to create /ietf-interfaces:interfaces via lyd_new_path");
+      // If ietf-interfaces is not found or fails, try to just get the module and use it.
+      const struct lys_module *mod = ly_ctx_get_module_implemented(ctx, "ietf-interfaces");
+      if (mod) {
+          log.debug("NetconfExecutor: found ietf-interfaces module, using lyd_new_inner");
+          lyd_new_inner(nullptr, mod, "interfaces", 0, &g_running);
+      } else {
+          log.error("NetconfExecutor: ietf-interfaces module not implemented in context!");
+      }
+  }
+
+  if (g_running) {
+    log.debug("NetconfExecutor: running datastore initialized successfully");
+  } else {
+    log.error("NetconfExecutor: failed to initialize running datastore");
+  }
+}
+
 std::unique_ptr<NetconfServerReply>
 NetconfExecutor::get(const Session &session, const YangData &filter) {
-  // get is for config + operational. Return getConfig for now.
   return getConfig(session, filter);
 }
 
 std::unique_ptr<NetconfServerReply>
 NetconfExecutor::getConfig(const Session &session,
                            const YangData &filter [[maybe_unused]]) {
+  auto &log = logger::get();
+  log.debug("NetconfExecutor: getConfig called");
   std::lock_guard<std::mutex> lock(g_ds_mutex);
-  if (!g_running) {
-    return std::make_unique<NetconfServerReply>(NetconfServerReply::RPL_OK);
-  }
-
   struct lyd_node *dup = nullptr;
-  // Use LYD_DUP_RECURSIVE (0x01) to clone the entire tree.
-  if (lyd_dup_siblings(g_running, nullptr, 0x01, &dup) != LY_SUCCESS) {
-    auto r =
-        std::make_unique<NetconfServerReply>(NetconfServerReply::RPL_ERROR);
-    r->setError(NetconfServerReply::ERR_OP_FAILED, session.yangContext().get());
-    return r;
+
+  if (g_running) {
+    // Use LYD_DUP_RECURSIVE (0x01) to clone the entire tree.
+    if (lyd_dup_siblings(g_running, nullptr, 0x01, &dup) != LY_SUCCESS) {
+      log.error("NetconfExecutor: failed to duplicate running datastore");
+      auto r =
+          std::make_unique<NetconfServerReply>(NetconfServerReply::RPL_ERROR);
+      r->setError(NetconfServerReply::ERR_OP_FAILED, session.yangContext().get());
+      return r;
+    }
+    log.debug("NetconfExecutor: duplicated running datastore for reply");
+  } else {
+    log.warn("NetconfExecutor: g_running is NULL in getConfig");
   }
 
   auto r = std::make_unique<NetconfServerReply>(NetconfServerReply::RPL_DATA);
@@ -96,8 +132,16 @@ NetconfExecutor::editConfig(const Session &session, const YangData &target,
   }
 
   // Initialize candidate with a clone of g_running if it's empty.
-  if (!g_candidate && g_running) {
-    lyd_dup_siblings(g_running, nullptr, 0x01, &g_candidate);
+  if (!g_candidate) {
+    if (g_running) {
+      lyd_dup_siblings(g_running, nullptr, 0x01, &g_candidate);
+    } else {
+      const struct lys_module *mod = ly_ctx_get_module_implemented(
+          session.yangContext().get(), "ietf-interfaces");
+      if (mod) {
+        lyd_new_inner(nullptr, mod, "interfaces", 0, &g_candidate);
+      }
+    }
   }
 
   // Apply changes to g_candidate. Merge is the default.

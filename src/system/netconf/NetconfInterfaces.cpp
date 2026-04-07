@@ -57,10 +57,10 @@ std::vector<InterfaceConfig> NetconfConfigurationManager::GetInterfaces(
   std::vector<InterfaceConfig> out;
   if (reply && reply->hasData()) {
     auto data = reply->getData();
-    if (data) {
-      struct lyd_node *op = data->toLydNode();
+    struct lyd_node *op = data ? data->toLydNode() : nullptr;
+    if (op) {
       struct ly_set *set = nullptr;
-      if (lyd_find_xpath(op, "ietf-interfaces:interfaces/interface", &set) ==
+      if (lyd_find_xpath(op, "/ietf-interfaces:interfaces/interface", &set) ==
               LY_SUCCESS &&
           set) {
         for (uint32_t i = 0; i < set->count; ++i) {
